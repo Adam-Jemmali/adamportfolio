@@ -1,6 +1,6 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Georama:ital,wght@0,100..900;1,100..900&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap");
-
+/* Use this instead - forces variable font */
+@import url("https://fonts.googleapis.com/css2?family=Georama:wght@100..900&display=swap");
 
 html,
 body {
@@ -19,6 +19,13 @@ body {
     --breakpoint-3xl: 1920px;
 }
 
+@font-face {
+    font-family: 'Georama';
+    src: url('Georama,Urbanist/Georama/Georama-VariableFont_wdth,wght.ttf') format('truetype');
+    font-weight: 100 900;
+    font-display: swap;
+}
+
 @utility flex-center {
     @apply flex items-center justify-center;
 }
@@ -30,7 +37,6 @@ body {
 @utility abs-center {
     @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2;
 }
-
 
 @layer base {
     main {
@@ -49,7 +55,7 @@ body {
         }
 
         ul {
-            @apply flex items-center gap-5 max-sm:hidden;
+            @apply flex items-center gap-2 max-sm:hidden;
 
             p {
                 @apply text-sm cursor-pointer hover:underline transition-all;
@@ -57,7 +63,7 @@ body {
         }
 
         time {
-            @apply text-sm font-medium text-black;
+            @apply text-shadow-md font-medium text-white;
         }
     }
 }
@@ -79,23 +85,27 @@ body {
         }
     }
 
-    #dock {
-        @apply absolute bottom-5 left-1/2 -translate-x-1/2 z-50 select-none max-sm:hidden;
+    /* FIXED: Removed positioning from #dock, keep it on .dock-container */
+    .dock-container {
+        @apply  rounded-2xl p-1.5 flex items-end gap-1.5 select-none max-sm:hidden;
+    }
 
-        .dock-container {
-            @apply bg-white/20 backdrop-blur-md justify-between rounded-2xl p-1.5 flex items-end gap-1.5;
-        }
+    .tooltip {
+        @apply !py-1 !px-3 !w-fit !text-center !text-xs !rounded-md !bg-blue-200 !text-blue-900 !shadow-2xl;
+    }
 
-        .tooltip {
-            @apply !py-1 !px-3 !w-fit !text-center !text-xs !rounded-md !bg-blue-200 !text-blue-900 !shadow-2xl;
-        }
+    .dock-icon {
+        @apply size-9 3xl:size-20 cursor-pointer transition-transform will-change-transform;
+        transform: translateZ(0); /* Forces GPU acceleration */
+        backface-visibility: hidden; /* Prevents flickering */
+        perspective: 1000px; /* Enables 3D transforms */
+        transform-style: preserve-3d; /* Preserves 3D space for children */
+        will-change: transform; /* Tells browser this will animate */
 
-        .dock-icon {
-            @apply size-14 3xl:size-20 cursor-pointer;
-
-            img {
-                @apply object-cover object-center;
-            }
+        img {
+            @apply object-cover object-center w-full h-full;
+            transform: translateZ(0);
+            backface-visibility: hidden;
         }
     }
 
