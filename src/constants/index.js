@@ -41,37 +41,37 @@ const dockApps = [
     {
         id: "finder",
         name: "Portfolio", // was "Finder"
-        icon: "finder.png",
+        icon: "public/images/finder.png",
         canOpen: true,
     },
     {
         id: "safari",
         name: "Articles", // was "Safari"
-        icon: "safari.png",
+        icon: "public/images/safari.png",
         canOpen: true,
     },
     {
         id: "photos",
         name: "Gallery", // was "Photos"
-        icon: "photos.png",
+        icon: "public/images/photos.png",
         canOpen: true,
     },
     {
         id: "contact",
         name: "Contact", // or "Get in touch"
-        icon: "contact.png",
+        icon: "public/images/contact.png",
         canOpen: true,
     },
     {
         id: "terminal",
         name: "Skills", // was "Terminal"
-        icon: "terminal.png",
+        icon: "public/images/terminal.png",
         canOpen: true,
     },
     {
         id: "trash",
         name: "Archive", // was "Trash"
-        icon: "trash.png",
+        icon: "public/images/trash.png",
         canOpen: false,
     },
 ];
