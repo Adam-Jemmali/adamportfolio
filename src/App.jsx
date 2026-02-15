@@ -5,6 +5,9 @@ import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import gsap from "gsap";
 import {Draggable} from "gsap/Draggable";
 import {Terminal} from "#window/index.js";
+import Safari from "#window/Safari.jsx";
+import Resume from "#window/resume.jsx";
+import Finder from "#window/Finder.jsx";
 gsap.registerPlugin(Draggable);
 
 const App = () => {
@@ -13,6 +16,9 @@ const App = () => {
            <Navbar />
            <Welcome />
            <Terminal />
+           <Safari />
+           <Resume/>
+           <Finder/>
 
 
 

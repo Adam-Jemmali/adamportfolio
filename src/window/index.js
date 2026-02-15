@@ -1,2 +1,3 @@
 import Terminal from './Terminal';
-export {Terminal};
+export {Terminal,Finder};
+import Finder from './Finder';
