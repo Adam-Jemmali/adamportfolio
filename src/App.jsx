@@ -1,10 +1,11 @@
 import React from 'react'
 import Navbar from "#components/Navbar.jsx";
 import Welcome from "#components/Welcome.jsx";
+import Home from "#components/Home.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import gsap from "gsap";
 import {Draggable} from "gsap/Draggable";
-import { Terminal, Finder, Text, Image, Safari, Resume, Contact } from "#window/index.js";
+import { Terminal, Finder, Text, Image, Safari, Resume, Contact, Gallery } from "#window/index.js";
 gsap.registerPlugin(Draggable);
 
 const App = () => {
@@ -12,6 +13,7 @@ const App = () => {
        <main>
            <Navbar />
            <Welcome />
+           <Home />
            <Terminal />
            <Safari />
            <Resume/>
@@ -19,6 +21,8 @@ const App = () => {
            <Text />
            <Image />
            <Contact/>
+           <Gallery />
+
 
 
 

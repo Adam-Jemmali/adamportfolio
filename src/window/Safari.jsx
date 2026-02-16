@@ -10,22 +10,11 @@ const Safari = () => {
             <WindowsControls target="safari"/>
 
 
-
-            <div className="flex items-center">
-
-            </div>
-
-            <div className="flex-1 flex-center gap-1 ml-5">
-                {/* This is where your URL/search bar content goes */}
-            </div>
-
-
-
             <div className="search">
-                <Search className="icon"/>
+                <Search className=""/>
                 <input
                     type="text"
-                    placeholder="Search or enter website name"
+                    placeholder="(Dont write here)"
                     className="flex-1 outline-none bg-transparent"
                 />
             </div>

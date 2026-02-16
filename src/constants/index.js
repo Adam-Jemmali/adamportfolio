@@ -46,14 +46,14 @@ const dockApps = [
     },
     {
         id: "safari",
-        name: "Articles", // was "Safari"
+        name: "Web", // was "Safari"
         icon: "public/images/safari.png",
         canOpen: true,
     },
     {
         id: "photos",
         name: "Gallery", // was "Photos"
-        icon: "public/images/photos.png",
+        icon: "public/images/gallery.png",
         canOpen: true,
     },
     {
@@ -68,12 +68,7 @@ const dockApps = [
         icon: "public/images/terminal.png",
         canOpen: true,
     },
-    {
-        id: "trash",
-        name: "Archive", // was "Trash"
-        icon: "public/images/trash.png",
-        canOpen: false,
-    },
+
 ];
 
 const blogPosts = [
@@ -103,8 +98,8 @@ const blogPosts = [
 
 const techStack = [
     {
-        category: "Frontend",
-        items: ["React.js", "Next.js", "TypeScript"],
+        category: "Languages",
+        items: ["Python", "Java", "TypeScript","JavaScript"],
     },
     {
         category: "Mobile",
@@ -112,19 +107,19 @@ const techStack = [
     },
     {
         category: "Styling",
-        items: ["Tailwind CSS", "Sass", "CSS"],
+        items: ["Tailwind", "HTML", "CSS"],
     },
     {
         category: "Backend",
-        items: ["Node.js", "Express", "NestJS", "Hono"],
+        items: ["Node.js","FastAPI","SpringBoot"],
     },
     {
         category: "Database",
-        items: ["MongoDB", "PostgreSQL"],
+        items: ["MongoDB", "PostgreSQL","Firebase","Supabase"],
     },
     {
         category: "Dev Tools",
-        items: ["Git", "GitHub", "Docker"],
+        items: ["Git", "GitHub", "Docker","AWS"],
     },
 ];
 
@@ -133,56 +128,49 @@ const socials = [
         id: 1,
         text: "Github",
         icon: "public/icons/github.svg",
-        bg: "#f4656b",
-        link: "https://github.com/JavaScript-Mastery-Pro",
-    },
-    {
-        id: 2,
-        text: "Platform",
-        icon: "public/icons/atom.svg",
-        bg: "#4bcb63",
-        link: "https://jsmastery.com/",
+        bg: "#000000",
+        link: "https://github.com/Adam-Jemmali",
     },
     {
         id: 3,
-        text: "Twitter/X",
+        text: "Instagram",
         icon: "public/icons/twitter.svg",
-        bg: "#ff866b",
-        link: "https://x.com/jsmasterypro",
+        bg: "#FFC0CB",
+        link: "https://www.instagram.com/madaj_2/",
     },
     {
         id: 4,
         text: "LinkedIn",
         icon: "public/icons/linkedin.svg",
         bg: "#05b6f6",
-        link: "https://www.linkedin.com/company/javascriptmastery/posts/?feedView=all",
+        link: "https://www.linkedin.com/in/adam-jem/",
     },
 ];
 
 const photosLinks = [
     {
         id: 1,
-        icon: "/icons/gicon1.svg",
+        icon: "public/icons/gicon1.svg",
         title: "Library",
     },
     {
         id: 2,
-        icon: "/icons/gicon2.svg",
+        icon: "public/icons/gicon2.svg",
         title: "Memories",
     },
     {
         id: 3,
-        icon: "/icons/file.svg",
+        icon: "public/icons/file.svg",
         title: "Places",
     },
     {
         id: 4,
-        icon: "/icons/gicon4.svg",
+        icon: "public/icons/gicon4.svg",
         title: "People",
     },
     {
         id: 5,
-        icon: "/icons/gicon5.svg",
+        icon: "public/icons/gicon5.svg",
         title: "Favorites",
     },
 ];
@@ -190,11 +178,11 @@ const photosLinks = [
 const gallery = [
     {
         id: 1,
-        img: "/images/gal1.png",
+        img: "public/images/gal1.png",
     },
     {
         id: 2,
-        img: "/images/gal2.png",
+        img: "public/images/gal2.png",
     },
     {
         id: 3,
@@ -202,7 +190,7 @@ const gallery = [
     },
     {
         id: 4,
-        img: "/images/gal4.png",
+        img: "public/images/gal4.png",
     },
 ];
 
@@ -263,7 +251,7 @@ const WORK_LOCATION = {
                     kind: "file",
                     fileType: "img",
                     position: "top-52 right-80",
-                    imageUrl: "/images/project-1.png",
+                    imageUrl: "public/images/project-1.png",
                 },
                 {
                     id: 5,
@@ -399,7 +387,7 @@ const ABOUT_LOCATION = {
             kind: "file",
             fileType: "img",
             position: "top-10 left-5",
-            imageUrl: "/images/adrian.jpg",
+            imageUrl: "public/images/adrian.jpg",
         },
         {
             id: 2,
@@ -407,8 +395,8 @@ const ABOUT_LOCATION = {
             icon: "public/images/image.png",
             kind: "file",
             fileType: "img",
-            position: "top-28 right-72",
-            imageUrl: "/images/adrian-2.jpg",
+            position: "top-10 left-30",
+            imageUrl: "public/images/adrian-2.jpg",
         },
         {
             id: 3,
@@ -416,8 +404,8 @@ const ABOUT_LOCATION = {
             icon: "public/images/image.png",
             kind: "file",
             fileType: "img",
-            position: "top-52 left-80",
-            imageUrl: "/images/adrian-3.jpeg",
+            position: "top-10 left-60",
+            imageUrl: "public/images/adrian-3.jpeg",
         },
         {
             id: 4,
@@ -425,9 +413,9 @@ const ABOUT_LOCATION = {
             icon: "public/images/txt.png",
             kind: "file",
             fileType: "txt",
-            position: "top-60 left-5",
+            position: "top-10 left-90",
             subtitle: "Meet the Developer Behind the Code",
-            image: "/images/adrian.jpg",
+            image: "public/images/adrian.jpg",
             description: [
                 "Hey! I’m Adrian 👋, a web developer who enjoys building sleek, interactive websites that actually work well.",
                 "I specialize in JavaScript, React, and Next.js—and I love making things feel smooth, fast, and just a little bit delightful.",
@@ -457,40 +445,61 @@ const RESUME_LOCATION = {
     ],
 };
 
-const TRASH_LOCATION = {
-    id: 4,
-    type: "trash",
-    name: "Trash",
-    icon: "public/icons/trash.svg",
-    kind: "folder",
-    children: [
-        {
-            id: 1,
-            name: "trash1.png",
-            icon: "public/images/image.png",
-            kind: "file",
-            fileType: "img",
-            position: "top-10 left-10",
-            imageUrl: "/images/trash-1.png",
-        },
-        {
-            id: 2,
-            name: "trash2.png",
-            icon: "public/images/image.png",
-            kind: "file",
-            fileType: "img",
-            position: "top-40 left-80",
-            imageUrl: "/images/trash-2.png",
-        },
-    ],
-};
 
 export const locations = {
     work: WORK_LOCATION,
     about: ABOUT_LOCATION,
     resume: RESUME_LOCATION,
-    trash: TRASH_LOCATION,
+
 };
+
+const GALLERY_DATA = [
+    {
+        id: 'library',
+        name: 'Library',
+        icon: 'public/icons/gicon1.svg',
+        images: [
+            { id: 1, name: 'Mountain.jpg', imageUrl: 'public/images/blog1.png' },
+            { id: 2, name: 'Ocean.jpg', imageUrl: 'public/images/blog2.png' },
+            { id: 3, name: 'Forest.jpg', imageUrl: 'public/images/blog3.png' },
+            { id: 4, name: 'City.jpg', imageUrl: 'public/images/project-1.png' },
+            { id: 5, name: 'Sky.jpg', imageUrl: 'public/images/project-2.png' },
+        ]
+    },
+    {
+        id: 'memories',
+        name: 'Memories',
+        icon: 'public/icons/gicon2.svg',
+        images: [
+            { id: 6, name: 'Birthday.jpg', imageUrl: 'public/images/adrian.jpg' },
+            { id: 7, name: 'Travel.jpg', imageUrl: 'public/images/adrian-2.jpg' },
+        ]
+    },
+    {
+        id: 'places',
+        name: 'Places',
+        icon: 'public/icons/gicon1.svg', // Fallback
+        images: [
+            { id: 8, name: 'Paris.jpg', imageUrl: 'public/images/blog1.png' },
+        ]
+    },
+    {
+        id: 'people',
+        name: 'People',
+        icon: 'public/icons/gicon4.svg',
+        images: [
+            { id: 9, name: 'Friend.jpg', imageUrl: 'public/images/adrian-3.jpeg' },
+        ]
+    },
+    {
+        id: 'favorites',
+        name: 'Favorites',
+        icon: 'public/icons/gicon5.svg',
+        images: [
+            { id: 10, name: 'Star.jpg', imageUrl: 'public/images/project-3.png' },
+        ]
+    }
+];
 
 const INITIAL_Z_INDEX = 1000;
 
@@ -505,4 +514,4 @@ const WINDOW_CONFIG = {
     imgfile: { isOpen: false, zIndex: INITIAL_Z_INDEX, data: null },
 };
 
-export { INITIAL_Z_INDEX, WINDOW_CONFIG };
+export { INITIAL_Z_INDEX, WINDOW_CONFIG, GALLERY_DATA };

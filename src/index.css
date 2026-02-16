@@ -45,7 +45,7 @@ body {
     }
 
     nav {
-        @apply flex fixed bottom-0 left-0 w-full justify-between items-center bg-white/50 backdrop-blur-3xl p-2 px-5 select-none;
+        @apply flex fixed bottom-0 left-0 w-full justify-between items-center bg-white/50 backdrop-blur-3xl p-2 px-5 select-none z-50;
 
         div {
             @apply flex items-center max-sm:w-full max-sm:justify-center gap-5;
@@ -75,7 +75,7 @@ body {
     }
 
     #welcome {
-        @apply text-gray-200 flex flex-col justify-center items-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 select-none max-sm:h-screen max-sm:w-full max-sm:px-10;
+        @apply text-gray-200 flex flex-col justify-center items-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 select-none max-sm:h-screen max-sm:w-full max-sm:px-10 z-10 pointer-events-none;
 
         .small-screen {
             @apply sm:hidden m-7 bg-red-300/20 backdrop-blur-lg p-3 rounded-md absolute top-10;
@@ -92,7 +92,7 @@ body {
     }
 
     .tooltip {
-        @apply !py-1 !px-3 !w-fit !text-center !text-xs !rounded-md !bg-blue-200 !text-blue-900 !shadow-2xl;
+        @apply !py-2 !px-3 !text-xs !rounded !bg-gray-900 !text-white !shadow-2xl !border !border-gray-700 !font-medium;
     }
 
     .dock-icon {
@@ -431,7 +431,7 @@ body {
     }
 
     #home {
-        @apply relative z-0 max-sm:hidden;
+        @apply absolute inset-0 z-20 max-sm:hidden;
 
         ul {
             li {
