@@ -227,7 +227,7 @@ const WORK_LOCATION = {
             name: "OmniContext OS",
             icon: "public/images/folder.png",
             kind: "folder",
-            position: "top-10 left-5",
+            position: "top-10 left-80",
             windowPosition: "top-[5vh] left-5",
             children: [
                 {
@@ -239,17 +239,17 @@ const WORK_LOCATION = {
                     position: "top-5 left-10",
                     description: [
                         "OmniContext OS is a thin-client AI system designed to maintain persistent memory across Slack, email, and web interfaces.",
-                        "Most AI assistants are stateless — switching tools forces users to re-explain context. We built for continuity instead of isolated prompts.",
+                        "Most AI assistants are stateless, switching tools forces users to re-explain context. We built for continuity instead of isolated prompts.",
                         "The architecture centralizes intelligence using Backboard.io for stateful threads, memory persistence, and LLM orchestration.",
                         "A Node.js / TypeScript backend normalizes multi-channel events and resolves state consistently across platforms.",
                         "We placed 9th overall at the McHacks × Backboard.io pre-hackathon challenge.",
-                        "RAG integration is currently in development to enable retrieval-augmented contextual responses."
+                        "RAG integration is currently in development for our MVP to enable RAG contextual responses."
                     ],
                 },
                 {
                     id: 2,
-                    name: " 📽️",
-                    icon: "public/images/safari.png",
+                    name: "How it works.ytb",
+                    icon: "public/images/ytb.png",
                     kind: "file",
                     fileType: "url",
                     href: "https://www.youtube.com/watch?v=K1wJtulUM7A",
@@ -258,7 +258,7 @@ const WORK_LOCATION = {
 
                 {
                     id: 4,
-                    name: "McHacks Challenge.fig",
+                    name: "Backboard.jpg",
                     icon: "public/images/plain.png",
                     kind: "file",
                     fileType: "fig",
@@ -271,10 +271,10 @@ const WORK_LOCATION = {
         // ▶ Project 2 — AeroGuard (HackConcordia Winner)
         {
             id: 6,
-            name: "AeroGuard (A.E.G.I.S. Garden)",
+            name: "AeroGuard (A.E.G.I.S)",
             icon: "public/images/folder.png",
             kind: "folder",
-            position: "top-10 left-40",
+            position: "top-10 left-5",
             windowPosition: "top-[20vh] left-7",
             children: [
                 {
@@ -283,7 +283,7 @@ const WORK_LOCATION = {
                     icon: "public/images/txt.png",
                     kind: "file",
                     fileType: "txt",
-                    position: "top-5 right-10",
+                    position: "top-10  left-40",
                     description: [
                         "AeroGuard is a real-time SOC decision platform built at HackConcordia in 24 hours.",
                         "Instead of overwhelming analysts with hundreds of alerts, the system predicts threats and surfaces the 3 most critical actions in under 60 seconds.",
@@ -291,25 +291,75 @@ const WORK_LOCATION = {
                         "Integrated ElevenLabs for voice alerting in high-severity scenarios.",
                         "Powered by a FastAPI backend engineered for deterministic decisions and auditability.",
                         "Winner: Best Use of Snowflake API."
+
                     ],
                 },
                 {
                     id: 2,
-                    name: "Demo",
-                    icon: "public/images/safari.png",
+                    name: "Demo.ytb",
+                    icon: "public/images/ytb.png",
                     kind: "file",
                     fileType: "url",
-                    href: "https://lnkd.in/eNAyQwT6",
-                    position: "top-20 left-20",
+                    href: "https://www.youtube.com/watch?v=v50brOXF6v4",
+                    position: "top-10 left-5",
                 },
                 {
                     id: 3,
-                    name: "GitHub",
-                    icon: "public/images/safari.png",
+                    name: "A.E.G.I.S. repo",
+                    icon: "public/images/github.png",
                     kind: "file",
                     fileType: "url",
                     href: "https://lnkd.in/ewetvar7",
-                    position: "top-50 left-20",
+                    position: "top-50 left-5",
+                },
+
+            ],
+        },
+
+        //project 3 Neurodesk
+        {
+            id: 7,
+            name: "NeuroDesk",
+            icon: "public/images/folder.png",
+            kind: "folder",
+            position: "top-10 left-45  ",
+            windowPosition: "top-[20vh] left-7",
+            children: [
+                {
+                    id: 1,
+                    name: "NeuroDesk.txt",
+                    icon: "public/images/txt.png",
+                    kind: "file",
+                    fileType: "txt",
+                    position: "top-10  left-40",
+                    description: [
+                        "NeuroDesk is a brain-inspired AI command center that turns simple natural language requests into structured outcomes.",
+                        "Instead of just chatting, NeuroDesk plans tasks, coordinates specialized AI agents, enforces approvals and keeps humans in control at every step.",
+                        "Users can ask for research, draft professional communications, compare products, or make decisions(just like our brain)  and the system handles execution with built-in guardrails and spending limits.",
+                        "Every action is logged with a full audit trail, creating trust, accountability, and enterprise transparency.",
+                        "Designed as a scalable AI middleware layer, NeuroDesk bridges conversation and execution, transforming AI from a passive assistant into a reliable operational partner.",
+                        "Built with a modular architecture ready for enterprise integrations, workflow automation, and future payment or hiring systems.",
+                        "NeuroDesk demonstrates the next evolution of AI: not just intelligent, but responsible, actionable and aligned with human oversight."
+                    ]
+
+                },
+                {
+                    id: 2,
+                    name: "Demo.ytb",
+                    icon: "public/images/ytb.png",
+                    kind: "file",
+                    fileType: "url",
+                    href: "https://www.youtube.com/watch?v=v50brOXF6v4",
+                    position: "top-10 left-5",
+                },
+                {
+                    id: 3,
+                    name: "NeuroDesk.repo",
+                    icon: "public/images/github.png",
+                    kind: "file",
+                    fileType: "url",
+                    href: "https://github.com/Adam-Jemmali/NeuroDesk",
+                    position: "top-50 left-5",
                 },
 
             ],
@@ -359,16 +409,18 @@ const ABOUT_LOCATION = {
             kind: "file",
             fileType: "txt",
             position: "top-10 left-90",
-            subtitle: "Who am I?",
+            subtitle: "Who am I ?",
             image: "public/images/adam_Me.png",
             description: [
-                "Hey! I’m Adam , a Computer Science student at the University of Ottawa building AI-powered backend automation systems.",
-                "I design API-driven workflows that replace repetitive manual operations, helping teams scale .",
-                "My work focuses on Python and FastAPI services, automation  with Make.com and building reliable backend pipelines that connect REST APIs, webhooks and CRMs",
-                "I care about systems that are scalable, predictable, and production-ready not just demos that look impressive.",
-                "I’m especially interested in applying AI and automation to sports organizations and B2B operations where inefficient workflows slow growth and decision-making.",
-                "Long term, I’m building toward becoming a high-impact AI backend automation engineer powering real operational systems."
-            ],
+                "I didn’t start coding because it was trendy. I started because I was curious how the apps I used every day actually worked.",
+                "What began with small Python scripts slowly turned into building full backend systems, APIs and AI automation pipelines that run in production with Make.",
+                "I’m currently a Computer Science student at the University of Ottawa, most of my work  has come from building  with FastAPI, databases and cloud deployments.",
+                "My long-term goal is to become a Cloud&AI  architect for sports organizations, designing real-time platforms that help teams make smarter decisions, automate operations and gain a competitive edge! ",
+                "Outside of coding, I’m deep into sports, especially basketball  and I genuinely enjoy analyzing games, strategy and performance patterns.",
+                "For me, engineering isn’t just about writing code. It’s about building reliable systems that people can trust when it matters!"
+            ]
+
+
 
         },
         {
@@ -418,7 +470,9 @@ const GALLERY_DATA = [
         images: [
             { id: 1, name: 'Neurodesk', imageUrl: 'public/images/blog1.png' },
             { id: 2, name: 'Podcast', imageUrl: 'public/images/blog2.png' },
-            { id: 3, name: 'uottahack', imageUrl: 'public/images/hackuo.png' }
+            { id: 3, name: 'uottahack', imageUrl: 'public/images/hackuo.png' },
+            { id: 4, name: 'AI automation', imageUrl: 'public/images/make.png' }
+
 
 
         ]

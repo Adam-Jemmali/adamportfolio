@@ -6,6 +6,7 @@ import {useGSAP} from "@gsap/react";
 import gsap from "gsap";
 import useWindowStore from "#store/window.js";
 import useLocationStore from "#store/location.js";
+import useUIStore from "#store/ui.js";
 
 
 const Navbar = () => {
@@ -15,8 +16,11 @@ const Navbar = () => {
     const bariconsRef = useRef(null);
     const{openWindow,closeWindow,windows,focusWindow}=useWindowStore();
     const { resetActivateLocation } = useLocationStore();
+    const { setIsLoading } = useUIStore();
 
     const handleLogoClick = () => {
+        setIsLoading(true);
+
         // Close all open windows
         Object.keys(windows).forEach((windowKey) => {
             if (windows[windowKey].isOpen) {
@@ -25,6 +29,11 @@ const Navbar = () => {
         });
         // Reset location to default
         resetActivateLocation();
+
+        // Refresh the page after the animation finishes
+        setTimeout(() => {
+            window.location.reload();
+        }, 3000);
     };
 
 
