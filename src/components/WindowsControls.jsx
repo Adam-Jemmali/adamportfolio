@@ -3,6 +3,9 @@ import useWindowStore from "#store/window.js";
 
 const WindowsControls = ({target}) => {
     const {closeWindow}=useWindowStore();
+    const {openWindow}= useWindowStore();
+
+
 
     const {focusWindow}= useWindowStore();
 
