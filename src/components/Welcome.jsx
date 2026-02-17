@@ -80,11 +80,11 @@ const Welcome = () => {
 
     return (
         <section id="welcome">
-            <p ref={subtitleRef}>
+            <p ref={subtitleRef} className="pointer-events-auto">
                 {renderText("Im Adam! Welcome to my ", "text-1xl font-georama", 100)}
             </p>
 
-            <h1 ref={titleRef} className="mt-7">
+            <h1 ref={titleRef} className="mt-7 pointer-events-auto">
                 {renderText("PORTFOLIO", "text-6xl italic font-georama", 400)}
             </h1>
         </section>

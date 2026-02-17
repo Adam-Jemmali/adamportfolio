@@ -8,12 +8,13 @@ gsap.registerPlugin(Draggable);
 
 const WindowWrapper = (Component, windowKey) => {
     const Wrapped = (props) => {
-        const { focusWindow, windows } = useWindowStore();
+        const { focusWindow, windows, focusedWindow } = useWindowStore();
         const ref = useRef(null);
 
         const windowState = windows[windowKey];
         const isOpen = windowState?.isOpen;
         const zIndex = windowState?.zIndex ?? 0;
+        const isFocused = focusedWindow === windowKey;
 
         useGSAP(() => {
             if (!isOpen || !ref.current) return;
@@ -30,6 +31,16 @@ const WindowWrapper = (Component, windowKey) => {
                 }
             );
         }, [isOpen]);
+
+        useGSAP(() => {
+            if (!isOpen || !ref.current) return;
+
+            gsap.to(ref.current, {
+                scale: isFocused ? 1.05 : 1,
+                duration: 0.2,
+                ease: "power2.out",
+            });
+        }, [isFocused, isOpen]);
 
         // drag the header
         useGSAP(() => {

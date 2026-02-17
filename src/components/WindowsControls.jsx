@@ -7,10 +7,14 @@ const WindowsControls = ({target}) => {
 
 
 
+    const {focusWindow}= useWindowStore();
+
+
+
     return (
         <div id="window-controls">
             <div className="close" onClick={() => closeWindow(target)}/>
-            <div className="maximize" onClick={() => openWindow(target)}/>
+            <div className="maximize" onClick={() => focusWindow(target)}/>
             <div className="minimize" onClick={() => closeWindow(target)}/>
 
 

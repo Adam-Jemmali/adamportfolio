@@ -5,6 +5,7 @@ import {Tooltip} from "react-tooltip";
 import {useGSAP} from "@gsap/react";
 import gsap from "gsap";
 import useWindowStore from "#store/window.js";
+import useLocationStore from "#store/location.js";
 
 
 const Navbar = () => {
@@ -12,7 +13,19 @@ const Navbar = () => {
 
 
     const bariconsRef = useRef(null);
-    const{openWindow,closeWindow,windows}=useWindowStore();
+    const{openWindow,closeWindow,windows,focusWindow}=useWindowStore();
+    const { resetActivateLocation } = useLocationStore();
+
+    const handleLogoClick = () => {
+        // Close all open windows
+        Object.keys(windows).forEach((windowKey) => {
+            if (windows[windowKey].isOpen) {
+                closeWindow(windowKey);
+            }
+        });
+        // Reset location to default
+        resetActivateLocation();
+    };
 
 
     useGSAP(() => {
@@ -76,18 +89,27 @@ const Navbar = () => {
 
         }else {
             openWindow(app.id);
+            focusWindow(app.id);
         }
         console.log(windows);
     };
 
     return (
         <nav>
-            <div>
-                <img src="public/images/logo.svg" alt="logo" />
-                <p>My Portfolio ! </p>
+            <div className="flex items-center gap-3">
+                <button
+                    type="button"
+                    onClick={handleLogoClick}
+                    className="logo p-0 cursor-pointer flex items-center justify-center transition-all"
+                >
+                    <img src="public/icons/AJ.svg" alt="AJ Logo" className="w-10 h-10" />
+                </button>
                 <ul>
                     {navLinks.map(({id, name,type}) => (
-                        <li key={id} onClick={() => openWindow(type)}>
+                        <li key={id} onClick={() => {
+                            openWindow(type);
+                            focusWindow(type);
+                        }}>
                             <p>{name}</p>
                         </li>
                     ))}
@@ -127,7 +149,7 @@ const Navbar = () => {
                         </li>
                     ))}
                 </ul>
-                <time>{dayjs().format("YYYY-MM-DD h:mm A")}</time>
+                <time className="text-black">{dayjs().format("YYYY-MM-DD h:mm A")}</time>
             </div>
         </nav>
     );
