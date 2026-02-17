@@ -20,7 +20,7 @@ const Resume = () => {
     const scrollContainerRef = useRef(null);
 
     // Use default if no data is passed (e.g. from Navbar)
-    const pdfFile = data?.href || data?.fileUrl || "/public/public/files/resume.pdf";
+    const pdfFile = data?.href || data?.fileUrl || "public/files/resume.pdf";
     const fileName = data?.name || "My resume!";
 
     const onDocumentLoadSuccess = ({ numPages }) => {
