@@ -10,7 +10,7 @@ import useLocationStore from "#store/location.js";
 gsap.registerPlugin(Draggable);
 
 const Home = () => {
-    const { openWindow } = useWindowStore();
+    const { openWindow, focusWindow } = useWindowStore();
     const { setActiveLocation } = useLocationStore();
     const containerRef = useRef(null);
     const [selectedId, setSelectedId] = useState(null);
@@ -35,6 +35,7 @@ const Home = () => {
     const handleFolderDoubleClick = (item) => {
         setActiveLocation(item);
         openWindow('finder');
+        focusWindow('finder');
     };
 
     const handleBackgroundClick = () => {

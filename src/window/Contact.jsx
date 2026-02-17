@@ -11,9 +11,9 @@ const Contact = () => {
                 <WindowsControls target="contact"/>
 
             </div>
-            <div className="items-center p-5">
+            <div className="contact-content flex-col items-center text-center p-5 space-y-4">
 
-                <img src="public/images/adrian.jpg" alt="Adam" className="rounded-b-full"/>
+                <img src="public/images/adam_Me.png" alt="Adam" className="rounded-b-full "/>
                 <h3> Lets Connect</h3>
                 <p> Happy to connect! Got an idea? Or just wanna talk  tech? I'm all in!</p>
                 <ul>

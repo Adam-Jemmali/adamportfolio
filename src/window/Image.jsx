@@ -19,12 +19,12 @@ const Image = () => {
                 </div>
             </div>
 
-            <div className="bg-white flex flex-col items-center justify-center p-4 min-w-[300px] min-h-[300px]">
+            <div className="preview bg-white flex flex-col items-center justify-center p-4 min-w-[300px] min-h-[300px]">
                 {imageUrl ? (
                     <img 
                         src={imageUrl} 
                         alt={name} 
-                        className="max-w-full max-h-[80vh] object-contain rounded"
+                        className="max-w-full h-auto object-contain rounded"
                     />
                 ) : (
                     <div className="text-gray-400 italic">No image available</div>

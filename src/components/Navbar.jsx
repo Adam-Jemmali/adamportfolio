@@ -13,7 +13,7 @@ const Navbar = () => {
 
 
     const bariconsRef = useRef(null);
-    const{openWindow,closeWindow,windows}=useWindowStore();
+    const{openWindow,closeWindow,windows,focusWindow}=useWindowStore();
     const { resetActivateLocation } = useLocationStore();
 
     const handleLogoClick = () => {
@@ -89,6 +89,7 @@ const Navbar = () => {
 
         }else {
             openWindow(app.id);
+            focusWindow(app.id);
         }
         console.log(windows);
     };
@@ -105,7 +106,10 @@ const Navbar = () => {
                 </button>
                 <ul>
                     {navLinks.map(({id, name,type}) => (
-                        <li key={id} onClick={() => openWindow(type)}>
+                        <li key={id} onClick={() => {
+                            openWindow(type);
+                            focusWindow(type);
+                        }}>
                             <p>{name}</p>
                         </li>
                     ))}

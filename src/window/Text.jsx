@@ -19,7 +19,7 @@ const Text = () => {
                 </div>
             </div>
 
-            <div className="p-6 bg-white overflow-y-auto max-h-[70vh] min-w-[400px] max-w-[600px] text-black">
+            <div className="text-content">
                 {image && (
                     <div className="mb-4">
                         <img src={image} alt={name} className="w-full h-48 object-cover rounded-md" />

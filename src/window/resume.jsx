@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react'
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import WindowsControls from "#components/WindowsControls.jsx";
 import {DownloadIcon, ChevronUp, ChevronDown} from "lucide-react";
+import useWindowStore from "#store/window.js";
 
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -13,9 +14,14 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 const Resume = () => {
+    const data = useWindowStore((state) => state.windows.resume.data);
     const [numPages, setNumPages] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);
     const scrollContainerRef = useRef(null);
+
+    // Use default if no data is passed (e.g. from Navbar)
+    const pdfFile = data?.href || data?.fileUrl || "/public/public/files/resume.pdf";
+    const fileName = data?.name || "My resume!";
 
     const onDocumentLoadSuccess = ({ numPages }) => {
         setNumPages(numPages);
@@ -62,7 +68,7 @@ const Resume = () => {
     return <>
         <div id="window-header">
             <WindowsControls target="resume"/>
-            <h2>My resume!</h2>
+            <h2>{fileName}</h2>
 
             <div className="flex items-center gap-2">
                 <button
@@ -86,7 +92,7 @@ const Resume = () => {
                 </button>
             </div>
 
-            <a href="public/files/resume.pdf" download className="cursor-pointer icon">
+            <a href={pdfFile} download className="cursor-pointer icon">
                 <DownloadIcon size={16}/>
             </a>
         </div>
@@ -94,10 +100,10 @@ const Resume = () => {
         <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className="overflow-auto h-full p-4 bg-gray-100"
+            className="overflow-auto flex-1 p-4 bg-gray-100"
         >
             <Document
-                file="public/files/resume.pdf"
+                file={pdfFile}
                 onLoadSuccess={onDocumentLoadSuccess}
                 className="flex flex-col items-center gap-4"
             >

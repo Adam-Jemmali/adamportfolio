@@ -6,11 +6,12 @@ import useWindowStore from "#store/window.js";
 import clsx from "clsx";
 
 const Gallery = () => {
-    const { openWindow } = useWindowStore();
+    const { openWindow, focusWindow } = useWindowStore();
     const [activeCategory, setActiveCategory] = useState(GALLERY_DATA[0]);
 
     const handleImageClick = (image) => {
         openWindow('imgfile', image);
+        focusWindow('imgfile');
     };
 
     return (
@@ -29,7 +30,7 @@ const Gallery = () => {
                                 key={category.id} 
                                 onClick={() => setActiveCategory(category)}
                                 className={clsx(
-                                    activeCategory.id === category.id && "!bg-blue-100 !text-blue-700"
+                                    activeCategory.id === category.id && "bg-white !text-black"
                                 )}
                             >
                                 <img src={category.icon} alt={category.name} />
