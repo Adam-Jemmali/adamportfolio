@@ -12,7 +12,7 @@ const Image = () => {
 
     return (
         <>
-            <div id="window-header" className="bg-[#EBEBEB] p-2 flex items-center">
+            <div id="window-header">
                 <WindowsControls target="imgfile" />
                 <div className="flex-1 text-center">
                     <span className="text-xs font-medium text-gray-600">{name}</span>

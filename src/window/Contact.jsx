@@ -7,9 +7,8 @@ const Contact = () => {
     return (
         <>
             <div id="window-header">
-                <h2> Contact me</h2>
                 <WindowsControls target="contact"/>
-
+                <h2> Contact me</h2>
             </div>
             <div className="contact-content flex-col items-center text-center p-5 space-y-4">
 

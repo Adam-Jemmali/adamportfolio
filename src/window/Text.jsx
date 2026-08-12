@@ -12,7 +12,7 @@ const Text = () => {
 
     return (
         <>
-            <div id="window-header" className="bg-[#EBEBEB] p-2 flex items-center">
+            <div id="window-header">
                 <WindowsControls target="txtfile" />
                 <div className="flex-1 text-center">
                     <h1 className="text-xs font-medium text-gray-600">{name}</h1>

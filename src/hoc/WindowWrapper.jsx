@@ -13,38 +13,25 @@ const WindowWrapper = (Component, windowKey) => {
 
         const windowState = windows[windowKey];
         const isOpen = windowState?.isOpen;
+        const isMinimized = windowState?.minimized;
+        const isMaximized = windowState?.maximized;
         const zIndex = windowState?.zIndex ?? 0;
         const isFocused = focusedWindow === windowKey;
 
+        // Entrance / restore animation
         useGSAP(() => {
-            if (!isOpen || !ref.current) return;
+            if (!isOpen || isMinimized || !ref.current) return;
 
             gsap.fromTo(
                 ref.current,
-                { opacity: 0, scale: 0.95, y: 20 },
-                {
-                    opacity: 1,
-                    scale: 1,
-                    y: 0,
-                    duration: 0.25,
-                    ease: "power2.out",
-                }
+                { opacity: 0, scale: 0.96, y: 16 },
+                { opacity: 1, scale: 1, y: 0, duration: 0.28, ease: "power2.out" }
             );
-        }, [isOpen]);
+        }, [isOpen, isMinimized]);
 
+        // Drag by the header (disabled while maximized)
         useGSAP(() => {
-            if (!isOpen || !ref.current) return;
-
-            gsap.to(ref.current, {
-                scale: isFocused ? 1.05 : 1,
-                duration: 0.2,
-                ease: "power2.out",
-            });
-        }, [isFocused, isOpen]);
-
-        // drag the header
-        useGSAP(() => {
-            if (!isOpen || !ref.current) return;
+            if (!isOpen || isMinimized || isMaximized || !ref.current) return;
 
             const header = ref.current.querySelector("#window-header");
             if (!header) return;
@@ -56,18 +43,19 @@ const WindowWrapper = (Component, windowKey) => {
             });
 
             return () => {
-                draggable.forEach(d => d.kill());
+                draggable.forEach((d) => d.kill());
+                if (ref.current) gsap.set(ref.current, { clearProps: "transform" });
             };
-        }, [isOpen]);
+        }, [isOpen, isMinimized, isMaximized]);
 
-        if (!isOpen) return null;
+        if (!isOpen || isMinimized) return null;
 
         return (
             <section
                 id={windowKey}
                 ref={ref}
                 style={{ zIndex }}
-                className="absolute"
+                className={`window absolute ${isMaximized ? "maximized" : ""} ${isFocused ? "focused" : ""}`}
                 onMouseDown={() => focusWindow(windowKey)}
             >
                 <Component {...props} />

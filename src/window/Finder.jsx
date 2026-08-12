@@ -35,8 +35,7 @@ const Finder = () => {
         <>
             <div id="window-header" >
                 <WindowsControls target="finder"/>
-
-
+                <h2>Portfolio</h2>
             </div>
 
             <div className="bg-white flex flex-1 min-h-0">
