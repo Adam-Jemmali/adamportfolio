@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { createElement, useRef } from "react";
 import { Tooltip } from "react-tooltip";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -85,7 +85,10 @@ const Dock = () => {
                             disabled={!canOpen}
                             onClick={() => toggleApp({ id, canOpen })}
                         >
-                            <img src={icon} alt={name} loading="lazy" className={canOpen ? "" : "opacity-50"} />
+                            {typeof icon === "string"
+                                ? <img src={icon} alt={name} loading="lazy" className={canOpen ? "" : "opacity-50"} />
+                                : createElement(icon, { className: canOpen ? "" : "opacity-50" })
+                            }
                         </button>
                         {windows[id]?.isOpen && <span className="dock-dot" />}
                     </div>

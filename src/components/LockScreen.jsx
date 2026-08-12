@@ -1,14 +1,23 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ArrowRight } from "lucide-react";
 import useSystemStore from "#store/system.js";
 import PowerMenu from "./PowerMenu.jsx";
 
+const HINTS = [
+    'Hint: the password is "password". We\'re very secure. 😉',
+    'Any password works. Seriously, try it.',
+    "Security level: the gatekeeper is on a coffee break.",
+    'Type literally anything. Yes, even "1234".',
+    "This lock is decorative. Don't tell anyone.",
+];
+
 const LockScreen = () => {
     const unlock = useSystemStore((s) => s.unlock);
     const [password, setPassword] = useState("");
     const [error, setError] = useState(false);
+    const [hintIndex, setHintIndex] = useState(0);
     const rootRef = useRef(null);
     const cardRef = useRef(null);
 
@@ -20,6 +29,15 @@ const LockScreen = () => {
             { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" }
         );
     }, []);
+
+    useEffect(() => {
+        const id = setInterval(() => setHintIndex((i) => (i + 1) % HINTS.length), 3200);
+        return () => clearInterval(id);
+    }, []);
+
+    useGSAP(() => {
+        gsap.fromTo(".lock-hint", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.4 });
+    }, [hintIndex]);
 
     const submit = (e) => {
         e.preventDefault();
@@ -47,8 +65,8 @@ const LockScreen = () => {
             <div className="lock-blur" />
 
             <div ref={cardRef} className="lock-card">
-                <img src="/public/images/adam_Me.png" alt="Adam Jemmali" className="lock-avatar" />
-                <h1>Adam Jemmali</h1>
+                <div className="lock-initials">M.J</div>
+                <h1>madajbuilds</h1>
 
                 <form className="lock-form" onSubmit={submit}>
                     <input
@@ -68,7 +86,7 @@ const LockScreen = () => {
                 </form>
 
                 {error && <p className="lock-error">Please enter a password</p>}
-                <p className="lock-hint">Demo — type anything to unlock</p>
+                <p className="lock-hint">{HINTS[hintIndex]}</p>
             </div>
 
             <div className="lock-power">

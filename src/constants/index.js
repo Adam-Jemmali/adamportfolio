@@ -1,3 +1,5 @@
+import { Folder, Globe, Images, Mail, Terminal, Gamepad2 } from "lucide-react";
+
 const navLinks = [
     {
         id: 1,
@@ -40,35 +42,40 @@ const navIcons = [
 const dockApps = [
     {
         id: "finder",
-        name: "Portfolio", // was "Finder"
-        icon: "public/images/finder.png",
+        name: "Portfolio",
+        icon: Folder,
         canOpen: true,
     },
     {
         id: "safari",
-        name: "Web", // was "Safari"
-        icon: "public/images/safari.png",
+        name: "Web",
+        icon: Globe,
         canOpen: true,
     },
     {
         id: "photos",
-        name: "Gallery", // was "Photos"
-        icon: "public/images/gallery.png",
+        name: "Gallery",
+        icon: Images,
         canOpen: true,
     },
     {
         id: "contact",
-        name: "Contact", // or "Get in touch"
-        icon: "public/images/contact.png",
+        name: "Contact",
+        icon: Mail,
         canOpen: true,
     },
     {
         id: "terminal",
-        name: "Skills", // was "Terminal"
-        icon: "public/images/terminal.png",
+        name: "Skills",
+        icon: Terminal,
         canOpen: true,
     },
-
+    {
+        id: "games",
+        name: "Games",
+        icon: Gamepad2,
+        canOpen: true,
+    },
 ];
 
 const blogPosts = [
@@ -449,7 +456,7 @@ const RESUME_LOCATION = {
             icon: "public/images/pdf.png",
             kind: "file",
             fileType: "pdf",
-            href: "/public/public/files/resume.pdf",
+            href: "/public/files/resume.pdf",
         },
     ],
 };
@@ -492,6 +499,9 @@ const WINDOW_CONFIG = {
     terminal: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
     txtfile: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
     imgfile: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
+    snake: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
+    games: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
+    code: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
 };
 
 export { INITIAL_Z_INDEX, WINDOW_CONFIG, GALLERY_DATA };

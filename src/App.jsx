@@ -9,7 +9,7 @@ import Home from "#components/Home.jsx";
 import LoadingScreen from "#components/LoadingScreen.jsx";
 import LockScreen from "#components/LockScreen.jsx";
 import SuspendScreen from "#components/SuspendScreen.jsx";
-import { Terminal, Finder, Text, Image, Safari, Resume, Contact, Gallery } from "#window/index.js";
+import { Terminal, Finder, Text, Image, Safari, Resume, Contact, Gallery, Snake, Games, Code } from "#window/index.js";
 import useSystemStore from "#store/system.js";
 
 gsap.registerPlugin(Draggable);
@@ -17,6 +17,7 @@ gsap.registerPlugin(Draggable);
 const App = () => {
     const screen = useSystemStore((s) => s.screen);
     const bootDone = useSystemStore((s) => s.bootDone);
+    const brightness = useSystemStore((s) => s.brightness);
     const desktopRef = useRef(null);
 
     useGSAP(() => {
@@ -42,6 +43,12 @@ const App = () => {
 
     return (
         <main ref={desktopRef}>
+            {/* Brightness dim overlay (lives above the desktop but below the topbar/dock) */}
+            <div
+                className="brightness-overlay"
+                aria-hidden="true"
+                style={{ opacity: (100 - brightness) / 100 * 0.85 }}
+            />
             <TopBar />
             <Welcome />
             <Home />
@@ -53,6 +60,9 @@ const App = () => {
             <Image />
             <Contact />
             <Gallery />
+            <Snake />
+            <Games />
+            <Code />
             <Dock />
         </main>
     );

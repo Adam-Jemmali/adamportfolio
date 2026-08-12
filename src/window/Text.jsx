@@ -15,7 +15,7 @@ const Text = () => {
             <div id="window-header">
                 <WindowsControls target="txtfile" />
                 <div className="flex-1 text-center">
-                    <h1 className="text-xs font-medium text-gray-600">{name}</h1>
+                    <h1 className="text-xs font-medium text-zinc-300">{name}</h1>
                 </div>
             </div>
 
@@ -29,7 +29,7 @@ const Text = () => {
 
                 
                 {subtitle && (
-                    <p className="text-lg text-gray-500 mb-4">{subtitle}</p>
+                    <p className="text-lg text-zinc-400 mb-4">{subtitle}</p>
                 )}
 
                 {description && Array.isArray(description) && (
@@ -46,6 +46,6 @@ const Text = () => {
     );
 };
 
-const textWindow = WindowWrapper(Text, "txtfile");
+const TextWindow = WindowWrapper(Text, "txtfile");
 
-export default textWindow;
+export default TextWindow;

@@ -20,7 +20,7 @@ const Resume = () => {
     const scrollContainerRef = useRef(null);
 
     // Use default if no data is passed (e.g. from Navbar)
-    const pdfFile = data?.href || data?.fileUrl || "public/files/resume.pdf";
+    const pdfFile = data?.href || data?.fileUrl || "/public/files/resume.pdf";
     const fileName = data?.name || "My resume!";
 
     const onDocumentLoadSuccess = ({ numPages }) => {
@@ -100,7 +100,7 @@ const Resume = () => {
         <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className="overflow-auto flex-1 p-4 bg-gray-100"
+            className="overflow-auto flex-1 p-4 bg-[#0f1216]"
         >
             <Document
                 file={pdfFile}

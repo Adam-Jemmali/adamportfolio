@@ -1,5 +1,6 @@
 import React, {useRef, useState} from 'react'
 import clsx from "clsx";
+import { Folder } from "lucide-react";
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
 import { Draggable } from 'gsap/Draggable';
@@ -61,14 +62,24 @@ const Home = () => {
                         onClick={(e) => handleFolderClick(e, item)}
                         onDoubleClick={() => handleFolderDoubleClick(item)}
                     >
-                        <img
-                            src={item.icon || "public/images/folder.png"}
-                            alt={item.name}
-                            className={clsx(
-                                "w-16 h-16 object-contain pointer-events-none transition-opacity",
-                                selectedId === item.id ? "opacity-100" : "group-active:opacity-80"
-                            )}
-                        />
+                        {item.kind === "folder" ? (
+                            <Folder
+                                strokeWidth={1.4}
+                                className={clsx(
+                                    "w-16 h-16 pointer-events-none drop-shadow-lg transition-colors",
+                                    selectedId === item.id ? "text-sky-300" : "text-sky-400/90 group-hover:text-sky-300"
+                                )}
+                            />
+                        ) : (
+                            <img
+                                src={item.icon || "public/images/folder.png"}
+                                alt={item.name}
+                                className={clsx(
+                                    "w-16 h-16 object-contain pointer-events-none transition-opacity",
+                                    selectedId === item.id ? "opacity-100" : "group-active:opacity-80"
+                                )}
+                            />
+                        )}
                         <p className={clsx(
                             "text-white text-[13px] leading-tight text-center break-words line-clamp-2 text-shadow-md px-1 rounded-sm transition-colors select-none pointer-events-none max-w-full",
                             selectedId === item.id ? "bg-blue-600" : "group-hover:bg-blue-600/80"

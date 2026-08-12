@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1526"/>
+      <stop offset="0.45" stop-color="#12233f"/>
+      <stop offset="1" stop-color="#0d1b2e"/>
+    </linearGradient>
+    <radialGradient id="aurora1" cx="0.2" cy="0.15" r="0.75">
+      <stop offset="0" stop-color="#3c6eb4" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#3c6eb4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="aurora2" cx="0.85" cy="0.25" r="0.8">
+      <stop offset="0" stop-color="#7b5ea7" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#7b5ea7" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="aurora3" cx="0.7" cy="0.95" r="0.9">
+      <stop offset="0" stop-color="#2a9d8f" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#2a9d8f" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="aurora4" cx="0.5" cy="0.45" r="0.55">
+      <stop offset="0" stop-color="#1e4d8c" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#1e4d8c" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="60"/>
+    </filter>
+  </defs>
+
+  <rect width="1920" height="1080" fill="url(#bg)"/>
+
+  <g filter="url(#soft)">
+    <ellipse cx="380" cy="160" rx="720" ry="560" fill="url(#aurora1)"/>
+    <ellipse cx="1640" cy="260" rx="760" ry="600" fill="url(#aurora2)"/>
+    <ellipse cx="1350" cy="1050" rx="880" ry="640" fill="url(#aurora3)"/>
+    <ellipse cx="960" cy="500" rx="620" ry="420" fill="url(#aurora4)"/>
+  </g>
+
+  <!-- subtle stars -->
+  <g fill="#ffffff" opacity="0.35">
+    <circle cx="120" cy="180" r="1.4"/>
+    <circle cx="430" cy="90" r="1"/>
+    <circle cx="720" cy="240" r="1.2"/>
+    <circle cx="980" cy="120" r="1"/>
+    <circle cx="1240" cy="300" r="1.4"/>
+    <circle cx="1500" cy="140" r="1"/>
+    <circle cx="1740" cy="420" r="1.2"/>
+    <circle cx="1880" cy="220" r="1"/>
+    <circle cx="260" cy="520" r="1"/>
+    <circle cx="90" cy="760" r="1.2"/>
+    <circle cx="1860" cy="860" r="1.4"/>
+    <circle cx="1600" cy="980" r="1"/>
+  </g>
+</svg>

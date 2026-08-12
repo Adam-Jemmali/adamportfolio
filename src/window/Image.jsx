@@ -15,11 +15,11 @@ const Image = () => {
             <div id="window-header">
                 <WindowsControls target="imgfile" />
                 <div className="flex-1 text-center">
-                    <span className="text-xs font-medium text-gray-600">{name}</span>
+                    <span className="text-xs font-medium text-zinc-300">{name}</span>
                 </div>
             </div>
 
-            <div className="preview bg-white flex flex-col items-center justify-center p-4 min-w-[300px] min-h-[300px]">
+            <div className="preview flex flex-col items-center justify-center p-4 min-w-[300px] min-h-[300px]">
                 {imageUrl ? (
                     <img 
                         src={imageUrl} 
@@ -29,12 +29,12 @@ const Image = () => {
                 ) : (
                     <div className="text-gray-400 italic">No image available</div>
                 )}
-                <p className="mt-2 text-sm font-semibold text-gray-700">{name}</p>
+                <p className="mt-2 text-sm font-semibold text-zinc-200">{name}</p>
             </div>
         </>
     );
 };
 
-const imageWindow = WindowWrapper(Image, "imgfile");
+const ImageWindow = WindowWrapper(Image, "imgfile");
 
-export default imageWindow;
+export default ImageWindow;

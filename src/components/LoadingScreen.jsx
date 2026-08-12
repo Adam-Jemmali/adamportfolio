@@ -2,83 +2,69 @@ import { useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
+const BOOT_LOGS = [
+    { text: "Stretching the CPUs…", pct: 8 },
+    { text: "Brewing coffee for the GPU", pct: 18 },
+    { text: "Waking up the pixels", pct: 30 },
+    { text: "Loaded madajbuilds OS v1.0", pct: 44 },
+    { text: "Finding your open tabs", pct: 58 },
+    { text: "Hiding the bugs 🐛", pct: 70 },
+    { text: "Mounted user session", pct: 82 },
+    { text: "Starting desktop environment", pct: 92 },
+];
+
 const LoadingScreen = ({ title = "System Initialize", onComplete }) => {
     const [progress, setProgress] = useState(0);
 
     useGSAP(() => {
         const tl = gsap.timeline({ onComplete });
         tl.to({}, {
-            duration: 2.2,
+            duration: 2.8,
             ease: "power1.inOut",
             onUpdate: () => setProgress(Math.round(tl.progress() * 100)),
         });
 
-        // Logo entrance and pulse
-        gsap.fromTo(".loading-logo",
-            { scale: 0.3, opacity: 0, rotate: -45 },
-            { scale: 1, opacity: 1, rotate: 0, duration: 1.2, ease: "elastic.out(1, 0.75)" }
+        gsap.fromTo(".boot-logo",
+            { scale: 0.4, opacity: 0, rotate: -30 },
+            { scale: 1, opacity: 1, rotate: 0, duration: 1.1, ease: "elastic.out(1, 0.7)" }
         );
 
-        gsap.to(".loading-logo", {
-            scale: 1.1,
-            duration: 1.5,
-            repeat: -1,
-            yoyo: true,
-            ease: "sine.inOut",
-        });
-
-        // Pulse the background glow
-        gsap.to(".bg-glow", {
-            scale: 1.5,
-            opacity: 0.2,
-            duration: 2,
-            repeat: -1,
-            yoyo: true,
-            ease: "sine.inOut",
-        });
+        gsap.fromTo(".boot-content",
+            { opacity: 0 },
+            { opacity: 1, duration: 0.6, delay: 0.3 }
+        );
     }, []);
 
     return (
-        <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center font-georama overflow-hidden">
-            {/* Background glow */}
-            <div className="bg-glow absolute w-96 h-96 bg-blue-500/10 blur-[100px] rounded-full" />
+        <div className="boot-screen">
+            <div className="boot-logo lock-initials !size-20 text-3xl">M.J</div>
 
-            <div className="relative mb-12">
-                <img src="/public/icons/AJ.svg" alt="AJ Logo" className="loading-logo w-32 h-32 z-10" />
-                <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full scale-50" />
-            </div>
+            <div className="boot-content flex flex-col items-center">
+                <div className="boot-spinner" />
 
-            <div className="relative w-72 group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-white/20 rounded-full blur opacity-25" />
-                <div className="relative h-1.5 bg-white/5 rounded-full overflow-hidden border border-white/10 backdrop-blur-sm">
-                    <div
-                        className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-400 via-white to-blue-400 bg-[length:200%_100%] transition-all duration-75 shadow-[0_0_10px_rgba(255,255,255,0.5)]"
-                        style={{ width: `${progress}%` }}
-                    />
+                <div className="boot-logs">
+                    {BOOT_LOGS.map((log) =>
+                        progress >= log.pct ? (
+                            <div key={log.text} className="boot-log">
+                                <span>{log.text}</span>
+                                <span className="ok">[&nbsp;OK&nbsp;]</span>
+                            </div>
+                        ) : null
+                    )}
                 </div>
-            </div>
 
-            <div className="mt-6 flex flex-col items-center gap-2">
-                <div className="flex items-center gap-4">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                    <p className="text-white/40 text-[11px] tracking-[0.3em] font-medium uppercase">
-                        {title}
-                    </p>
-                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse delay-75" />
+                <div className="boot-bar">
+                    <div className="boot-bar-track">
+                        <div className="boot-bar-fill" style={{ width: `${progress}%` }} />
+                    </div>
                 </div>
-                <p className="text-white font-mono text-xs opacity-80">
-                    LOADING..{progress.toString().padStart(2, '0')}%
+
+                <p className="mt-6 text-white/40 text-[11px] tracking-[0.3em] font-medium uppercase">
+                    {title}
+                    <span className="ml-2 font-mono normal-case tracking-normal text-white/60">
+                        {progress.toString().padStart(2, "0")}%
+                    </span>
                 </p>
-            </div>
-
-            {/* Decorative elements */}
-            <div className="absolute top-8 left-8 flex gap-4">
-                <div className="w-12 h-[1px] bg-white/20" />
-                <div className="w-[1px] h-12 bg-white/20" />
-            </div>
-            <div className="absolute bottom-8 right-8 flex flex-col items-end gap-4">
-                <div className="w-12 h-[1px] bg-white/20" />
-                <div className="w-[1px] h-12 bg-white/20" />
             </div>
         </div>
     );

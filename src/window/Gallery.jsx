@@ -18,7 +18,7 @@ const Gallery = () => {
         <div className="flex flex-col h-full">
             <div id="window-header">
                 <WindowsControls target="photos" />
-                <span className="flex-1 text-center font-bold text-gray-700">Photos</span>
+                <span className="flex-1 text-center font-bold text-zinc-200">Photos</span>
             </div>
 
             <div className="flex flex-1 overflow-hidden">
@@ -30,7 +30,7 @@ const Gallery = () => {
                                 key={category.id} 
                                 onClick={() => setActiveCategory(category)}
                                 className={clsx(
-                                    activeCategory.id === category.id && "bg-white !text-black"
+                                    activeCategory.id === category.id && "bg-white/10 !text-white"
                                 )}
                             >
                                 <img src={category.icon} alt={category.name} />
@@ -58,6 +58,6 @@ const Gallery = () => {
     );
 };
 
-const galleryWindow = WindowWrapper(Gallery, "photos");
+const GalleryWindow = WindowWrapper(Gallery, "photos");
 
-export default galleryWindow;
+export default GalleryWindow;

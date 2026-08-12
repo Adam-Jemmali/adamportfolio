@@ -10,9 +10,7 @@ const Contact = () => {
                 <WindowsControls target="contact"/>
                 <h2> Contact me</h2>
             </div>
-            <div className="contact-content flex-col items-center text-center p-5 space-y-4">
-
-                <img src="public/images/adam_Me.png" alt="Adam" className="rounded-b-full "/>
+            <div className="contact-content flex-col items-center text-center p-5 space-y-4">                <div className="lock-initials !size-20 text-2xl mx-auto">M.J</div>
                 <h3> Lets Connect</h3>
                 <p> Happy to connect! Got an idea? Or just wanna talk  tech? I'm all in!</p>
                 <ul>
