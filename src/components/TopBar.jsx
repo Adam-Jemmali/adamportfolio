@@ -15,12 +15,11 @@ import {
 import { navLinks, locations } from "#constants/index.js";
 import useWindowStore from "#store/window.js";
 import useSystemStore from "#store/system.js";
-import useLocationStore from "#store/location.js";
 import PowerMenu from "./PowerMenu.jsx";
 
 // A single top-bar control that opens a popover panel.
-const TrayControl = ({ icon, label, active, onToggle, children }) => (
-    <div className="tray-control">
+const TrayControl = ({ icon, label, active, onToggle, children, className = "" }) => (
+    <div className={`tray-control ${className}`}>
         <button
             type="button"
             className={`topbar-action ${active ? "topbar-action-active" : ""}`}
@@ -54,7 +53,6 @@ const Slider = ({ value, onChange, icon, ariaLabel }) => (
 
 const TopBar = () => {
     const { openWindow, focusWindow } = useWindowStore();
-    const setActiveLocation = useLocationStore((s) => s.setActiveLocation);
 
     const wifiOn = useSystemStore((s) => s.wifiOn);
     const toggleWifi = useSystemStore((s) => s.toggleWifi);
@@ -98,9 +96,9 @@ const TopBar = () => {
 
     const openAbout = () => {
         setOpenPanel(null);
-        setActiveLocation(locations.about);
-        openWindow("finder");
-        focusWindow("finder");
+        const aboutTxt = locations.about.children?.find((c) => c.fileType === "txt");
+        openWindow("txtfile", aboutTxt);
+        focusWindow("txtfile");
     };
 
     // Which icon reflects the live state.
@@ -134,6 +132,7 @@ const TopBar = () => {
                 <TrayControl
                     icon={WifiIcon}
                     label="Wi-Fi"
+                    className="tray-aux"
                     active={openPanel === "wifi"}
                     onToggle={() => togglePanel("wifi")}
                 >
@@ -145,7 +144,7 @@ const TopBar = () => {
                                 {wifiOn ? "Connected" : "Disconnected"}
                             </span>
                             <span className="block text-[11px] text-zinc-400">
-                                {wifiOn ? "madajhome — 5GHz" : "Airplane mode-ish vibe"}
+                                {wifiOn ? "madajhome 5GHz" : "Airplane mode"}
                             </span>
                         </span>
                         <span className={`tray-switch ${wifiOn ? "on" : ""}`}>
@@ -158,6 +157,7 @@ const TopBar = () => {
                 <TrayControl
                     icon={VolumeIcon}
                     label="Sound"
+                    className="tray-aux"
                     active={openPanel === "volume"}
                     onToggle={() => togglePanel("volume")}
                 >
@@ -183,6 +183,7 @@ const TopBar = () => {
                 <TrayControl
                     icon={Sun}
                     label="Brightness"
+                    className="tray-aux"
                     active={openPanel === "brightness"}
                     onToggle={() => togglePanel("brightness")}
                 >
@@ -210,7 +211,7 @@ const TopBar = () => {
                     onToggle={() => togglePanel("profile")}
                 >
                     <div className="profile-head">
-                        <span className="lock-initials !size-9 text-sm">MJ</span>
+                        <span className="lock-initials size-9! text-sm">MJ</span>
                         <div className="leading-tight">
                             <p className="text-[13px] font-semibold text-white">Adam J.</p>
                             <p className="text-[11px] text-zinc-400">@madajbuilds</p>

@@ -15,6 +15,10 @@ dist-ssr
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+
+# Freebuff desktop app state (binary databases must never be scanned or committed)
+.freebuff/*
+!.freebuff/run.md
 .idea
 .DS_Store
 *.suo

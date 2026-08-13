@@ -10,11 +10,13 @@ const useSystemStore = create((set) => ({
     brightness: 100, // 0 – 100
     volume: 65, // 0 – 100
     muted: false,
+    wallpaper: "aurora",
 
     toggleWifi: () => set((s) => ({ wifiOn: !s.wifiOn })),
     setBrightness: (value) => set({ brightness: Math.max(0, Math.min(100, value)) }),
     setVolume: (value) => set({ volume: Math.max(0, Math.min(100, value)), muted: false }),
     toggleMute: () => set((s) => ({ muted: !s.muted })),
+    setWallpaper: (id) => set({ wallpaper: id }),
 
     bootDone: () => set({ screen: "lock" }),
     unlock: () => set({ screen: "desktop", powerMenuOpen: false }),

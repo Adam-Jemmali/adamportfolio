@@ -184,7 +184,7 @@ const Snake = () => {
         <>
             <div id="window-header">
                 <WindowsControls target="snake" />
-                <h2>Snake — don't crash</h2>
+                <h2>Snake</h2>
             </div>
 
             <div className="snake-body">

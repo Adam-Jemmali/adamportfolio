@@ -6,7 +6,7 @@ const BOOT_LOGS = [
     { text: "Stretching the CPUs…", pct: 8 },
     { text: "Brewing coffee for the GPU", pct: 18 },
     { text: "Waking up the pixels", pct: 30 },
-    { text: "Loaded madajbuilds OS v1.0", pct: 44 },
+    { text: "Loaded @madajbuilds OS v1.0", pct: 44 },
     { text: "Finding your open tabs", pct: 58 },
     { text: "Hiding the bugs 🐛", pct: 70 },
     { text: "Mounted user session", pct: 82 },
@@ -37,7 +37,7 @@ const LoadingScreen = ({ title = "System Initialize", onComplete }) => {
 
     return (
         <div className="boot-screen">
-            <div className="boot-logo lock-initials !size-20 text-3xl">M.J</div>
+            <div className="boot-logo lock-initials !size-20 text-3xl">M. J</div>
 
             <div className="boot-content flex flex-col items-center">
                 <div className="boot-spinner" />
@@ -47,7 +47,14 @@ const LoadingScreen = ({ title = "System Initialize", onComplete }) => {
                         progress >= log.pct ? (
                             <div key={log.text} className="boot-log">
                                 <span>{log.text}</span>
-                                <span className="ok">[&nbsp;OK&nbsp;]</span>
+                                <span className="boot-ok">
+                                    <span className="boot-check">
+                                        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M2 6.5l2.5 2.5L10 3.5" />
+                                        </svg>
+                                    </span>
+                                    okay
+                                </span>
                             </div>
                         ) : null
                     )}

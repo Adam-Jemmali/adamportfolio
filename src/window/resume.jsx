@@ -80,7 +80,7 @@ const Resume = () => {
                 </button>
 
                 <span className="text-xs">
-                    {pageNumber} / {numPages || '—'}
+                    {pageNumber} / {numPages || '…'}
                 </span>
 
                 <button

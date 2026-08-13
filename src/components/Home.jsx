@@ -1,12 +1,13 @@
-import React, {useRef, useState} from 'react'
+import React, { createElement, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-import { Folder } from "lucide-react";
-import { useGSAP } from '@gsap/react';
-import gsap from 'gsap';
-import { Draggable } from 'gsap/Draggable';
-import { locations } from "#constants/index.js";
+import { Folder, Check, Palette } from "lucide-react";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { Draggable } from "gsap/Draggable";
+import { locations, desktopApps, wallpapers } from "#constants/index.js";
 import useWindowStore from "#store/window.js";
 import useLocationStore from "#store/location.js";
+import useSystemStore from "#store/system.js";
 
 gsap.registerPlugin(Draggable);
 
@@ -14,82 +15,168 @@ const Home = () => {
     const { openWindow, focusWindow } = useWindowStore();
     const { setActiveLocation } = useLocationStore();
     const containerRef = useRef(null);
+    const menuRef = useRef(null);
     const [selectedId, setSelectedId] = useState(null);
+    const [menu, setMenu] = useState(null); // { x, y }
+
+    const wallpaper = useSystemStore((s) => s.wallpaper);
+    const setWallpaper = useSystemStore((s) => s.setWallpaper);
+
+    const folderItems = (locations.work?.children ?? []).map((item) => ({
+        id: `folder-${item.id}`,
+        name: item.name,
+        kind: "folder",
+        item,
+        open: () => {
+            setActiveLocation(item);
+            openWindow("finder");
+            focusWindow("finder");
+        },
+    }));
+
+    const appItems = desktopApps.map((app) => ({
+        id: `app-${app.id}`,
+        name: app.name,
+        kind: "app",
+        app,
+        open: () => {
+            openWindow(app.appId);
+            focusWindow(app.appId);
+        },
+    }));
+
+    const items = [...folderItems, ...appItems];
+    const leftItems = items.slice(0, 5);
+    const rightItems = items.slice(5);
+
+    const renderItem = (item) => (
+        <div
+            key={item.id}
+            data-id={item.id}
+            className={clsx(
+                "desktop-item group pointer-events-auto",
+                selectedId === item.id && "selected"
+            )}
+            onClick={(e) => {
+                e.stopPropagation();
+                setSelectedId(item.id);
+            }}
+            onDoubleClick={() => item.open()}
+            onContextMenu={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setSelectedId(item.id);
+                setMenu({ x: e.clientX, y: e.clientY });
+            }}
+            title={item.name}
+        >
+            {item.kind === "folder" ? (
+                <Folder
+                    strokeWidth={1.4}
+                    className={clsx(
+                        "desktop-folder-icon",
+                        selectedId === item.id && "text-sky-200"
+                    )}
+                />
+            ) : (
+                <span className="desktop-app-icon" style={{ background: item.app.tile }}>
+                    {typeof item.app.icon === "string" ? (
+                        <img src={item.app.icon} alt={item.app.name} />
+                    ) : (
+                        createElement(item.app.icon, { strokeWidth: 1.6 })
+                    )}
+                </span>
+            )}
+            <p className="desktop-label">{item.name}</p>
+        </div>
+    );
 
     useGSAP(() => {
-        Draggable.create(".folder-item", {
+        Draggable.create(".desktop-item", {
             bounds: containerRef.current,
-            inertia: true,
-            onPress: function() {
-                // This helps with selection when starting a drag
-                const id = this.target.getAttribute('data-id');
-                setSelectedId(Number(id));
-            }
+            onPress: function () {
+                const id = this.target.getAttribute("data-id");
+                setSelectedId(id);
+            },
         });
     }, { scope: containerRef });
 
-    const handleFolderClick = (e, item) => {
-        e.stopPropagation();
-        setSelectedId(item.id);
-    };
+    // Close the context menu on any outside interaction.
+    useEffect(() => {
+        if (!menu) return;
 
-    const handleFolderDoubleClick = (item) => {
-        setActiveLocation(item);
-        openWindow('finder');
-        focusWindow('finder');
-    };
+        const onMouseDown = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) setMenu(null);
+        };
+        const onKeyDown = (e) => {
+            if (e.key === "Escape") setMenu(null);
+        };
+
+        document.addEventListener("mousedown", onMouseDown);
+        document.addEventListener("keydown", onKeyDown);
+        return () => {
+            document.removeEventListener("mousedown", onMouseDown);
+            document.removeEventListener("keydown", onKeyDown);
+        };
+    }, [menu]);
 
     const handleBackgroundClick = () => {
         setSelectedId(null);
+        setMenu(null);
+    };
+
+    const handleContextMenu = (e) => {
+        e.preventDefault();
+        setSelectedId(null);
+        setMenu({ x: e.clientX, y: e.clientY });
     };
 
     return (
         <section
             id="home"
             ref={containerRef}
-            className="absolute inset-0 pt-20 p-10 select-none pointer-events-none"
+            className="absolute inset-0 pt-20 pb-8 pl-6 pr-6 select-none pointer-events-none"
             onClick={handleBackgroundClick}
+            onContextMenu={handleContextMenu}
         >
-            <div className="flex flex-col flex-wrap h-full gap-1 items-start content-start pointer-events-none">
-                {locations.work?.children?.map((item) => (
-                    <div
-                        key={item.id}
-                        data-id={item.id}
-                        className={clsx(
-                            "folder-item group flex flex-col items-center gap-1 w-28 p-2 cursor-pointer rounded-md transition-colors pointer-events-auto",
-                            selectedId === item.id ? "bg-blue-500/30" : "hover:bg-white/10"
-                        )}
-                        onClick={(e) => handleFolderClick(e, item)}
-                        onDoubleClick={() => handleFolderDoubleClick(item)}
-                    >
-                        {item.kind === "folder" ? (
-                            <Folder
-                                strokeWidth={1.4}
-                                className={clsx(
-                                    "w-16 h-16 pointer-events-none drop-shadow-lg transition-colors",
-                                    selectedId === item.id ? "text-sky-300" : "text-sky-400/90 group-hover:text-sky-300"
-                                )}
-                            />
-                        ) : (
-                            <img
-                                src={item.icon || "public/images/folder.png"}
-                                alt={item.name}
-                                className={clsx(
-                                    "w-16 h-16 object-contain pointer-events-none transition-opacity",
-                                    selectedId === item.id ? "opacity-100" : "group-active:opacity-80"
-                                )}
-                            />
-                        )}
-                        <p className={clsx(
-                            "text-white text-[13px] leading-tight text-center break-words line-clamp-2 text-shadow-md px-1 rounded-sm transition-colors select-none pointer-events-none max-w-full",
-                            selectedId === item.id ? "bg-blue-600" : "group-hover:bg-blue-600/80"
-                        )}>
-                            {item.name}
-                        </p>
-                    </div>
-                ))}
+            <div className="flex justify-between h-[calc(100dvh-15rem)] pointer-events-none">
+                <div className="flex flex-col flex-wrap gap-1 items-start content-start max-w-[12rem] h-full pointer-events-none">
+                    {leftItems.map(renderItem)}
+                </div>
+                <div className="flex flex-col flex-wrap gap-1 items-end content-end max-w-[12rem] h-full pointer-events-none">
+                    {rightItems.map(renderItem)}
+                </div>
             </div>
+
+            {menu && (
+                <div
+                    ref={menuRef}
+                    className="desktop-menu pointer-events-auto"
+                    style={{ left: menu.x, top: menu.y }}
+                >
+                    <p className="desktop-menu-title">
+                        <Palette size={13} />
+                        Wallpaper
+                    </p>
+                    {wallpapers.map((wp) => (
+                        <button
+                            key={wp.id}
+                            type="button"
+                            className="desktop-menu-item"
+                            onClick={() => {
+                                setWallpaper(wp.id);
+                                setMenu(null);
+                            }}
+                        >
+                            <span className="desktop-menu-swatch" style={{ background: wp.value }} />
+                            <span className="flex-1 text-left">{wp.name}</span>
+                            {wallpaper === wp.id && <Check size={14} className="text-green-400" />}
+                        </button>
+                    ))}
+                </div>
+            )}
         </section>
-    )
-}
-export default Home
+    );
+};
+
+export default Home;

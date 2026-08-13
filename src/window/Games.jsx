@@ -22,7 +22,7 @@ const Games = () => {
                 <button type="button" className="game-card" onClick={() => launch("snake")}>
                     <span className="game-icon"><Gamepad2 size={28} /></span>
                     <h3>Snake</h3>
-                    <p>Classic arcade — don't crash.</p>
+                    <p>Classic arcade. Don't crash.</p>
                 </button>
 
                 <button type="button" className="game-card" onClick={() => launch("code")}>

@@ -1,4 +1,4 @@
-import { Folder, Globe, Images, Mail, Terminal, Gamepad2 } from "lucide-react";
+import { Folder, Globe, Images, Mail, Terminal, Gamepad2, FileText } from "lucide-react";
 
 const navLinks = [
     {
@@ -71,6 +71,12 @@ const dockApps = [
         canOpen: true,
     },
     {
+        id: "journey",
+        name: "Journey",
+        icon: "public/icons/journey.svg",
+        canOpen: true,
+    },
+    {
         id: "games",
         name: "Games",
         icon: Gamepad2,
@@ -78,12 +84,71 @@ const dockApps = [
     },
 ];
 
+const desktopApps = [
+    {
+        id: "blog",
+        name: "Blog",
+        icon: Globe,
+        appId: "safari",
+        tile: "linear-gradient(135deg, #38bdf8, #2563eb)",
+    },
+    {
+        id: "skills",
+        name: "Skills",
+        icon: Terminal,
+        appId: "terminal",
+        tile: "linear-gradient(135deg, #34d399, #0f766e)",
+    },
+    {
+        id: "gallery",
+        name: "Gallery",
+        icon: Images,
+        appId: "photos",
+        tile: "linear-gradient(135deg, #f472b6, #a855f7)",
+    },
+    {
+        id: "games",
+        name: "Games",
+        icon: Gamepad2,
+        appId: "games",
+        tile: "linear-gradient(135deg, #fb923c, #ef4444)",
+    },
+    {
+        id: "contact",
+        name: "Contact",
+        icon: Mail,
+        appId: "contact",
+        tile: "linear-gradient(135deg, #fbbf24, #f59e0b)",
+    },
+    {
+        id: "resume",
+        name: "Resume",
+        icon: FileText,
+        appId: "resume",
+        tile: "linear-gradient(135deg, #94a3b8, #475569)",
+    },
+    {
+        id: "journey",
+        name: "Journey",
+        icon: "public/icons/journey.svg",
+        appId: "journey",
+        tile: "linear-gradient(135deg, #a78bfa, #7c3aed)",
+    },
+];
+
+const wallpapers = [
+    { id: "aurora", name: "Aurora", type: "image", value: "/public/images/wallpaper.svg" },
+    { id: "midnight", name: "Midnight", type: "gradient", value: "linear-gradient(160deg, #0b1526 0%, #1e3a5f 55%, #3c6eb4 100%)" },
+    { id: "sunset", name: "Sunset", type: "gradient", value: "linear-gradient(160deg, #1a0b2e 0%, #5f1e3a 50%, #b4653c 100%)" },
+    { id: "forest", name: "Forest", type: "gradient", value: "linear-gradient(160deg, #06251f 0%, #0f4c3a 55%, #2e7d5b 100%)" },
+];
+
 const blogPosts = [
     {
         id: 1,
         date: "Feb 8 , 2026",
         title:
-            " How we built NeuroDesk, a brain-inspired AI system",
+            " How we built NeuroDesk, a brain inspired AI system",
         image: "public/images/blog1.png",
         link: "https://www.youtube.com/watch?v=TJSrwQRLg1A",
     },
@@ -115,27 +180,27 @@ const blogPosts = [
 const techStack = [
     {
         category: "Languages",
-        items: ["Python", "Java", "TypeScript","JavaScript"],
+        items: ["Python", "TypeScript", "Go", "C++", "Java", "SQL", "Bash"],
     },
     {
-        category: "Mobile",
-        items: ["Android Studio"],
-    },
-    {
-        category: "Styling",
-        items: ["Tailwind", "HTML", "CSS"],
+        category: "AI & CV",
+        items: ["PyTorch", "OpenCV", "YOLOv8", "LangChain", "RAG", "HuggingFace"],
     },
     {
         category: "Backend",
-        items: ["Node.js","FastAPI","SpringBoot"],
+        items: ["FastAPI", "Node.js", "Docker", "Kubernetes", "AWS", "Supabase"],
     },
     {
-        category: "Database",
-        items: ["MongoDB", "PostgreSQL","Firebase","Supabase"],
+        category: "Frontend",
+        items: ["Next.js", "React", "Tailwind", "Vercel", "Stripe"],
     },
     {
-        category: "Dev Tools",
-        items: ["Git", "GitHub", "Docker","AWS","Postman","Make.com"],
+        category: "Databases",
+        items: ["PostgreSQL", "MongoDB", "Redis", "Snowflake"],
+    },
+    {
+        category: "DevOps",
+        items: ["GitHub Actions", "Linux", "Playwright", "Sentry", "Make.com"],
     },
 ];
 
@@ -214,6 +279,8 @@ export {
     navLinks,
     navIcons,
     dockApps,
+    desktopApps,
+    wallpapers,
     blogPosts,
     techStack,
     socials,
@@ -245,11 +312,11 @@ const WORK_LOCATION = {
                     fileType: "txt",
                     position: "top-5 left-10",
                     description: [
-                        "OmniContext OS is a thin-client AI system designed to maintain persistent memory across Slack, email, and web interfaces.",
-                        "Most AI assistants are stateless, switching tools forces users to re-explain context. We built for continuity instead of isolated prompts.",
+                        "OmniContext OS is a thin client AI system designed to maintain persistent memory across Slack, email, and web interfaces.",
+                        "Most AI assistants are stateless, switching tools forces users to reexplain context. We built for continuity instead of isolated prompts.",
                         "The architecture centralizes intelligence using Backboard.io for stateful threads, memory persistence, and LLM orchestration.",
-                        "A Node.js / TypeScript backend normalizes multi-channel events and resolves state consistently across platforms.",
-                        "We placed 9th overall at the McHacks × Backboard.io pre-hackathon challenge.",
+                        "A Node.js / TypeScript backend normalizes multichannel events and resolves state consistently across platforms.",
+                        "We placed 9th overall at the McHacks × Backboard.io prehackathon challenge.",
                         "RAG integration is currently in development for our MVP to enable RAG contextual responses."
                     ],
                 },
@@ -292,10 +359,10 @@ const WORK_LOCATION = {
                     fileType: "txt",
                     position: "top-10  left-40",
                     description: [
-                        "AeroGuard is a real-time SOC decision platform built at HackConcordia in 24 hours.",
+                        "AeroGuard is a real time SOC decision platform built at HackConcordia in 24 hours.",
                         "Instead of overwhelming analysts with hundreds of alerts, the system predicts threats and surfaces the 3 most critical actions in under 60 seconds.",
-                        "Built with Snowflake for analytics, MongoDB for real-time state, and Google Gemini via OpenRouter for explainable AI reasoning.",
-                        "Integrated ElevenLabs for voice alerting in high-severity scenarios.",
+                        "Built with Snowflake for analytics, MongoDB for real time state, and Google Gemini via OpenRouter for explainable AI reasoning.",
+                        "Integrated ElevenLabs for voice alerting in high severity scenarios.",
                         "Powered by a FastAPI backend engineered for deterministic decisions and auditability.",
                         "Winner: Best Use of Snowflake API."
 
@@ -340,9 +407,9 @@ const WORK_LOCATION = {
                     fileType: "txt",
                     position: "top-10  left-40",
                     description: [
-                        "NeuroDesk is a brain-inspired AI command center that turns simple natural language requests into structured outcomes.",
+                        "NeuroDesk is a brain inspired AI command center that turns simple natural language requests into structured outcomes.",
                         "Instead of just chatting, NeuroDesk plans tasks, coordinates specialized AI agents, enforces approvals and keeps humans in control at every step.",
-                        "Users can ask for research, draft professional communications, compare products, or make decisions(just like our brain)  and the system handles execution with built-in guardrails and spending limits.",
+                        "Users can ask for research, draft professional communications, compare products, or make decisions(just like our brain)  and the system handles execution with built in guardrails and spending limits.",
                         "Every action is logged with a full audit trail, creating trust, accountability, and enterprise transparency.",
                         "Designed as a scalable AI middleware layer, NeuroDesk bridges conversation and execution, transforming AI from a passive assistant into a reliable operational partner.",
                         "Built with a modular architecture ready for enterprise integrations, workflow automation, and future payment or hiring systems.",
@@ -384,62 +451,20 @@ const ABOUT_LOCATION = {
     children: [
         {
             id: 1,
-            name: "me.png",
-            icon: "public/images/image.png",
-            kind: "file",
-            fileType: "img",
-            position: "top-10 left-5",
-            imageUrl: "public/images/adam_Me.png",
-        },
-        {
-            id: 2,
-            name: "casual-me.png",
-            icon: "public/images/image.png",
-            kind: "file",
-            fileType: "img",
-            position: "top-10 left-30",
-            imageUrl: "public/images/casual.png",
-        },
-        {
-            id: 3,
-            name: "random_ahh_pic.png",
-            icon: "public/images/image.png",
-            kind: "file",
-            fileType: "img",
-            position: "top-10 left-60",
-            imageUrl: "public/images/hackathon.png",
-        },
-        {
-            id: 4,
             name: "about-me.txt",
             icon: "public/images/txt.png",
             kind: "file",
             fileType: "txt",
-            position: "top-10 left-90",
-            subtitle: "Who am I ?",
-            image: "public/images/adam_Me.png",
+            position: "top-5 left-10",
+            subtitle: "Computer Vision & AI Systems Engineer",
             description: [
-                "I didn’t start coding because it was trendy. I started because I was curious how the apps I used every day actually worked.",
-                "What began with small Python scripts slowly turned into building full backend systems, APIs and AI automation pipelines that run in production with Make.",
-                "I’m currently a Computer Science student at the University of Ottawa, most of my work  has come from building  with FastAPI, databases and cloud deployments.",
-                "My long-term goal is to become a Cloud&AI  architect for sports organizations, designing real-time platforms that help teams make smarter decisions, automate operations and gain a competitive edge! ",
-                "Outside of coding, I’m deep into sports, especially basketball  and I genuinely enjoy analyzing games, strategy and performance patterns.",
-                "For me, engineering isn’t just about writing code. It’s about building reliable systems that people can trust when it matters!"
+                "CS student building the future of scouting. I design computer vision and AI systems for sports analytics, agentic AI, and EdTech.",
+                "Founder of Mentrixa, an AI tutoring SaaS. I help teams understand AI + Computer Vision in sports and ship production scale systems.",
+                "I build agentic AI with Claude, Gemini, and Groq, real time sports analytics and computer vision pipelines, and AI automation with Make.com, n8n, and LangChain.",
+                "My goal is to become a Cloud & AI architect for sports organizations, designing real time platforms that help teams make smarter decisions.",
+                "Outside of code I'm deep into basketball: analyzing games, strategy, and performance patterns."
             ]
-
-
-
         },
-        {
-            id: 5,
-            name: "Aura.png",
-            icon: "public/images/image.png",
-            kind: "file",
-            fileType: "img",
-            position: "top-40 left-5",
-            imageUrl: "public/images/Wpic.png",
-        },
-
     ],
 };
 
@@ -479,13 +504,19 @@ const GALLERY_DATA = [
             { id: 2, name: 'Podcast', imageUrl: 'public/images/blog2.png' },
             { id: 3, name: 'uottahack', imageUrl: 'public/images/hackuo.png' },
             { id: 4, name: 'AI automation', imageUrl: 'public/images/make.png' }
-
-
-
         ]
     },
-
-
+    {
+        id: 'portraits',
+        name: 'Portraits',
+        icon: 'public/icons/gicon2.svg',
+        images: [
+            { id: 1, name: 'Me', imageUrl: 'public/images/adam_Me.png' },
+            { id: 2, name: 'Casual', imageUrl: 'public/images/casual.png' },
+            { id: 3, name: 'Hackathon', imageUrl: 'public/images/hackathon.png' },
+            { id: 4, name: 'Aura', imageUrl: 'public/images/Wpic.png' }
+        ]
+    },
 ];
 
 const INITIAL_Z_INDEX = 1000;
@@ -502,6 +533,7 @@ const WINDOW_CONFIG = {
     snake: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
     games: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
     code: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
+    journey: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
 };
 
 export { INITIAL_Z_INDEX, WINDOW_CONFIG, GALLERY_DATA };

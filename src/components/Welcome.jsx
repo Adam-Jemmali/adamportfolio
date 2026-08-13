@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { FolderOpen, Send } from "lucide-react";
+import { locations } from "#constants/index.js";
+import useWindowStore from "#store/window.js";
+import useLocationStore from "#store/location.js";
 
 const ROLES = [
-    "full-stack apps",
-    "AI systems that remember",
-    "cloud backends",
+    "computer vision systems",
+    "agentic AI",
+    "sports analytics",
     "things that actually ship",
 ];
 
@@ -55,6 +59,20 @@ const setTitleHover = (container) => {
 const Welcome = () => {
     const titleRef = useRef(null);
     const [typed, setTyped] = useState("");
+
+    const { openWindow, focusWindow } = useWindowStore();
+    const setActiveLocation = useLocationStore((s) => s.setActiveLocation);
+
+    const openProjects = () => {
+        setActiveLocation(locations.work);
+        openWindow("finder");
+        focusWindow("finder");
+    };
+
+    const openContact = () => {
+        openWindow("contact");
+        focusWindow("contact");
+    };
 
     // Typewriter loop.
     useEffect(() => {
@@ -112,6 +130,17 @@ const Welcome = () => {
                 {typed}
                 <span className="caret" />
             </p>
+
+            <div className="hero-ctas">
+                <button type="button" className="hero-cta hero-cta-primary" onClick={openProjects}>
+                    <FolderOpen size={15} />
+                    View projects
+                </button>
+                <button type="button" className="hero-cta hero-cta-secondary" onClick={openContact}>
+                    <Send size={15} />
+                    Get in touch
+                </button>
+            </div>
         </section>
     );
 };

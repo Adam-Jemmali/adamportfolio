@@ -9,10 +9,11 @@ const HELP = [
     ["help, ls", "show this help"],
     ["tech, skills", "print the tech stack (npm show tech stack)"],
     ["portfolio, projects", "open my portfolio"],
-    ["blog, web", "open my blog"],
+    ["blog, web", "open top videos"],
     ["gallery", "open the gallery"],
     ["contact", "open contact"],
     ["resume, cv", "open my resume"],
+    ["journey", "open my experience & education"],
     ["neurodesk", "open the NeuroDesk project"],
     ["omni", "open the OmniContext OS project"],
     ["aeroguard", "open the AeroGuard project"],
@@ -25,7 +26,7 @@ const HELP = [
 ];
 
 const BANNER = [
-    { id: "banner-1", kind: "ok", content: "madajbuilds OS terminal" },
+    { id: "banner-1", kind: "ok", content: "@madajbuilds OS terminal" },
     { id: "banner-2", kind: "dim", content: 'Type "help" or "ls" to see what you can do.' },
 ];
 
@@ -99,6 +100,8 @@ const Terminal = () => {
             push("ok", launch("contact"));
         } else if (["resume", "cv"].includes(cmd)) {
             push("ok", launch("resume"));
+        } else if (["journey", "experience", "education", "timeline"].includes(cmd)) {
+            push("ok", launch("journey"));
         } else if (["games", "game"].includes(cmd)) {
             push("ok", launch("games"));
         } else if (["snake"].includes(cmd)) {
@@ -115,7 +118,7 @@ const Terminal = () => {
             const folder = locations.work.children.find((f) => f.name.toLowerCase().includes("aeroguard"));
             push("ok", openFinderAt(folder));
         } else if (cmd === "whoami") {
-            push("out", "madajbuilds — full-stack developer & AI tinkerer");
+            push("out", "@madajbuilds: Computer Vision & AI Systems engineer");
         } else if (cmd === "date") {
             push("out", new Date().toLocaleString());
         } else if (cmd === "clear" || cmd === "cls") {
@@ -124,7 +127,7 @@ const Terminal = () => {
         } else if (cmd.startsWith("sudo")) {
             push("err", "madaj is not in the sudoers file. This incident will be reported. \u{1F604}");
         } else {
-            push("err", `command not found: ${raw} — type "help"`);
+            push("err", `command not found: ${raw}. Type "help"`);
         }
 
         setLines((l) => [...l, ...out]);

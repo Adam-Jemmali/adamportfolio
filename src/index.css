@@ -15,10 +15,10 @@ body {
 }
 
 :root {
-    --pfp-grad: linear-gradient(135deg, #5eaaca 0%, #4bd5ea 50%, #36b5df 100%);
-    --pfp-a: #5eaaca;
-    --pfp-b: #4bd5ea;
-    --pfp-c: #36b5df;
+    --pfp-grad: linear-gradient(135deg, #4ad8ed 0%, #3aa7ce 45%, #7b5946 100%);
+    --pfp-a: #4ad8ed;
+    --pfp-b: #3aa7ce;
+    --pfp-c: #7b5946;
 }
 
 @theme {
@@ -55,7 +55,7 @@ body {
 @layer components {
     /* ============ Top bar (GNOME / Fedora style) ============ */
     #topbar {
-        @apply fixed top-0 left-0 right-0 h-8 z-[5000] flex items-center justify-between px-3 text-zinc-100 select-none;
+        @apply fixed top-0 left-0 right-0 h-8 z-5000 flex items-center justify-between px-3 text-zinc-100 select-none;
         background: rgb(24 24 27 / 0.85);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
@@ -73,11 +73,11 @@ body {
     }
 
     .topbar-logo img {
-        @apply size-[18px];
+        @apply size-4.5;
     }
 
     .topbar-logo .logo-badge {
-        @apply flex items-center justify-center size-[18px] rounded-full text-[9px] font-bold text-zinc-100;
+        @apply flex items-center justify-center size-4.5 rounded-full text-[9px] font-bold text-zinc-100;
         background: var(--pfp-grad);
     }
 
@@ -109,7 +109,7 @@ body {
 
     /* ============ System tray (wifi / sound / brightness / profile) ============ */
     .brightness-overlay {
-        @apply fixed inset-0 z-[4000] pointer-events-none;
+        @apply fixed inset-0 z-4000 pointer-events-none;
         background: #000;
         transition: opacity 120ms linear;
     }
@@ -119,7 +119,7 @@ body {
     }
 
     .tray-popover {
-        @apply absolute right-0 top-full mt-2 min-w-56 rounded-xl p-2.5 shadow-2xl z-[6000];
+        @apply absolute right-0 top-full mt-2 min-w-56 rounded-xl p-2.5 shadow-2xl z-6000;
         background: rgb(24 24 27 / 0.96);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
@@ -148,7 +148,7 @@ body {
     }
 
     .tray-switch {
-        @apply relative w-8 h-[18px] rounded-full shrink-0 transition-colors;
+        @apply relative w-8 h-4.5 rounded-full shrink-0 transition-colors;
         background: rgb(255 255 255 / 0.15);
     }
 
@@ -157,7 +157,7 @@ body {
     }
 
     .tray-switch-knob {
-        @apply absolute top-[2px] left-[2px] size-[14px] rounded-full bg-white transition-transform;
+        @apply absolute top-0.5 left-0.5 size-3.5 rounded-full bg-white transition-transform;
     }
 
     .tray-switch.on .tray-switch-knob {
@@ -227,11 +227,11 @@ body {
 
     /* ============ Dock (macOS style) ============ */
     #dock {
-        @apply fixed bottom-3 left-1/2 -translate-x-1/2 z-[5000];
+        @apply fixed bottom-3 left-1/2 -translate-x-1/2 z-5000;
     }
 
     .dock-container {
-        @apply rounded-2xl px-2 py-1.5 flex items-end gap-1.5 select-none max-sm:hidden;
+        @apply rounded-2xl px-2 py-1.5 flex items-end gap-1.5 select-none;
         background: rgb(255 255 255 / 0.35);
         backdrop-filter: blur(24px) saturate(1.8);
         -webkit-backdrop-filter: blur(24px) saturate(1.8);
@@ -240,7 +240,7 @@ body {
     }
 
     .tooltip {
-        @apply !py-2 !px-3 !text-xs !rounded !bg-gray-900 !text-white !shadow-2xl !border !border-gray-700 !font-medium;
+        @apply py-2! px-3! text-xs! rounded! bg-gray-900! text-white! shadow-2xl! border! border-gray-700! font-medium!;
     }
 
     .dock-icon {
@@ -259,8 +259,13 @@ body {
         }
 
         svg {
-            @apply size-6 3xl:size-9 text-zinc-800;
-            stroke-width: 1.75;
+            @apply size-8 3xl:size-14 text-zinc-800;
+            stroke-width: 2.4;
+        }
+
+        /* Custom image icons (e.g. Journey) render dark like the lucide icons */
+        img {
+            filter: invert(1);
         }
     }
 
@@ -276,6 +281,8 @@ body {
         margin: auto;
         border: 1px solid rgb(0 0 0 / 0.1);
         box-shadow: 0 18px 50px rgb(0 0 0 / 0.25), 0 2px 8px rgb(0 0 0 / 0.12);
+        max-width: calc(100vw - 1rem);
+        max-height: calc(100dvh - 3.5rem);
     }
 
     .window.focused {
@@ -334,7 +341,7 @@ body {
 
     /* ============ Boot / loading screen (Linux style) ============ */
     .boot-screen {
-        @apply fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center font-georama overflow-hidden;
+        @apply fixed inset-0 z-9999 bg-black flex flex-col items-center justify-center font-georama overflow-hidden;
     }
 
     .boot-spinner {
@@ -355,8 +362,25 @@ body {
         @apply flex items-center justify-between text-white/45;
     }
 
-    .boot-log .ok {
+    .boot-ok {
+        @apply inline-flex items-center gap-1.5 text-[11px] font-semibold;
         color: #4ade80;
+        animation: boot-ok-pop 0.35s ease-out;
+    }
+
+    .boot-check {
+        @apply inline-flex items-center justify-center size-4 rounded-full;
+        background: rgb(74 222 128 / 0.16);
+    }
+
+    .boot-check svg {
+        @apply size-2.5;
+        color: #4ade80;
+    }
+
+    @keyframes boot-ok-pop {
+        from { opacity: 0; transform: scale(0.6); }
+        to { opacity: 1; transform: scale(1); }
     }
 
     .boot-bar {
@@ -382,7 +406,7 @@ body {
 
     /* ============ Lock / suspend screens ============ */
     .lock-screen {
-        @apply fixed inset-0 z-[9990] flex items-center justify-center select-none;
+        @apply fixed inset-0 z-9990 flex items-center justify-center select-none;
     }
 
     .lock-blur {
@@ -408,12 +432,25 @@ body {
         @apply text-2xl font-medium;
     }
 
+    .lock-clock {
+        @apply absolute top-[9vh] left-1/2 -translate-x-1/2 text-center text-white;
+        text-shadow: 0 2px 12px rgb(0 0 0 / 0.5);
+    }
+
+    .lock-time {
+        @apply text-6xl font-semibold tracking-tight;
+    }
+
+    .lock-date {
+        @apply text-base text-white/80 mt-1;
+    }
+
     .lock-form {
         @apply flex items-center gap-2 mt-1;
     }
 
     .lock-form input {
-        @apply w-56 rounded-xl px-4 py-2 text-[15px] text-white outline-none;
+        @apply w-56 rounded-xl px-4 py-2 text-[15px] text-white text-center outline-none;
         background: rgb(255 255 255 / 0.15);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
@@ -453,11 +490,86 @@ body {
     }
 
     .suspend-screen {
-        @apply fixed inset-0 z-[9999] bg-black flex items-center justify-center cursor-pointer;
+        @apply fixed inset-0 z-9999 bg-black flex flex-col items-center justify-between select-none cursor-pointer overflow-hidden;
+        padding-top: 16vh;
+        padding-bottom: 12vh;
     }
 
-    .suspend-screen p {
-        @apply text-white/30 text-sm tracking-[0.3em] uppercase animate-pulse;
+    .suspend-clock-wrap {
+        @apply flex flex-col items-center;
+    }
+
+    .suspend-time {
+        @apply font-georama font-light text-8xl md:text-9xl text-white;
+        line-height: 1;
+        text-shadow: 0 2px 40px rgb(255 255 255 / 0.3);
+    }
+
+    .suspend-date {
+        @apply mt-4 text-2xl md:text-3xl font-medium text-white/85;
+        letter-spacing: 0.02em;
+    }
+
+    /* Mirrored reflection of the time, complete and readable */
+    .suspend-mirror {
+        @apply pointer-events-none select-none;
+        margin-top: -0.06em;
+        opacity: 0.8;
+        -webkit-mask-image: linear-gradient(to bottom, rgb(0 0 0 / 1), rgb(0 0 0 / 0.55));
+        mask-image: linear-gradient(to bottom, rgb(0 0 0 / 1), rgb(0 0 0 / 0.55));
+    }
+
+    .suspend-mirror-flip {
+        transform: scaleY(-1);
+    }
+
+    .suspend-mirror .suspend-time {
+        color: rgb(255 255 255 / 0.95);
+        text-shadow: none;
+    }
+
+    .suspend-wake {
+        @apply flex flex-col items-center gap-5;
+    }
+
+    .suspend-icon {
+        @apply size-16 rounded-full flex items-center justify-center text-[#06283a];
+        background: var(--pfp-grad);
+        animation: suspend-ring 2.4s ease-in-out infinite;
+    }
+
+    @keyframes suspend-ring {
+        0%, 100% {
+            box-shadow: 0 0 0 6px rgb(255 255 255 / 0.08), 0 0 40px rgb(75 213 234 / 0.5);
+        }
+        50% {
+            box-shadow: 0 0 0 12px rgb(255 255 255 / 0.04), 0 0 64px rgb(75 213 234 / 0.85);
+        }
+    }
+
+    .neon-text {
+        @apply text-sm uppercase;
+        color: #eafcff;
+        letter-spacing: 0.35em;
+        animation: neon-flicker 4.5s ease-in-out infinite;
+    }
+
+    @keyframes neon-flicker {
+        0%, 18%, 22%, 26%, 53%, 57%, 100% {
+            text-shadow:
+                0 0 4px #fff,
+                0 0 11px #fff,
+                0 0 22px #4bd5ea,
+                0 0 42px #4bd5ea,
+                0 0 82px #4bd5ea,
+                0 0 120px #4bd5ea;
+        }
+        20%, 24%, 55% {
+            text-shadow:
+                0 0 3px #fff,
+                0 0 9px #4bd5ea,
+                0 0 22px #4bd5ea;
+        }
     }
 
     /* ============ Welcome / desktop hero ============ */
@@ -466,7 +578,7 @@ body {
     }
 
     #welcome {
-        @apply flex flex-col justify-center items-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 select-none max-sm:h-full max-sm:w-full max-sm:px-10 z-10 pointer-events-none text-center;
+        @apply flex flex-col justify-center items-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 select-none max-sm:h-full max-sm:w-full max-sm:px-6 z-10 pointer-events-none text-center;
     }
 
     #welcome .hero-eyebrow {
@@ -489,7 +601,7 @@ body {
     }
 
     #welcome .hero-title {
-        @apply pointer-events-auto mt-6 text-6xl md:text-7xl italic font-georama;
+        @apply pointer-events-auto mt-6 text-6xl md:text-7xl max-sm:text-4xl italic font-georama;
         background: var(--pfp-grad);
         background-size: 200% 100%;
         -webkit-background-clip: text;
@@ -508,12 +620,42 @@ body {
     }
 
     #welcome .hero-type .caret {
-        @apply inline-block w-[2px] h-5 bg-white/80 align-middle ml-1;
+        @apply inline-block w-0.5 h-5 bg-white/80 align-middle ml-1;
         animation: caret-blink 1s steps(1) infinite;
     }
 
     @keyframes caret-blink {
         50% { opacity: 0; }
+    }
+
+    #welcome .hero-ctas {
+        @apply pointer-events-auto flex flex-wrap justify-center items-center gap-3 mt-6;
+    }
+
+    #welcome .hero-cta {
+        @apply flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95;
+    }
+
+    #welcome .hero-cta-primary {
+        background: var(--pfp-grad);
+        color: #06283a;
+        box-shadow: 0 6px 20px rgb(0 0 0 / 0.35);
+    }
+
+    #welcome .hero-cta-primary:hover {
+        filter: brightness(1.08);
+    }
+
+    #welcome .hero-cta-secondary {
+        @apply text-white;
+        background: rgb(255 255 255 / 0.08);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgb(255 255 255 / 0.15);
+    }
+
+    #welcome .hero-cta-secondary:hover {
+        background: rgb(255 255 255 / 0.14);
     }
 
     #safari {
@@ -540,6 +682,69 @@ body {
                 -webkit-background-clip: text;
                 background-clip: text;
                 color: transparent;
+            }
+
+            .newsletter {
+                @apply relative mb-12 rounded-2xl p-6 text-center overflow-hidden;
+                background: rgb(255 255 255 / 0.04);
+                border: 1px solid rgb(255 255 255 / 0.1);
+            }
+
+            .newsletter::before {
+                content: "";
+                @apply absolute inset-0 pointer-events-none;
+                background: radial-gradient(600px circle at 50% -20%, rgb(75 213 234 / 0.25), transparent 60%);
+            }
+
+            .newsletter-badge {
+                @apply relative inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider text-cyan-300;
+                background: rgb(75 213 234 / 0.12);
+                border: 1px solid rgb(75 213 234 / 0.3);
+            }
+
+            .newsletter h3 {
+                @apply relative mt-3 text-xl font-bold text-white;
+            }
+
+            .newsletter-sub {
+                @apply relative mt-1.5 text-[13px] text-zinc-400;
+            }
+
+            .newsletter-form {
+                @apply relative flex items-center gap-2 mt-4 max-w-md mx-auto;
+            }
+
+            .newsletter-form input {
+                @apply flex-1 rounded-xl px-4 py-2.5 text-[13px] text-zinc-100 outline-none;
+                background: rgb(255 255 255 / 0.06);
+                border: 1px solid rgb(255 255 255 / 0.12);
+            }
+
+            .newsletter-form input::placeholder {
+                color: rgb(255 255 255 / 0.35);
+            }
+
+            .newsletter-form input:focus {
+                border-color: rgb(75 213 234 / 0.6);
+            }
+
+            .newsletter-form button {
+                @apply flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-[#06283a] transition-transform active:scale-95;
+                background: var(--pfp-grad);
+            }
+
+            .newsletter-error {
+                @apply relative mt-2 text-xs text-red-400;
+            }
+
+            .newsletter-success {
+                @apply relative flex flex-col items-center gap-2 py-2;
+            }
+
+            .newsletter-check {
+                @apply size-11 rounded-full flex items-center justify-center text-[#06283a];
+                background: var(--pfp-grad);
+                animation: newsletter-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             }
 
             .blog-post {
@@ -584,7 +789,7 @@ body {
         }
 
         .terminal-line {
-            @apply whitespace-pre-wrap break-words;
+            @apply whitespace-pre-wrap wrap-break-word;
         }
 
         .terminal-line.echo { color: #9ca3af; }
@@ -626,39 +831,165 @@ body {
     }
 
     #contact {
-        @apply w-2xl bg-[#14171c] h-[70vh];
+        @apply w-3xl bg-[#14171c] h-[80vh];
 
         #window-header {
             @apply bg-[#1a1e24] border-white/10 text-zinc-300;
         }
 
-        h2 {
-            @apply font-bold text-sm text-center w-full text-zinc-100;
+        #window-header h2 {
+            @apply font-bold text-sm text-center flex-1 text-zinc-200;
         }
 
-        h3 {
+        .contact-layout {
+            @apply flex flex-1 min-h-0 overflow-y-auto;
+        }
+
+        .contact-intro {
+            @apply w-[40%] flex flex-col items-center justify-center text-center p-8 gap-4 border-r border-white/10 bg-[#0f1216] shrink-0;
+        }
+
+        .contact-intro h3 {
             @apply text-xl font-semibold text-zinc-100;
         }
 
-        .contact-content {
-            @apply overflow-y-auto flex-1 h-full text-zinc-300;
+        .contact-tagline {
+            @apply text-[13px] leading-relaxed text-zinc-400;
         }
 
-        ul {
-            @apply flex items-center gap-3;
-
-            li {
-                @apply rounded-lg p-3 w-60 hover:-translate-y-0.5 hover:scale-105 origin-center transition-all duration-300;
-
-                a {
-                    @apply space-y-5;
-                }
-
-                p {
-                    @apply font-semibold text-sm text-white;
-                }
-            }
+        .contact-socials {
+            @apply flex flex-col gap-2 w-full;
         }
+
+        .contact-socials li a {
+            @apply flex items-center gap-3 rounded-xl px-4 py-3 transition-transform hover:scale-[1.03];
+        }
+
+        .contact-socials li img {
+            @apply size-5;
+        }
+
+        .contact-socials li span {
+            @apply text-sm font-semibold text-white;
+        }
+
+        .booking {
+            @apply flex-1 p-6 overflow-y-auto;
+        }
+
+        .quiz {
+            @apply flex flex-col gap-4 h-full;
+        }
+
+        .quiz-top {
+            @apply flex items-center justify-between;
+        }
+
+        .quiz-step {
+            @apply text-[11px] font-medium uppercase tracking-wider text-zinc-500;
+        }
+
+        .quiz-back {
+            @apply flex items-center gap-1 text-[12px] text-zinc-400 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed;
+        }
+
+        .quiz-track {
+            @apply h-1.5 rounded-full bg-white/10 overflow-hidden;
+        }
+
+        .quiz-fill {
+            @apply h-full rounded-full;
+            background: var(--pfp-grad);
+            transition: width 0.3s ease;
+        }
+
+        .quiz-prompt {
+            @apply text-lg font-semibold text-white;
+        }
+
+        .quiz-options {
+            @apply flex flex-col gap-2;
+        }
+
+        .quiz-option {
+            @apply flex items-center justify-between gap-2 px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-left text-sm text-zinc-200 hover:bg-white/10 transition-colors;
+        }
+
+        .quiz-option:hover {
+            border-color: rgb(75 213 234 / 0.5);
+        }
+
+        .quiz-done {
+            @apply flex flex-col items-center justify-center text-center h-full gap-3 py-10;
+        }
+
+        .quiz-done h4 {
+            @apply text-lg font-semibold text-white;
+        }
+
+        .quiz-summary {
+            @apply text-sm text-zinc-400;
+        }
+
+        .booking-check {
+            @apply size-14 rounded-full flex items-center justify-center text-[#06283a];
+            background: var(--pfp-grad);
+        }
+
+        .booking-cal {
+            @apply flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-[#06283a] transition-transform active:scale-95;
+            background: var(--pfp-grad);
+        }
+
+        .cal-overlay {
+            @apply absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 overflow-hidden;
+            background: rgb(8 12 20 / 0.92);
+        }
+
+        .cal-ring {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 96px;
+            height: 96px;
+            margin: -48px 0 0 -48px;
+            border-radius: 9999px;
+            border: 2px solid rgb(75 213 234 / 0.7);
+        }
+
+        .cal-particle {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 10px;
+            height: 10px;
+            margin: -5px 0 0 -5px;
+            border-radius: 9999px;
+        }
+
+        .cal-rocket {
+            @apply relative text-white;
+            filter: drop-shadow(0 0 14px rgb(75 213 234 / 0.8));
+        }
+
+        .cal-copy {
+            @apply relative text-white text-sm font-medium;
+        }
+
+        .cal-fallback {
+            @apply relative text-xs text-cyan-300 hover:underline flex items-center gap-1;
+            opacity: 0;
+            animation: cal-fade 0.4s ease 1.2s both;
+        }
+    }
+
+    @keyframes cal-fade {
+        to { opacity: 1; }
+    }
+
+    @keyframes newsletter-pop {
+        from { transform: scale(0); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
     }
 
     #photos {
@@ -737,6 +1068,66 @@ body {
         }
     }
 
+    #journey {
+        @apply w-xl h-[80vh] bg-[#14171c];
+
+        #window-header {
+            @apply bg-[#1a1e24] border-white/10 text-zinc-300;
+        }
+
+        #window-header h2 {
+            @apply font-bold text-sm text-center flex-1 text-zinc-200;
+        }
+    }
+
+    .journey-body {
+        @apply flex-1 overflow-y-auto p-7;
+    }
+
+    .journey-entry {
+        @apply flex gap-4;
+    }
+
+    .journey-rail {
+        @apply flex flex-col items-center w-9 shrink-0;
+    }
+
+    .journey-dot {
+        @apply size-9 rounded-full flex items-center justify-center shrink-0;
+        background: var(--pfp-grad);
+        box-shadow: 0 0 0 4px rgb(255 255 255 / 0.06);
+    }
+
+    .journey-dot img {
+        @apply w-4 h-4;
+        filter: brightness(0) invert(1);
+    }
+
+    .journey-line {
+        @apply w-px flex-1 my-1.5;
+        background: linear-gradient(to bottom, rgb(255 255 255 / 0.22), rgb(255 255 255 / 0.04));
+    }
+
+    .journey-card {
+        @apply flex-1 mb-8 rounded-xl px-4 py-3.5;
+        background: rgb(255 255 255 / 0.04);
+        border: 1px solid rgb(255 255 255 / 0.08);
+    }
+
+    .journey-tag {
+        @apply inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full text-cyan-300;
+        background: rgb(75 213 234 / 0.12);
+        border: 1px solid rgb(75 213 234 / 0.25);
+    }
+
+    .journey-card h3 {
+        @apply mt-1.5 text-[15px] font-semibold text-white;
+    }
+
+    .journey-card p {
+        @apply mt-1 text-[13px] leading-relaxed text-zinc-400;
+    }
+
     #finder {
         @apply w-3xl h-[70vh] bg-[#14171c];
 
@@ -790,6 +1181,10 @@ body {
                     @apply object-contain object-center size-16 relative group-hover:scale-105 transition-transform;
                 }
 
+                .finder-folder-icon {
+                    @apply size-16 text-sky-400 drop-shadow-lg;
+                }
+
                 p {
                     @apply text-sm text-center font-medium w-40 text-zinc-200;
                 }
@@ -809,11 +1204,28 @@ body {
         }
 
         .text-content {
-            @apply p-6 bg-[#14171c] overflow-y-auto min-w-[400px] max-w-[600px] text-zinc-200 h-full;
+            @apply p-6 bg-[#14171c] overflow-y-auto min-w-100 max-w-150 text-zinc-200 h-full;
 
             p {
                 @apply leading-relaxed;
             }
+        }
+
+        .about-subtitle {
+            @apply text-xl font-semibold leading-snug text-sky-300;
+        }
+
+        .about-subtitle-word {
+            @apply inline-block;
+        }
+
+        .about-rule {
+            @apply block h-0.5 w-16 mt-3 rounded-full origin-left;
+            background: var(--pfp-grad);
+        }
+
+        .about-para {
+            @apply text-[15px] leading-relaxed text-zinc-200;
         }
     }
 
@@ -839,7 +1251,7 @@ body {
 
     /* ============ Snake game ============ */
     #snake {
-        @apply w-[28rem] h-[540px] bg-[#0b0f14] text-gray-200;
+        @apply w-md h-135 bg-[#0b0f14] text-gray-200;
 
         #window-header {
             @apply bg-[#15181d] border-white/10 text-zinc-300;
@@ -891,7 +1303,7 @@ body {
 
     /* ============ Games ============ */
     #games {
-        @apply w-[34rem] h-[420px] bg-[#14171c] text-gray-200;
+        @apply w-136 h-105 bg-[#14171c] text-gray-200;
 
         #window-header {
             @apply bg-[#1a1e24] border-white/10 text-zinc-300;
@@ -925,7 +1337,7 @@ body {
 
     /* ============ Code Racer game ============ */
     #code {
-        @apply w-[36rem] h-[540px] bg-[#0b0f14] text-gray-200;
+        @apply w-xl h-135 bg-[#0b0f14] text-gray-200;
 
         #window-header {
             @apply bg-[#15181d] border-white/10 text-zinc-300;
@@ -990,19 +1402,263 @@ body {
 
     #home {
         @apply absolute inset-0 z-20 max-sm:hidden;
+    }
 
-        ul {
-            li {
-                @apply absolute z-0 select-none flex items-center flex-col;
+    /* ============ Desktop icons ============ */
+    .desktop-item {
+        @apply flex flex-col items-center gap-1 w-[5.5rem] p-1.5 cursor-pointer rounded-md transition-colors;
+    }
 
-                img {
-                    @apply group-hover:bg-gray-950/10 p-1 rounded-md;
-                }
+    .desktop-item:hover {
+        background: rgb(255 255 255 / 0.08);
+    }
 
-                p {
-                    @apply text-sm text-white text-center px-1 rounded-md group-hover:bg-blue-500 transition-colors max-w-40;
-                }
-            }
+    .desktop-item.selected {
+        background: rgb(59 130 246 / 0.28);
+    }
+
+    .desktop-folder-icon {
+        @apply w-12 h-12 drop-shadow-lg transition-colors text-sky-400/90;
+    }
+
+    .desktop-item:hover .desktop-folder-icon {
+        color: #7dd3fc;
+    }
+
+    .desktop-app-icon {
+        @apply w-12 h-12 rounded-xl flex items-center justify-center shadow-lg;
+        border: 1px solid rgb(255 255 255 / 0.25);
+        box-shadow: 0 10px 22px rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.35);
+        transition: transform 0.15s ease;
+    }
+
+    .desktop-item:hover .desktop-app-icon {
+        transform: scale(1.06);
+    }
+
+    .desktop-app-icon svg,
+    .desktop-app-icon img {
+        @apply w-6 h-6;
+    }
+
+    .desktop-app-icon svg {
+        color: #fff;
+        filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.35));
+    }
+
+    .desktop-app-icon img {
+        object-fit: contain;
+        filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.35));
+    }
+
+    .desktop-label {
+        @apply text-white text-[11px] leading-tight text-center wrap-break-word line-clamp-2 text-shadow-md px-1 rounded-sm select-none pointer-events-none max-w-full;
+    }
+
+    .desktop-item.selected .desktop-label {
+        @apply bg-blue-600;
+    }
+
+    /* Roomier desktop icons on taller screens */
+    @media (min-height: 820px) {
+        .desktop-item {
+            width: 6rem;
+        }
+
+        .desktop-folder-icon,
+        .desktop-app-icon {
+            width: 3.5rem;
+            height: 3.5rem;
+        }
+
+        .desktop-app-icon svg,
+        .desktop-app-icon img {
+            width: 1.75rem;
+            height: 1.75rem;
+        }
+
+        .desktop-label {
+            font-size: 12px;
+        }
+    }
+
+    /* ============ Desktop context menu ============ */
+    .desktop-menu {
+        @apply fixed z-6500 w-56 rounded-xl p-1.5 shadow-2xl;
+        background: rgb(30 30 34 / 0.92);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgb(255 255 255 / 0.12);
+    }
+
+    .desktop-menu-title {
+        @apply flex items-center gap-2 px-2.5 py-2 text-[11px] font-medium uppercase tracking-wider text-zinc-400;
+    }
+
+    .desktop-menu-item {
+        @apply flex items-center gap-2.5 w-full px-2.5 py-2 rounded-lg text-[13px] text-zinc-200 hover:bg-white/10 transition-colors;
+    }
+
+    .desktop-menu-swatch {
+        @apply size-5 rounded-md shrink-0;
+        border: 1px solid rgb(255 255 255 / 0.2);
+    }
+
+    /* ============ Spotlight (⌘K command palette) ============ */
+    .spotlight-overlay {
+        @apply fixed inset-0 z-7000 flex items-start justify-center pt-[16vh] px-4;
+        background: rgb(0 0 0 / 0.35);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+    }
+
+    .spotlight-panel {
+        @apply w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden;
+        background: rgb(24 24 27 / 0.92);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgb(255 255 255 / 0.12);
+    }
+
+    .spotlight-input-row {
+        @apply flex items-center gap-3 px-4 py-3.5 border-b border-white/10 text-zinc-400;
+
+        input {
+            @apply flex-1 bg-transparent outline-none text-zinc-100 text-[15px] placeholder:text-zinc-500;
+        }
+
+        kbd {
+            @apply px-1.5 py-0.5 rounded-md text-[11px] font-medium text-zinc-400 border border-white/15 bg-white/5;
+        }
+    }
+
+    .spotlight-results {
+        @apply max-h-80 overflow-y-auto p-1.5;
+    }
+
+    .spotlight-empty {
+        @apply px-4 py-8 text-center text-sm text-zinc-500;
+    }
+
+    .spotlight-result {
+        @apply flex items-center gap-3 px-2.5 py-2 rounded-xl cursor-pointer;
+    }
+
+    .spotlight-result.active {
+        background: rgb(255 255 255 / 0.1);
+    }
+
+    .spotlight-icon {
+        @apply size-8 rounded-lg flex items-center justify-center shrink-0;
+
+        svg {
+            @apply size-4 text-white;
+        }
+    }
+
+    .spotlight-text {
+        @apply flex-1 min-w-0 flex items-baseline gap-2;
+    }
+
+    .spotlight-label {
+        @apply text-[14px] text-zinc-100 truncate;
+    }
+
+    .spotlight-hint {
+        @apply text-[11px] text-zinc-500 shrink-0;
+    }
+
+    .spotlight-enter {
+        @apply text-zinc-500 shrink-0;
+    }
+
+    /* ============ Mobile (small screens) ============ */
+    @media (max-width: 640px) {
+        #topbar .topbar-clock {
+            display: none;
+        }
+
+        #topbar .tray-aux {
+            display: none;
+        }
+
+        /* Windows become near-fullscreen sheets above the dock */
+        .window {
+            top: 2.75rem !important;
+            left: 0.5rem !important;
+            right: 0.5rem !important;
+            bottom: 5.25rem !important;
+            width: auto !important;
+            height: auto !important;
+            max-width: none !important;
+            max-height: none !important;
+            margin: 0 !important;
+            border-radius: 0.75rem;
+        }
+
+        /* Compact dock that fits narrow phones */
+        .dock-container {
+            gap: 0.25rem;
+            padding: 0.375rem 0.5rem;
+        }
+
+        .dock-icon {
+            width: 2.25rem;
+            height: 2.25rem;
+        }
+
+        .dock-icon svg {
+            width: 1.75rem;
+            height: 1.75rem;
+        }
+
+        /* Finder: turn the scattered desktop-style icons into a tidy column */
+        #finder .content {
+            display: flex;
+            flex-direction: column;
+            align-content: flex-start;
+            gap: 0.75rem;
+            padding: 1rem;
+        }
+
+        #finder .content li {
+            position: static !important;
+            flex-direction: row;
+            justify-content: flex-start;
+            gap: 0.75rem;
+        }
+
+        #finder .content li img,
+        #finder .content li .finder-folder-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            margin: 0;
+        }
+
+        #finder .content li p {
+            width: auto;
+            text-align: left;
+            margin: 0;
+        }
+
+        #finder .sidebar {
+            width: 8.5rem;
+            padding: 0.75rem;
+        }
+
+        /* Contact: stack intro above the booking form */
+        #contact .contact-layout {
+            flex-direction: column;
+        }
+
+        #contact .contact-intro {
+            width: 100%;
+            padding: 1.5rem;
+        }
+
+        /* Safari: tighter blog padding */
+        #safari .blog {
+            padding: 1rem;
         }
     }
 }

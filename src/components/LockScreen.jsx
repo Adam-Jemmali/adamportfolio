@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import dayjs from "dayjs";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ArrowRight } from "lucide-react";
@@ -6,11 +7,11 @@ import useSystemStore from "#store/system.js";
 import PowerMenu from "./PowerMenu.jsx";
 
 const HINTS = [
-    'Hint: the password is "password". We\'re very secure. 😉',
+    'The password is "password". We\'re very secure.',
     'Any password works. Seriously, try it.',
-    "Security level: the gatekeeper is on a coffee break.",
+    "The gatekeeper is on a coffee break.",
     'Type literally anything. Yes, even "1234".',
-    "This lock is decorative. Don't tell anyone.",
+    
 ];
 
 const LockScreen = () => {
@@ -18,8 +19,14 @@ const LockScreen = () => {
     const [password, setPassword] = useState("");
     const [error, setError] = useState(false);
     const [hintIndex, setHintIndex] = useState(0);
+    const [time, setTime] = useState(dayjs());
     const rootRef = useRef(null);
     const cardRef = useRef(null);
+
+    useEffect(() => {
+        const id = setInterval(() => setTime(dayjs()), 1000);
+        return () => clearInterval(id);
+    }, []);
 
     useGSAP(() => {
         gsap.fromTo(rootRef.current, { opacity: 0 }, { opacity: 1, duration: 0.5 });
@@ -64,9 +71,14 @@ const LockScreen = () => {
         <section ref={rootRef} className="lock-screen">
             <div className="lock-blur" />
 
+            <div className="lock-clock">
+                <p className="lock-time">{time.format("h:mm")}</p>
+                <p className="lock-date">{time.format("dddd, MMMM D")}</p>
+            </div>
+
             <div ref={cardRef} className="lock-card">
-                <div className="lock-initials">M.J</div>
-                <h1>madajbuilds</h1>
+                <div className="lock-initials">M. J</div>
+                <h1>@madajbuilds</h1>
 
                 <form className="lock-form" onSubmit={submit}>
                     <input

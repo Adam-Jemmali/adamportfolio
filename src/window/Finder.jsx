@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import WindowsControls from "#components/WindowsControls.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
-import {Search} from "lucide-react"
+import {Search, Folder} from "lucide-react"
 import {locations} from "#constants/index.js";
 import useLocationStore from "#store/location.js";
 import clsx from "clsx";
@@ -83,7 +83,7 @@ const Finder = () => {
                                     onClick={() => setActiveLocation(item)}
                                     className={clsx("cursor-pointer flex items-center gap-2 px-3 py-2 rounded-md transition-colors", isActive(item) ? "active" : "hover:bg-white/5")}
                                 >
-                                    <img src={resolveIcon(item.icon)} className="w-4" alt={item.name} />
+                                    <Folder strokeWidth={1.6} className="w-4 text-sky-400 shrink-0" />
                                     <p className="text-sm font-medium">{item.name}</p>
                                 </li>
                             ))}
@@ -99,7 +99,11 @@ const Finder = () => {
                     )}
                     {visibleItems.map((item) => (
                         <li key={item.id} className={item.position} onClick={() => openItem(item)} title={item.name}>
-                            <img src={resolveIcon(item.icon)} alt={item.name} />
+                            {item.kind === "folder" ? (
+                                <Folder strokeWidth={1.4} className="finder-folder-icon" />
+                            ) : (
+                                <img src={resolveIcon(item.icon)} alt={item.name} />
+                            )}
                             <p className="text-shadow-md">{item.name}</p>
                         </li>
                     ))}
