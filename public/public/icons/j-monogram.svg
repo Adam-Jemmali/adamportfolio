@@ -1,0 +1,16 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="j-body-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366F1" />
+      <stop offset="100%" stop-color="#2563EB" />
+    </linearGradient>
+    <linearGradient id="j-accent-grad" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#4ADE80" />
+    </linearGradient>
+  </defs>
+  <path d="M 110 30 L 145 30 L 145 125 C 145 150, 125 165, 95 165 C 65 165, 45 145, 45 125 L 75 125 C 75 132, 82 138, 95 138 C 108 138, 115 130, 115 120 Z" fill="url(#j-body-grad)" />
+  <rect x="155" y="30" width="22" height="8" rx="4" fill="url(#j-accent-grad)" />
+  <rect x="155" y="44" width="14" height="8" rx="4" fill="url(#j-accent-grad)" />
+  <circle cx="174" cy="62" r="4" fill="#38BDF8" />
+</svg>

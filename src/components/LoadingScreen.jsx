@@ -36,7 +36,10 @@ const LoadingScreen = ({ title = "OS Initialize", onComplete }) => {
             <div className="boot-logo lock-initials size-20! text-3xl">A J</div>
 
             <div className="boot-content flex flex-col items-center">
-                <div className="boot-spinner" />
+                <div className="boot-snake" role="status" aria-label="Loading">
+                    <span className="boot-snake-head" />
+                    <span /><span /><span /><span /><span /><span />
+                </div>
 
                 <div className="boot-logs">
                     {BOOT_LOGS.map((log) =>

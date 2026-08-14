@@ -22,7 +22,9 @@ const BrandName = ({ className = "", animated = false }) => (
                 style={animated ? { "--letter-delay": `${0.24 + index * 0.055}s` } : undefined}
                 aria-hidden="true"
             >
-                {value === " " ? "\u00A0" : value}
+                {monogram ? (
+                    <img src={`/public/icons/${value.toLowerCase()}-monogram.svg`} alt="" />
+                ) : value === " " ? "\u00A0" : value}
             </span>
         ))}
     </span>

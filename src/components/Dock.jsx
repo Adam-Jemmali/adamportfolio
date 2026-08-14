@@ -1,5 +1,4 @@
 import { createElement, useRef } from "react";
-import { Tooltip } from "react-tooltip";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { dockApps } from "#constants/index.js";
@@ -74,14 +73,11 @@ const Dock = () => {
         <div id="dock">
             <div ref={bariconsRef} className="dock-container">
                 {dockApps.map(({ id, name, icon, canOpen }) => (
-                    <div key={id} className="relative flex justify-center">
+                    <div key={id} className="dock-item">
                         <button
                             type="button"
                             className="dock-icon"
                             aria-label={name}
-                            data-tooltip-id="dock-tooltip"
-                            data-tooltip-delay-show={150}
-                            data-tooltip-content={name}
                             disabled={!canOpen}
                             onClick={() => toggleApp({ id, canOpen })}
                         >
@@ -90,10 +86,10 @@ const Dock = () => {
                                 : createElement(icon, { className: canOpen ? "" : "opacity-50" })
                             }
                         </button>
+                        <span className="dock-label" role="tooltip">{name}</span>
                         {windows[id]?.isOpen && <span className="dock-dot" />}
                     </div>
                 ))}
-                <Tooltip id="dock-tooltip" place="top" className="tooltip" />
             </div>
         </div>
     );

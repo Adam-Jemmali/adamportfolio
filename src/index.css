@@ -312,8 +312,24 @@ body {
         box-shadow: 0 12px 32px rgb(0 0 0 / 0.25);
     }
 
-    .tooltip {
-        @apply py-2! px-3! text-xs! rounded! bg-gray-900! text-white! shadow-2xl! border! border-gray-700! font-medium!;
+    .dock-item {
+        @apply relative flex justify-center;
+    }
+
+    .dock-label {
+        @apply absolute whitespace-nowrap rounded-md px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 pointer-events-none;
+        bottom: calc(100% + 0.9rem);
+        background: rgb(20 20 24 / 0.9);
+        border: 1px solid rgb(255 255 255 / 0.14);
+        box-shadow: 0 8px 22px rgb(0 0 0 / 0.28);
+        transform: translateY(0.35rem) scale(0.96);
+        transition: opacity 150ms ease, transform 150ms ease;
+    }
+
+    .dock-item:hover .dock-label,
+    .dock-icon:focus-visible + .dock-label {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 
     .dock-icon {
@@ -426,14 +442,50 @@ body {
         @apply fixed inset-0 z-9999 bg-black flex flex-col items-center justify-center font-georama overflow-hidden;
     }
 
-    .boot-spinner {
-        @apply size-10 rounded-full border-2 border-white/15;
-        border-top-color: #3c6eb4;
-        animation: boot-spin 0.9s linear infinite;
+    .boot-snake {
+        @apply flex items-center gap-1.5 h-10;
+        animation: boot-snake-travel 1.35s ease-in-out infinite;
     }
 
-    @keyframes boot-spin {
-        to { transform: rotate(360deg); }
+    .boot-snake span {
+        @apply size-3 rounded-full;
+        background: linear-gradient(135deg, #4ade80, #22c55e);
+        box-shadow: 0 0 12px rgb(74 222 128 / 0.5);
+        animation: boot-snake-wave 0.75s ease-in-out infinite alternate;
+    }
+
+    .boot-snake span:nth-child(2) { animation-delay: 0.06s; opacity: 0.88; }
+    .boot-snake span:nth-child(3) { animation-delay: 0.12s; opacity: 0.76; }
+    .boot-snake span:nth-child(4) { animation-delay: 0.18s; opacity: 0.64; }
+    .boot-snake span:nth-child(5) { animation-delay: 0.24s; opacity: 0.52; }
+    .boot-snake span:nth-child(6) { animation-delay: 0.3s; opacity: 0.4; }
+    .boot-snake span:nth-child(7) { animation-delay: 0.36s; opacity: 0.28; }
+
+    .boot-snake-head {
+        @apply relative size-4!;
+        background: linear-gradient(135deg, #86efac, #22c55e) !important;
+    }
+
+    .boot-snake-head::after {
+        content: "";
+        position: absolute;
+        top: 0.28rem;
+        left: 0.34rem;
+        width: 0.16rem;
+        height: 0.16rem;
+        border-radius: 999px;
+        background: #082f49;
+        box-shadow: 0.34rem 0 #082f49;
+    }
+
+    @keyframes boot-snake-wave {
+        from { transform: translateY(-0.16rem) scale(1); }
+        to { transform: translateY(0.16rem) scale(0.86); }
+    }
+
+    @keyframes boot-snake-travel {
+        0%, 100% { transform: translateX(-0.35rem); }
+        50% { transform: translateX(0.35rem); }
     }
 
     .boot-logs {
@@ -684,38 +736,52 @@ body {
 
     #welcome .hero-brand {
         @apply pointer-events-auto mt-6 flex items-center gap-4;
+        max-width: calc(100vw - 2rem);
     }
 
     #welcome .brand-name {
         display: inline-flex;
         align-items: baseline;
         white-space: pre;
+        min-width: 0;
     }
 
     .brand-name-letter {
         display: inline-block;
     }
 
+    .brand-monogram {
+        display: inline-block;
+        line-height: 1;
+    }
+
+    .brand-monogram img {
+        display: block;
+        width: 1em;
+        height: 1em;
+    }
+
     #welcome .brand-monogram {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 0.82em;
-        height: 0.82em;
-        margin: 0 0.07em 0 0.035em;
-        border-radius: 0.08em;
-        background: var(--pfp-grad);
-        color: #f7fbff;
-        font-size: 0.75em;
-        font-weight: 900;
-        font-style: normal;
-        letter-spacing: -0.08em;
-        box-shadow: 0 0.09em 0.28em rgb(0 0 0 / 0.28);
-        transform: translateY(0.07em) skewX(-8deg);
+        width: 0.72em;
+        height: 0.72em;
+        margin: 0 0.055em 0 0.025em;
+        vertical-align: -0.08em;
+        animation-name: hero-monogram-land;
+        animation-duration: 0.9s;
+        animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+        animation-fill-mode: both;
+    }
+
+    #welcome .brand-monogram img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        filter: drop-shadow(0 0.09em 0.22em rgb(0 0 0 / 0.28));
     }
 
     #welcome .hero-title {
-        @apply text-6xl md:text-7xl max-sm:text-4xl italic font-georama;
+        @apply italic font-georama;
+        font-size: clamp(2rem, 7vw, 4.5rem);
         background: var(--pfp-grad);
         background-size: 200% 100%;
         -webkit-background-clip: text;
@@ -732,8 +798,12 @@ body {
     }
 
     #welcome .hero-letter:hover {
-        animation: hero-letter-rubberband 0.82s both;
-        color: #f7fbff;
+        color: inherit;
+    }
+
+    #welcome .brand-monogram.hero-letter {
+        animation: hero-monogram-land 0.9s both cubic-bezier(0.16, 1, 0.3, 1);
+        animation-delay: var(--letter-delay);
     }
 
     @keyframes hero-letter-enter {
@@ -741,14 +811,10 @@ body {
         to { opacity: 1; transform: translateY(0) rotate(0); }
     }
 
-    @keyframes hero-letter-rubberband {
-        0% { transform: scaleX(1); }
-        30% { transform: scale3d(1.22, 0.78, 1); }
-        40% { transform: scale3d(0.8, 1.2, 1); }
-        50% { transform: scale3d(1.12, 0.88, 1); }
-        65% { transform: scale3d(0.96, 1.04, 1); }
-        75% { transform: scale3d(1.04, 0.96, 1); }
-        to { transform: scaleX(1); }
+    @keyframes hero-monogram-land {
+        from { opacity: 0; transform: translateY(-0.75em) rotate(-360deg) scale(0.55); }
+        72% { opacity: 1; transform: translateY(0.06em) rotate(18deg) scale(1.06); }
+        to { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
     }
 
     #welcome .hero-type {
