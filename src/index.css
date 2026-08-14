@@ -1169,20 +1169,40 @@ body {
 
     .journey-intro {
         @apply mb-8 rounded-2xl px-5 py-5;
-        background: linear-gradient(135deg, rgb(75 213 234 / 0.12), rgb(124 58 237 / 0.12));
+        background: linear-gradient(135deg, rgb(75 213 234 / 0.14), rgb(124 58 237 / 0.14));
         border: 1px solid rgb(255 255 255 / 0.1);
     }
 
     .journey-intro-kicker {
-        @apply text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-300;
+        @apply text-[11px] font-bold uppercase tracking-[0.22em] text-cyan-300;
     }
 
     .journey-intro h1 {
         @apply mt-2 text-2xl font-bold text-white;
     }
 
+    .journey-intro .journey-intro-sub {
+        @apply mt-1 text-[13px] font-semibold text-cyan-200/90;
+    }
+
     .journey-intro p {
         @apply mt-2 max-w-2xl text-[13px] leading-relaxed text-zinc-300;
+    }
+
+    .journey-section {
+        @apply mb-9;
+    }
+
+    .journey-section-head {
+        @apply mb-5 flex flex-col gap-1;
+    }
+
+    .journey-section-kicker {
+        @apply text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500;
+    }
+
+    .journey-section-head h2 {
+        @apply text-lg font-bold text-white;
     }
 
     .journey-timeline {
@@ -1220,10 +1240,23 @@ body {
     }
 
     .journey-card {
-        @apply flex-1 mb-8 rounded-xl px-4 py-4;
+        @apply relative flex-1 mb-8 rounded-xl px-4 py-4;
         min-width: 0;
         background: rgb(255 255 255 / 0.04);
         border: 1px solid rgb(255 255 255 / 0.08);
+    }
+
+    .journey-year {
+        @apply absolute -top-3 right-3 pointer-events-none select-none;
+        font-size: 3.25rem;
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        opacity: 0.07;
+        background: linear-gradient(135deg, #4ad8ed, #a78bfa);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
     }
 
     .journey-card-topline {
@@ -1242,6 +1275,10 @@ body {
 
     .journey-card h3 {
         @apply mt-2 text-[16px] font-semibold text-white;
+    }
+
+    .journey-subtitle {
+        @apply mt-0.5 text-[13px] font-semibold text-zinc-200;
     }
 
     .journey-location {
@@ -1274,6 +1311,20 @@ body {
         @apply rounded-md px-2 py-1 text-[10px] font-medium text-zinc-300;
         background: rgb(255 255 255 / 0.07);
         border: 1px solid rgb(255 255 255 / 0.08);
+    }
+
+    .journey-support-grid {
+        @apply grid grid-cols-2 gap-4;
+    }
+
+    .journey-support {
+        @apply mb-0;
+    }
+
+    .journey-support-focus {
+        @apply col-span-2;
+        background: linear-gradient(135deg, rgb(75 213 234 / 0.08), rgb(124 58 237 / 0.08));
+        border-color: rgb(75 213 234 / 0.2);
     }
 
     #finder {
@@ -2026,6 +2077,23 @@ body {
 
         #journey .journey-highlights li {
             font-size: 0.7rem;
+        }
+
+        #journey .journey-year {
+            font-size: 2.25rem;
+            top: -0.6rem;
+        }
+
+        #journey .journey-support-grid {
+            grid-template-columns: 1fr;
+        }
+
+        #journey .journey-support-focus {
+            grid-column: auto;
+        }
+
+        #journey .journey-section-head h2 {
+            font-size: 1rem;
         }
 
         /* Safari: tighter blog padding */

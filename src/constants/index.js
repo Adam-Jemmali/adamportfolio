@@ -438,6 +438,179 @@ const WORK_LOCATION = {
 
             ],
         },
+
+        // ▶ Project 4 — Solen AI (Autonomous Software Deployment Platform)
+        {
+            id: 8,
+            name: "Solen AI",
+            icon: "public/images/folder.png",
+            kind: "folder",
+            position: "top-10 left-80",
+            windowPosition: "top-[5vh] left-5",
+            children: [
+                {
+                    id: 1,
+                    name: "Solen AI.txt",
+                    icon: "public/images/txt.png",
+                    kind: "file",
+                    fileType: "txt",
+                    position: "top-5 left-10",
+                    description: [
+                        "Solen AI is an autonomous software deployment platform: from a single natural-language prompt it covers intent classification, LLM-driven code generation, Docker containerization, and deployment monitoring.",
+                        "A closed-loop repair system monitors live deployments, diagnoses failures using LLM reasoning, and regenerates fixes.",
+                        "Circuit-breaker patterns and an action-level audit trail keep every autonomous step observable and safe."
+                    ],
+                },
+                {
+                    id: 2,
+                    name: "Solen AI.repo",
+                    icon: "public/images/github.png",
+                    kind: "file",
+                    fileType: "url",
+                    href: "https://github.com/Adam-Jemmali",
+                    position: "top-50 left-5",
+                },
+            ],
+        },
+
+        // ▶ Project 5 — A.E.G.I.S. Garden (Real-Time Incident Triage Platform)
+        {
+            id: 9,
+            name: "A.E.G.I.S. Garden",
+            icon: "public/images/folder.png",
+            kind: "folder",
+            position: "top-10 left-5",
+            windowPosition: "top-[20vh] left-7",
+            children: [
+                {
+                    id: 1,
+                    name: "A.E.G.I.S. Garden.txt",
+                    icon: "public/images/txt.png",
+                    kind: "file",
+                    fileType: "txt",
+                    position: "top-10 left-40",
+                    description: [
+                        "An event-driven incident triage system integrating Google Gemini multimodal reasoning with structured JSON outputs and function-calling dispatch for text, image, and structured-data inputs.",
+                        "Multi-provider LLM failover logic via OpenRouter with secondary model fallbacks eliminates single-provider dependency and prevents API downtime during upstream outages.",
+                        "MongoDB Atlas Change Streams drive WebSocket state updates for real-time incident tracking.",
+                        "Stack: FastAPI, React, MongoDB Atlas, Google Gemini, OpenRouter, WebSocket, Docker."
+                    ],
+                },
+                {
+                    id: 2,
+                    name: "A.E.G.I.S. Garden.repo",
+                    icon: "public/images/github.png",
+                    kind: "file",
+                    fileType: "url",
+                    href: "https://github.com/Adam-Jemmali",
+                    position: "top-50 left-5",
+                },
+            ],
+        },
+
+        // ▶ Project 6 — Chronos Cloud (Event-Driven Digital Twin)
+        {
+            id: 10,
+            name: "Chronos Cloud",
+            icon: "public/images/folder.png",
+            kind: "folder",
+            position: "top-10 left-45",
+            windowPosition: "top-[20vh] left-7",
+            children: [
+                {
+                    id: 1,
+                    name: "Chronos Cloud.txt",
+                    icon: "public/images/txt.png",
+                    kind: "file",
+                    fileType: "txt",
+                    position: "top-10 left-40",
+                    description: [
+                        "An event-driven digital twin built at the Invest Ottawa Hackathon 2026, winner of Best Use of Snowflake API.",
+                        "Architected a fault-tolerant message queue and state-recovery pipeline using RabbitMQ and Redis, implementing retry backoffs and dead-letter queues to handle upstream LLM rate limits and network drops.",
+                        "Built a FastAPI control plane with circuit-breaker patterns and automated PyTest unit testing to harden the pipeline against upstream service failures, tracked via Git-managed Jenkins CI/CD.",
+                        "Stack: Python, FastAPI, NATS/JetStream, Docker, RabbitMQ, Redis, PyTest, Jenkins."
+                    ],
+                },
+                {
+                    id: 2,
+                    name: "Chronos Cloud.repo",
+                    icon: "public/images/github.png",
+                    kind: "file",
+                    fileType: "url",
+                    href: "https://github.com/Adam-Jemmali",
+                    position: "top-50 left-5",
+                },
+            ],
+        },
+
+        // ▶ Project 7 — B2B AI Workforce Optimizer (Scheduling & Predictive Analytics)
+        {
+            id: 11,
+            name: "B2B AI Workforce Optimizer",
+            icon: "public/images/folder.png",
+            kind: "folder",
+            position: "top-10 left-80",
+            windowPosition: "top-[20vh] left-7",
+            children: [
+                {
+                    id: 1,
+                    name: "B2B AI Workforce Optimizer.txt",
+                    icon: "public/images/txt.png",
+                    kind: "file",
+                    fileType: "txt",
+                    position: "top-10 left-40",
+                    description: [
+                        "Resolved staffing conflicts by engineering a constraint-based scheduling pipeline combining LP heuristics with LLM-assisted shift analysis via DeepSeek AI.",
+                        "Gave operations managers real-time visibility into demand spikes by building an interactive Streamlit dashboard with Plotly trend visualizations and Twilio SMS alerting.",
+                        "Stack: FastAPI, Streamlit, DeepSeek AI, Plotly, SQLite, Twilio."
+                    ],
+                },
+                {
+                    id: 2,
+                    name: "B2B AI Workforce Optimizer.repo",
+                    icon: "public/images/github.png",
+                    kind: "file",
+                    fileType: "url",
+                    href: "https://github.com/Adam-Jemmali",
+                    position: "top-50 left-5",
+                },
+            ],
+        },
+
+        // ▶ Project 8 — Distributed Systems Developer (UOttawa AI+ Society)
+        {
+            id: 12,
+            name: "Distributed Systems (AI+ Society)",
+            icon: "public/images/folder.png",
+            kind: "folder",
+            position: "top-10 left-5",
+            windowPosition: "top-[20vh] left-7",
+            children: [
+                {
+                    id: 1,
+                    name: "Distributed Systems (AI+ Society).txt",
+                    icon: "public/images/txt.png",
+                    kind: "file",
+                    fileType: "txt",
+                    position: "top-10 left-40",
+                    description: [
+                        "Event-driven backend infrastructure for a 3-person Agile team at the University of Ottawa AI+ Society.",
+                        "Replaced a synchronous polling architecture with RabbitMQ async message queues, decoupling producers from consumers and enabling backpressure-controlled throughput scaling.",
+                        "Implemented GitHub Actions CI/CD with automated unit-testing gates and tagged release management, contributing as a backend developer using object-oriented design patterns in a collaborative Git-managed repository.",
+                        "Oct 2025 - Jan 2026 | Ottawa, ON."
+                    ],
+                },
+                {
+                    id: 2,
+                    name: "Distributed Systems.repo",
+                    icon: "public/images/github.png",
+                    kind: "file",
+                    fileType: "url",
+                    href: "https://github.com/Adam-Jemmali",
+                    position: "top-50 left-5",
+                },
+            ],
+        },
     ],
 
 };
@@ -456,13 +629,13 @@ const ABOUT_LOCATION = {
             kind: "file",
             fileType: "txt",
             position: "top-5 left-10",
-            subtitle: "Computer Vision & AI Systems Engineer",
+            subtitle: "Full-Stack Software Engineer - Backend Systems and AI-Integrated Applications",
             description: [
-                "CS student building the future of scouting. I design computer vision and AI systems for sports analytics, agentic AI, and EdTech.",
-                "Founder of Mentrixa, an AI tutoring SaaS. I help teams understand AI + Computer Vision in sports and ship production scale systems.",
-                "I build agentic AI with Claude, Gemini, and Groq, real time sports analytics and computer vision pipelines, and AI automation with Make.com, n8n, and LangChain.",
-                "My goal is to become a Cloud & AI architect for sports organizations, designing real time platforms that help teams make smarter decisions.",
-                "Outside of code I'm deep into basketball: analyzing games, strategy, and performance patterns."
+                "Full-stack software engineering student proficient in Python, OpenCV, FastAPI, SQL, Git, Docker, and CI/CD, with hands-on production experience building real-time computer vision systems for professional sports analytics and full-stack SaaS platforms shipped and operated end-to-end.",
+                "Sharpening system design, testing, and Linux debugging daily through structured and self-directed practice. Eligible for Government of Canada security clearance.",
+                "Seeking a Summer 2027 internship in software engineering, backend development, full-stack development, or applied AI/ML systems.",
+                "Designing real-time sports analytics and computer vision pipelines alongside agentic AI systems with Claude, Gemini, Groq, LangChain, and n8n.",
+                "Currently building daily: DSA (NeetCode), Linux systems debugging (SadServers), shell tools, git internals, debugging/profiling (MIT Missing Semester), and SQL (SQLZoo)."
             ]
         },
     ],
