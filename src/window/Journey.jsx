@@ -20,7 +20,7 @@ const WORK_EXPERIENCE = [
         year: "2024",
         location: "Montreal, QC · On-site",
         summary:
-            "Sports analytics company building real-time computer vision infrastructure for professional soccer.",
+            "Built real-time soccer tracking and event detection from broadcast video.",
         bullets: [
             "Designed a soccer performance analytics pipeline for single-camera Canadian Premier League (CPL) broadcast feeds, transforming raw video into spatio-temporal tracking data and physical load metrics.",
             "Engineered and deployed a low-latency soccer event-detection engine achieving 92% accuracy at 30 FPS with under 100ms CPU inference, using OpenCV and PyTorch optimized for edge and serverless video processing.",
@@ -41,7 +41,7 @@ const WORK_EXPERIENCE = [
         year: "2024",
         location: "Remote · 7 clients across education, recruiting, and real estate",
         summary:
-            "AI-driven workflow automation for B2B clients, primarily in real estate, using no-code and AI tooling.",
+            "Automated lead and CRM workflows for B2B clients using AI and no-code tools.",
         bullets: [
             "Engineered AI-driven workflow automations for B2B clients, primarily in real estate, using Make.com, Zapier, and Monday.com, increasing lead conversion by 35%.",
             "Designed event-triggered CRM automations that achieved a 40% client ROI within two months of deployment.",
@@ -60,7 +60,7 @@ const WORK_EXPERIENCE = [
         year: "2025",
         location: "Ottawa, ON · Event-driven backend infrastructure for a 3-person Agile team",
         summary:
-            "Replaced synchronous polling with asynchronous message queues to scale event-driven backend infrastructure.",
+            "Helped replace polling with event-driven backend infrastructure for a three-person team.",
         bullets: [
             "Replaced a synchronous polling architecture with RabbitMQ async message queues, decoupling producers from consumers and enabling backpressure-controlled throughput scaling.",
             "Implemented GitHub Actions CI/CD with automated unit-testing gates and tagged release management, contributing as a backend developer using object-oriented design patterns in a collaborative Git-managed repository.",
@@ -78,7 +78,7 @@ const WORK_EXPERIENCE = [
         year: "2026",
         location: "Ottawa, ON · Self-employed · Remote",
         summary:
-            "Gamified EdTech SaaS for verifiable first-attempt skill recording and practice across academic and applied subjects.",
+            "Co-founded an EdTech SaaS for recording and practicing verifiable skills.",
         bullets: [
             "Co-built a full-stack platform (Next.js 14 App Router, TypeScript, Supabase/Postgres) with a collaborator for recording verifiable first-attempt skill performance across academic and applied subjects.",
             "Planned system architecture with UML class and sequence diagrams before implementation, mapping the auth, quest, and video-recording flows.",
@@ -192,9 +192,6 @@ const SUPPORTING_ENTRIES = [
     },
 ];
 
-/* ── Small GSAP hover lift shared by every card ─────────────────────────── */
-const liftCard = (el, y) => gsap.to(el, { y, duration: 0.25, ease: "power2.out", overwrite: "auto" });
-
 const JourneyWorkEntry = ({ entry }) => (
     <article className={`journey-entry journey-entry--${entry.side}`}>
         <div className="journey-spine" aria-hidden="true">
@@ -208,45 +205,30 @@ const JourneyWorkEntry = ({ entry }) => (
             {entry.showLine && <span className="journey-line" />}
         </div>
 
-        <div
-            className={`journey-card journey-card--${entry.side}`}
-            onMouseEnter={(e) => liftCard(e.currentTarget, -4)}
-            onMouseLeave={(e) => liftCard(e.currentTarget, 0)}
-        >
+        <div className={`journey-entry-content journey-entry-content--${entry.side}`}>
             <div className="journey-card-topline">
-                <span className="journey-tag">{entry.tag}</span>
+                <span className="journey-role">{entry.tag}</span>
                 <span className="journey-period">{entry.period}</span>
             </div>
             <h3>{entry.title}</h3>
             {entry.location && <p className="journey-location">{entry.location}</p>}
             <p className="journey-summary">{entry.summary}</p>
-
-            <ul className="journey-highlights">
-                {entry.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
-            </ul>
-
             {entry.skills && (
-                <div className="journey-skills" aria-label={`${entry.title} technologies`}>
-                    {entry.skills.map((skill) => <span key={skill}>{skill}</span>)}
-                </div>
+                <p className="journey-skills" aria-label={`${entry.title} technologies`}>{entry.skills.slice(0, 4).join("  ·  ")}</p>
             )}
         </div>
     </article>
 );
 
 const SupportingEntry = ({ entry }) => (
-    <article
-        className={`journey-card journey-support journey-support-${entry.type}`}
-        onMouseEnter={(e) => liftCard(e.currentTarget, -4)}
-        onMouseLeave={(e) => liftCard(e.currentTarget, 0)}
-    >
+    <article className={`journey-support journey-support-${entry.type}`}>
         {(entry.logo || entry.icon) && (
             <div className="journey-support-icon">
                 <img className={entry.logo ? "journey-logo" : ""} src={entry.logo || entry.icon} alt="" />
             </div>
         )}
         <div className="journey-card-topline">
-            <span className="journey-tag">{entry.tag}</span>
+            <span className="journey-role">{entry.tag}</span>
             {entry.period && <span className="journey-period">{entry.period}</span>}
         </div>
         <h3>{entry.title}</h3>
@@ -256,7 +238,7 @@ const SupportingEntry = ({ entry }) => (
 
         {entry.certs && (
             <ul className="journey-certs">
-                {entry.certs.map((cert) => (
+                {entry.certs.slice(0, 3).map((cert) => (
                     <li key={cert.name}>
                         <img className="journey-cert-icon" src={cert.icon} alt="" />
                         <span className="journey-cert-body">
@@ -268,23 +250,14 @@ const SupportingEntry = ({ entry }) => (
             </ul>
         )}
 
-        {entry.bullets && (
-            <ul className="journey-highlights">
-                {entry.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
-            </ul>
-        )}
-
         {entry.skills && (
-            <div className="journey-skills" aria-label={`${entry.title} technologies`}>
-                {entry.skills.map((skill) => <span key={skill}>{skill}</span>)}
-            </div>
+            <p className="journey-skills" aria-label={`${entry.title} technologies`}>{entry.skills.slice(0, 5).join("  ·  ")}</p>
         )}
     </article>
 );
 
 const Journey = () => {
     const bodyRef = useRef(null);
-    const pillRef = useRef(null);
     const [activeYear, setActiveYear] = useState(YEARS[0]);
 
     useEffect(() => {
@@ -312,15 +285,6 @@ const Journey = () => {
         };
     }, []);
 
-    useEffect(() => {
-        if (!pillRef.current) return;
-        gsap.fromTo(
-            pillRef.current,
-            { y: -8, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.35, ease: "power2.out", overwrite: true }
-        );
-    }, [activeYear]);
-
     const scrollToYear = (year) => {
         const container = bodyRef.current;
         if (!container) return;
@@ -341,7 +305,7 @@ const Journey = () => {
                 { opacity: 1, y: 0, duration: 0.8, stagger: 0.12, ease: "power3.out" }
             );
 
-            // Year dividers and supporting cards fade/rise on scroll.
+            // The content enters softly; the timeline remains visually quiet.
             ScrollTrigger.batch([".journey-year-divider", ".journey-support"], {
                 scroller: bodyRef.current,
                 start: "top 90%",
@@ -354,11 +318,11 @@ const Journey = () => {
                     ),
             });
 
-            // Work cards slide in from their side of the timeline.
+            // Work entries slide in from their side of the timeline.
             bodyRef.current
-                .querySelectorAll(".journey-card--left, .journey-card--right")
+                .querySelectorAll(".journey-entry-content--left, .journey-entry-content--right")
                 .forEach((card) => {
-                    const isRight = card.classList.contains("journey-card--right");
+                    const isRight = card.classList.contains("journey-entry-content--right");
                     gsap.fromTo(
                         card,
                         { opacity: 0, x: isRight ? 72 : -72, y: 28 },
@@ -403,26 +367,14 @@ const Journey = () => {
             </div>
 
             <div ref={bodyRef} className="journey-body">
-                <div className="journey-year-pill" ref={pillRef} aria-live="polite">
-                    {activeYear}
-                </div>
-
                 <header className="journey-intro">
                     <span className="journey-intro-kicker">ADAM JEMMALI</span>
-                    <h1>Full-Stack Software Engineer</h1>
-                    <p className="journey-intro-sub">Backend Systems &amp; AI-Integrated Applications</p>
-                    <p>
-                        Full-stack software engineering student proficient in Python, OpenCV, FastAPI, SQL, Git, Docker,
-                        and CI/CD, with hands-on production experience building real-time computer vision systems for
-                        professional sports analytics and full-stack SaaS platforms shipped and operated end-to-end.
-                        Sharpening system design, testing, and Linux debugging daily — seeking a Summer 2027 internship
-                        in software engineering, backend development, full-stack development, or applied AI/ML systems.
-                    </p>
+                    <h1>I build reliable software for real-time ideas.</h1>
+                    <p>Full-stack engineer focused on backend systems, computer vision, and AI products.</p>
                 </header>
 
                 <section className="journey-section">
                     <div className="journey-section-head">
-                        <span className="journey-section-kicker">Experience · Building · Learning</span>
                         <h2>Work Experience</h2>
                     </div>
 
@@ -444,7 +396,7 @@ const Journey = () => {
 
                 <section className="journey-section journey-section-support">
                     <div className="journey-section-head">
-                        <span className="journey-section-kicker">Growth · Learning · Recognition</span>
+                    
                         <h2>Education, Awards &amp; What's Next</h2>
                     </div>
 
