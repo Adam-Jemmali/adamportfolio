@@ -7,10 +7,10 @@ import useSystemStore from "#store/system.js";
 import PowerMenu from "./PowerMenu.jsx";
 
 const HINTS = [
-    'The password is "password". We\'re very secure.',
-    'Any password works. Seriously, try it.',
+    'The password is "password" maybe who knows.',
+    'Any password works.Seriously, try it.',
     "The gatekeeper is on a coffee break.",
-    'Type literally anything. Yes, even "1234".',
+    'Type literally anything.Yes, even "1234".',
     
 ];
 

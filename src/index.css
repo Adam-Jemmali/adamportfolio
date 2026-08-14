@@ -1238,6 +1238,10 @@ body {
         filter: none;
     }
 
+    .journey-dot .journey-logo--white {
+        filter: brightness(0) invert(1);
+    }
+
     .journey-line {
         @apply w-px flex-1 my-1.5;
         min-height: 1.5rem;
@@ -1345,6 +1349,27 @@ body {
 
     .journey-certs li {
         @apply flex items-start gap-3;
+    }
+
+    .journey-awards {
+        @apply mt-3 space-y-3;
+    }
+
+    .journey-awards li {
+        @apply flex items-center gap-3;
+    }
+
+    .journey-award-icons {
+        @apply flex items-center gap-1 shrink-0;
+        width: 5.75rem;
+    }
+
+    .journey-award-icons img {
+        @apply size-7 object-contain;
+    }
+
+    .journey-award-icons img:last-child:first-child {
+        @apply size-9 rounded-md;
     }
 
     .journey-cert-icon {
@@ -1722,7 +1747,7 @@ body {
 
     /* ============ Desktop icons ============ */
     .desktop-item {
-        @apply flex flex-col items-center gap-1 w-[5.5rem] p-1.5 cursor-pointer rounded-md transition-colors;
+        @apply flex flex-col items-center gap-1 w-22 p-1.5 cursor-pointer rounded-md transition-colors;
     }
 
     .desktop-item:hover {

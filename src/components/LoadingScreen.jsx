@@ -3,23 +3,19 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
 const BOOT_LOGS = [
-    { text: "Stretching the CPUs…", pct: 8 },
-    { text: "Brewing coffee for the GPU", pct: 18 },
-    { text: "Waking up the pixels", pct: 30 },
-    { text: "Loaded @madajbuilds OS v1.0", pct: 44 },
-    { text: "Finding your open tabs", pct: 58 },
-    { text: "Hiding the bugs 🐛", pct: 70 },
-    { text: "Mounted user session", pct: 82 },
-    { text: "Starting desktop environment", pct: 92 },
+    { text: "Stretching the startup process", pct: 8 },
+    { text: "Loading @AdamJemmali OS", pct: 44 },
+    { text: "Hiding the bugs ", pct: 70 },
+    { text: "Starting python virtual environment", pct: 92 },
 ];
 
-const LoadingScreen = ({ title = "System Initialize", onComplete }) => {
+const LoadingScreen = ({ title = "OS Initialize", onComplete }) => {
     const [progress, setProgress] = useState(0);
 
     useGSAP(() => {
         const tl = gsap.timeline({ onComplete });
         tl.to({}, {
-            duration: 2.8,
+            duration: 3.5,
             ease: "power1.inOut",
             onUpdate: () => setProgress(Math.round(tl.progress() * 100)),
         });
@@ -31,13 +27,13 @@ const LoadingScreen = ({ title = "System Initialize", onComplete }) => {
 
         gsap.fromTo(".boot-content",
             { opacity: 0 },
-            { opacity: 1, duration: 0.6, delay: 0.3 }
+            { opacity: 1, duration: 1.5, delay: 0.3 }
         );
     }, []);
 
     return (
         <div className="boot-screen">
-            <div className="boot-logo lock-initials !size-20 text-3xl">M. J</div>
+            <div className="boot-logo lock-initials size-20! text-3xl">M. J</div>
 
             <div className="boot-content flex flex-col items-center">
                 <div className="boot-spinner" />

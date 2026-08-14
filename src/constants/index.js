@@ -634,7 +634,7 @@ const ABOUT_LOCATION = {
                 "Full-stack software engineering student proficient in Python, OpenCV, FastAPI, SQL, Git, Docker, and CI/CD, with hands-on production experience building real-time computer vision systems for professional sports analytics and full-stack SaaS platforms shipped and operated end-to-end.",
                 "Sharpening system design, testing, and Linux debugging daily through structured and self-directed practice. Eligible for Government of Canada security clearance.",
                 "Seeking a Summer 2027 internship in software engineering, backend development, full-stack development, or applied AI/ML systems.",
-                "Designing real-time sports analytics and computer vision pipelines alongside agentic AI systems with Claude, Gemini, Groq, LangChain, and n8n.",
+                "Designing real-time sports analytics and computer vision pipelines alongside agentic AI systems.",
                 "Currently practicing daily: DSA (NeetCode), Linux systems debugging (SadServers), shell tools, git internals, debugging/profiling (MIT Missing Semester), and SQL (SQLZoo)."
             ]
         },

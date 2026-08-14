@@ -139,27 +139,27 @@ const SUPPORTING_ENTRIES = [
             {
                 icon: "public/images/aifundamentalsofmachinelearningandai.jpg",
                 name: "AWS Fundamentals of Machine Learning and Artificial Intelligence",
-                meta: "Amazon Web Services · Oct 2025",
+                meta: "Amazon Web Services: Oct 2025",
             },
             {
                 icon: "public/images/kaggle.png",
                 name: "Intro to Machine Learning (scikit-learn, Random Forest, model evaluation)",
-                meta: "Kaggle · Nov 2025",
+                meta: "Kaggle: Nov 2025",
             },
             {
                 icon: "public/images/githubcertificate.jpg",
                 name: "Career Essentials in GitHub Professional Certificate",
-                meta: "GitHub · Aug 2026",
+                meta: "GitHub: Aug 2026",
             },
             {
                 icon: "public/images/githubactioncert.jpg",
                 name: "Practical GitHub Actions",
-                meta: "LinkedIn Learning · Feb 2026",
+                meta: "LinkedIn Learning: Feb 2026",
             },
             {
                 icon: "public/images/awscloudpract.webp",
                 name: "AWS Cloud Practitioner",
-                meta: "Amazon Web Services · In Progress 2026",
+                meta: "Amazon Web Services: In Progress 2026",
             },
             {
                 icon: "public/images/dockercert.jpg",
@@ -174,9 +174,17 @@ const SUPPORTING_ENTRIES = [
         icon: "/public/icons/trophy.svg",
         tag: "Awards & Recognition",
         title: "Recognition",
-        bullets: [
-            "Best Use of Snowflake API, Invest Ottawa Hackathon 2026 — Chronos Cloud distributed digital twin platform.",
-            "Faculty of Science Achievement Award, University of Ottawa, 2024–2025 — awarded to top-performing Faculty of Science students.",
+        awards: [
+            {
+                icons: ["public/images/snowflake-logo.png", "public/images/mlh-logo.png", "public/images/hackconcordia.png"],
+                title: "Best Use of Snowflake API",
+                meta: "Invest Ottawa Hackathon 2026 · Chronos Cloud",
+            },
+            {
+                icons: ["public/images/uo.png"],
+                title: "Faculty of Science Achievement Award",
+                meta: "University of Ottawa · 2024–2025",
+            },
         ],
     },
     {
@@ -187,7 +195,7 @@ const SUPPORTING_ENTRIES = [
         title: "Agentic AI & Computer Vision",
         period: "Building in public",
         summary:
-            "Designing real-time sports analytics and computer vision pipelines alongside agentic AI systems with Claude, Gemini, Groq, LangChain, and n8n.",
+            "Designing real-time sports analytics and computer vision pipelines alongside agentic AI systems.",
         skills: ["DSA (NeetCode)", "Linux debugging (SadServers)", "Shell tools", "Git internals", "MIT Missing Semester", "SQLZoo"],
     },
 ];
@@ -197,7 +205,11 @@ const JourneyWorkEntry = ({ entry }) => (
         <div className="journey-spine" aria-hidden="true">
             <span className="journey-dot">
                 {entry.logo ? (
-                    <img className="journey-logo" src={entry.logo} alt="" />
+                    <img
+                        className={`journey-logo${entry.id === "uo-ai-society" ? " journey-logo--white" : ""}`}
+                        src={entry.logo}
+                        alt=""
+                    />
                 ) : (
                     <img src={entry.icon} alt="" />
                 )}
@@ -238,12 +250,28 @@ const SupportingEntry = ({ entry }) => (
 
         {entry.certs && (
             <ul className="journey-certs">
-                {entry.certs.slice(0, 3).map((cert) => (
+                {entry.certs.map((cert) => (
                     <li key={cert.name}>
                         <img className="journey-cert-icon" src={cert.icon} alt="" />
                         <span className="journey-cert-body">
                             <span className="journey-cert-name">{cert.name}</span>
                             <span className="journey-cert-meta">{cert.meta}</span>
+                        </span>
+                    </li>
+                ))}
+            </ul>
+        )}
+
+        {entry.awards && (
+            <ul className="journey-awards">
+                {entry.awards.map((award) => (
+                    <li key={award.title}>
+                        <span className="journey-award-icons" aria-hidden="true">
+                            {award.icons.map((icon) => <img key={icon} src={icon} alt="" />)}
+                        </span>
+                        <span className="journey-cert-body">
+                            <span className="journey-cert-name">{award.title}</span>
+                            <span className="journey-cert-meta">{award.meta}</span>
                         </span>
                     </li>
                 ))}
