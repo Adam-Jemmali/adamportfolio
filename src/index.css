@@ -1168,13 +1168,13 @@ body {
     }
 
     .journey-intro {
-        @apply mb-8 rounded-2xl px-5 py-5;
-        background: linear-gradient(135deg, rgb(75 213 234 / 0.14), rgb(124 58 237 / 0.14));
-        border: 1px solid rgb(255 255 255 / 0.1);
+        @apply mb-8 rounded-xl px-5 py-5;
+        background: rgb(255 255 255 / 0.03);
+        border: 1px solid rgb(255 255 255 / 0.08);
     }
 
     .journey-intro-kicker {
-        @apply text-[11px] font-bold uppercase tracking-[0.22em] text-cyan-300;
+        @apply text-[11px] font-bold uppercase tracking-[0.22em] text-zinc-400;
     }
 
     .journey-intro h1 {
@@ -1182,7 +1182,7 @@ body {
     }
 
     .journey-intro .journey-intro-sub {
-        @apply mt-1 text-[13px] font-semibold text-cyan-200/90;
+        @apply mt-1 text-[13px] font-semibold text-zinc-300;
     }
 
     .journey-intro p {
@@ -1219,8 +1219,9 @@ body {
 
     .journey-dot {
         @apply size-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden;
-        background: var(--pfp-grad);
-        box-shadow: 0 0 0 4px rgb(255 255 255 / 0.06), 0 8px 24px rgb(0 0 0 / 0.22);
+        background: rgb(255 255 255 / 0.06);
+        border: 1px solid rgb(255 255 255 / 0.12);
+        box-shadow: 0 4px 14px rgb(0 0 0 / 0.3);
     }
 
     .journey-dot img {
@@ -1229,7 +1230,7 @@ body {
     }
 
     .journey-dot .journey-logo {
-        @apply w-full h-full object-cover;
+        @apply w-full h-full object-contain p-1.5;
         filter: none;
     }
 
@@ -1239,24 +1240,40 @@ body {
         background: linear-gradient(to bottom, rgb(255 255 255 / 0.22), rgb(255 255 255 / 0.04));
     }
 
+    .journey-year-divider {
+        @apply flex items-center gap-4 mb-5;
+    }
+
+    .journey-year-divider-label {
+        @apply w-10 shrink-0 text-center text-[10px] font-bold tracking-[0.18em] text-zinc-500;
+    }
+
+    .journey-year-divider-line {
+        @apply h-px flex-1;
+        background: rgb(255 255 255 / 0.1);
+    }
+
+    .journey-year-nav {
+        @apply flex items-center gap-1 shrink-0;
+    }
+
+    .journey-year-nav-btn {
+        @apply px-2 py-0.5 rounded-md text-[11px] font-semibold text-zinc-500 transition-colors;
+    }
+
+    .journey-year-nav-btn:hover {
+        @apply text-zinc-200 bg-white/5;
+    }
+
+    .journey-year-nav-btn.is-active {
+        @apply text-white bg-white/10;
+    }
+
     .journey-card {
         @apply relative flex-1 mb-8 rounded-xl px-4 py-4;
         min-width: 0;
-        background: rgb(255 255 255 / 0.04);
+        background: rgb(255 255 255 / 0.03);
         border: 1px solid rgb(255 255 255 / 0.08);
-    }
-
-    .journey-year {
-        @apply absolute -top-3 right-3 pointer-events-none select-none;
-        font-size: 3.25rem;
-        font-weight: 900;
-        line-height: 1;
-        letter-spacing: -0.02em;
-        opacity: 0.07;
-        background: linear-gradient(135deg, #4ad8ed, #a78bfa);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
     }
 
     .journey-card-topline {
@@ -1264,9 +1281,9 @@ body {
     }
 
     .journey-tag {
-        @apply inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full text-cyan-300;
-        background: rgb(75 213 234 / 0.12);
-        border: 1px solid rgb(75 213 234 / 0.25);
+        @apply inline-block text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md text-zinc-300;
+        background: rgb(255 255 255 / 0.06);
+        border: 1px solid rgb(255 255 255 / 0.1);
     }
 
     .journey-period {
@@ -1282,7 +1299,7 @@ body {
     }
 
     .journey-location {
-        @apply mt-0.5 text-[11px] font-medium text-cyan-200/70;
+        @apply mt-0.5 text-[11px] font-medium text-zinc-400;
     }
 
     .journey-summary {
@@ -1299,8 +1316,7 @@ body {
 
     .journey-highlights li::before {
         content: "";
-        @apply absolute left-0 top-[0.55em] size-1.5 rounded-full bg-cyan-300;
-        box-shadow: 0 0 8px rgb(75 213 234 / 0.7);
+        @apply absolute left-0 top-[0.55em] size-1.5 rounded-full bg-zinc-500;
     }
 
     .journey-skills {
@@ -1321,10 +1337,50 @@ body {
         @apply mb-0;
     }
 
+    .journey-support-icon {
+        @apply size-8 rounded-lg flex items-center justify-center mb-3 overflow-hidden;
+        background: rgb(255 255 255 / 0.06);
+        border: 1px solid rgb(255 255 255 / 0.1);
+    }
+
+    .journey-support-icon img {
+        @apply w-4 h-4;
+        filter: brightness(0) invert(1);
+    }
+
+    .journey-support-icon .journey-logo {
+        @apply w-full h-full object-contain p-1;
+        filter: none;
+    }
+
+    .journey-certs {
+        @apply mt-3 space-y-2 border-t border-white/10 pt-3;
+    }
+
+    .journey-certs li {
+        @apply flex items-start gap-3;
+    }
+
+    .journey-cert-icon {
+        @apply size-8 shrink-0 rounded-md object-contain p-1;
+        background: rgb(255 255 255 / 0.08);
+        border: 1px solid rgb(255 255 255 / 0.1);
+    }
+
+    .journey-cert-body {
+        @apply flex flex-col min-w-0;
+    }
+
+    .journey-cert-name {
+        @apply text-[12px] leading-snug text-zinc-300;
+    }
+
+    .journey-cert-meta {
+        @apply text-[11px] text-zinc-500 mt-0.5;
+    }
+
     .journey-support-focus {
         @apply col-span-2;
-        background: linear-gradient(135deg, rgb(75 213 234 / 0.08), rgb(124 58 237 / 0.08));
-        border-color: rgb(75 213 234 / 0.2);
     }
 
     #finder {
@@ -2051,12 +2107,20 @@ body {
             width: 2rem;
         }
 
+        #journey .journey-year-divider {
+            gap: 0.6rem;
+        }
+
+        #journey .journey-year-divider-label {
+            width: 2rem;
+        }
+
         #journey .journey-dot {
             width: 2rem;
             height: 2rem;
         }
 
-        #journey .journey-dot img {
+        #journey .journey-dot img:not(.journey-logo) {
             width: 1rem;
             height: 1rem;
         }
@@ -2077,11 +2141,6 @@ body {
 
         #journey .journey-highlights li {
             font-size: 0.7rem;
-        }
-
-        #journey .journey-year {
-            font-size: 2.25rem;
-            top: -0.6rem;
         }
 
         #journey .journey-support-grid {

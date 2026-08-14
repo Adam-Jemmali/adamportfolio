@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -52,7 +52,8 @@ const WORK_EXPERIENCE = [
     {
         id: "uo-ai-society",
         type: "work",
-        icon: "/public/icons/grad.svg",
+        logo: "public/images/universityai+society.png",
+        logoAlt: "University of Ottawa AI+ Society logo",
         tag: "Distributed Systems Developer",
         title: "University of Ottawa AI+ Society",
         period: "Oct 2025 – Jan 2026",
@@ -89,12 +90,33 @@ const WORK_EXPERIENCE = [
     },
 ];
 
+/* ── Group work entries by start year so each year is labelled once ────── */
+const WORK_GROUPS = (() => {
+    const groups = [];
+    let index = 0;
+    for (const entry of WORK_EXPERIENCE) {
+        const last = groups[groups.length - 1];
+        if (!last || last.year !== entry.year) {
+            groups.push({ year: entry.year, entries: [] });
+        }
+        groups[groups.length - 1].entries.push({
+            ...entry,
+            showLine: index < WORK_EXPERIENCE.length - 1,
+        });
+        index += 1;
+    }
+    return groups;
+})();
+
+const YEARS = WORK_GROUPS.map((group) => group.year);
+
 /* ── Education, certifications, awards, and current focus ───────────────── */
 const SUPPORTING_ENTRIES = [
     {
         id: "education",
         type: "education",
-        icon: "/public/icons/grad.svg",
+        logo: "public/images/uo.png",
+        logoAlt: "University of Ottawa logo",
         tag: "Education",
         title: "University of Ottawa",
         subtitle: "Honours Bachelor of Engineering, Computer Science",
@@ -112,13 +134,37 @@ const SUPPORTING_ENTRIES = [
         icon: "/public/icons/trophy.svg",
         tag: "Certifications",
         title: "Certifications & Learning",
-        bullets: [
-            "AWS Fundamentals of Machine Learning and Artificial Intelligence — Amazon Web Services, Oct 2025",
-            "Intro to Machine Learning (scikit-learn, Random Forest, model evaluation) — Kaggle, Nov 2025",
-            "Career Essentials in GitHub Professional Certificate — GitHub, Aug 2026",
-            "Practical GitHub Actions — LinkedIn Learning, Feb 2026",
-            "AWS Cloud Practitioner — Amazon Web Services, In Progress 2026",
-            "Docker and DevOps Fundamentals — In Progress 2026",
+        certs: [
+            {
+                icon: "public/images/aifundamentalsofmachinelearningandai.jpg",
+                name: "AWS Fundamentals of Machine Learning and Artificial Intelligence",
+                meta: "Amazon Web Services · Oct 2025",
+            },
+            {
+                icon: "public/images/kaggle.png",
+                name: "Intro to Machine Learning (scikit-learn, Random Forest, model evaluation)",
+                meta: "Kaggle · Nov 2025",
+            },
+            {
+                icon: "public/images/githubcertificate.jpg",
+                name: "Career Essentials in GitHub Professional Certificate",
+                meta: "GitHub · Aug 2026",
+            },
+            {
+                icon: "public/images/githubactioncert.jpg",
+                name: "Practical GitHub Actions",
+                meta: "LinkedIn Learning · Feb 2026",
+            },
+            {
+                icon: "public/images/awscloudpract.webp",
+                name: "AWS Cloud Practitioner",
+                meta: "Amazon Web Services · In Progress 2026",
+            },
+            {
+                icon: "public/images/dockercert.jpg",
+                name: "Docker and DevOps Fundamentals",
+                meta: "In Progress 2026",
+            },
         ],
     },
     {
@@ -145,7 +191,7 @@ const SUPPORTING_ENTRIES = [
     },
 ];
 
-const JourneyWorkEntry = ({ entry, index }) => (
+const JourneyWorkEntry = ({ entry }) => (
     <article className={`journey-entry journey-entry-${entry.type}`}>
         <div className="journey-rail" aria-hidden="true">
             <span className="journey-dot">
@@ -155,13 +201,10 @@ const JourneyWorkEntry = ({ entry, index }) => (
                     <img src={entry.icon} alt="" />
                 )}
             </span>
-            {index < WORK_EXPERIENCE.length - 1 && <span className="journey-line" />}
+            {entry.showLine && <span className="journey-line" />}
         </div>
 
         <div className="journey-card journey-enter">
-            <span className="journey-year journey-year-anim" aria-hidden="true">
-                {entry.year}
-            </span>
             <div className="journey-card-topline">
                 <span className="journey-tag">{entry.tag}</span>
                 <span className="journey-period">{entry.period}</span>
@@ -185,6 +228,11 @@ const JourneyWorkEntry = ({ entry, index }) => (
 
 const SupportingEntry = ({ entry }) => (
     <article className={`journey-card journey-enter journey-support journey-support-${entry.type}`}>
+        {(entry.logo || entry.icon) && (
+            <div className="journey-support-icon">
+                <img className={entry.logo ? "journey-logo" : ""} src={entry.logo || entry.icon} alt="" />
+            </div>
+        )}
         <div className="journey-card-topline">
             <span className="journey-tag">{entry.tag}</span>
             {entry.period && <span className="journey-period">{entry.period}</span>}
@@ -193,6 +241,20 @@ const SupportingEntry = ({ entry }) => (
         {entry.subtitle && <p className="journey-subtitle">{entry.subtitle}</p>}
         {entry.location && <p className="journey-location">{entry.location}</p>}
         {entry.summary && <p className="journey-summary">{entry.summary}</p>}
+
+        {entry.certs && (
+            <ul className="journey-certs">
+                {entry.certs.map((cert) => (
+                    <li key={cert.name}>
+                        <img className="journey-cert-icon" src={cert.icon} alt="" />
+                        <span className="journey-cert-body">
+                            <span className="journey-cert-name">{cert.name}</span>
+                            <span className="journey-cert-meta">{cert.meta}</span>
+                        </span>
+                    </li>
+                ))}
+            </ul>
+        )}
 
         {entry.bullets && (
             <ul className="journey-highlights">
@@ -210,6 +272,41 @@ const SupportingEntry = ({ entry }) => (
 
 const Journey = () => {
     const bodyRef = useRef(null);
+    const [activeYear, setActiveYear] = useState(YEARS[0]);
+
+    useEffect(() => {
+        const container = bodyRef.current;
+        if (!container) return;
+
+        const dividers = Array.from(container.querySelectorAll(".journey-year-divider"));
+        const onScroll = () => {
+            const top = container.getBoundingClientRect().top;
+            let current = YEARS[0];
+            for (const divider of dividers) {
+                if (divider.getBoundingClientRect().top - top <= 48) {
+                    current = divider.dataset.year;
+                }
+            }
+            setActiveYear(current);
+        };
+
+        onScroll();
+        container.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("resize", onScroll);
+        return () => {
+            container.removeEventListener("scroll", onScroll);
+            window.removeEventListener("resize", onScroll);
+        };
+    }, []);
+
+    const scrollToYear = (year) => {
+        const container = bodyRef.current;
+        if (!container) return;
+        const target = container.querySelector(`.journey-year-divider[data-year="${year}"]`);
+        if (!target) return;
+        const delta = target.getBoundingClientRect().top - container.getBoundingClientRect().top;
+        container.scrollTo({ top: container.scrollTop + delta - 12, behavior: "smooth" });
+    };
 
     useGSAP(() => {
         if (!bodyRef.current) return;
@@ -232,26 +329,6 @@ const Journey = () => {
                         { opacity: 1, y: 0, duration: 0.7, stagger: 0.08, ease: "power3.out", overwrite: true }
                     ),
             });
-
-            gsap.utils.toArray(".journey-year-anim").forEach((el) => {
-                gsap.fromTo(
-                    el,
-                    { opacity: 0, scale: 0.85, x: -24 },
-                    {
-                        opacity: 1,
-                        scale: 1,
-                        x: 0,
-                        duration: 0.9,
-                        ease: "power3.out",
-                        scrollTrigger: {
-                            trigger: el,
-                            scroller: bodyRef.current,
-                            start: "top 92%",
-                            once: true,
-                        },
-                    }
-                );
-            });
         }, bodyRef);
 
         return () => ctx.revert();
@@ -262,6 +339,18 @@ const Journey = () => {
             <div id="window-header">
                 <WindowsControls target="journey" />
                 <h2>My Journey</h2>
+                <nav className="journey-year-nav" aria-label="Jump to year">
+                    {YEARS.map((year) => (
+                        <button
+                            key={year}
+                            type="button"
+                            className={`journey-year-nav-btn${year === activeYear ? " is-active" : ""}`}
+                            onClick={() => scrollToYear(year)}
+                        >
+                            {year}
+                        </button>
+                    ))}
+                </nav>
             </div>
 
             <div ref={bodyRef} className="journey-body">
@@ -285,8 +374,16 @@ const Journey = () => {
                     </div>
 
                     <div className="journey-timeline">
-                        {WORK_EXPERIENCE.map((entry, index) => (
-                            <JourneyWorkEntry key={entry.id} entry={entry} index={index} />
+                        {WORK_GROUPS.map((group) => (
+                            <React.Fragment key={group.year}>
+                                <div className="journey-year-divider journey-enter" data-year={group.year}>
+                                    <span className="journey-year-divider-label">{group.year}</span>
+                                    <span className="journey-year-divider-line" aria-hidden="true" />
+                                </div>
+                                {group.entries.map((entry) => (
+                                    <JourneyWorkEntry key={entry.id} entry={entry} />
+                                ))}
+                            </React.Fragment>
                         ))}
                     </div>
                 </section>

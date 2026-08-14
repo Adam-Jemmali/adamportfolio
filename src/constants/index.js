@@ -635,7 +635,7 @@ const ABOUT_LOCATION = {
                 "Sharpening system design, testing, and Linux debugging daily through structured and self-directed practice. Eligible for Government of Canada security clearance.",
                 "Seeking a Summer 2027 internship in software engineering, backend development, full-stack development, or applied AI/ML systems.",
                 "Designing real-time sports analytics and computer vision pipelines alongside agentic AI systems with Claude, Gemini, Groq, LangChain, and n8n.",
-                "Currently building daily: DSA (NeetCode), Linux systems debugging (SadServers), shell tools, git internals, debugging/profiling (MIT Missing Semester), and SQL (SQLZoo)."
+                "Currently practicing daily: DSA (NeetCode), Linux systems debugging (SadServers), shell tools, git internals, debugging/profiling (MIT Missing Semester), and SQL (SQLZoo)."
             ]
         },
     ],
