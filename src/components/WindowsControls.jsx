@@ -4,7 +4,7 @@ const WindowsControls = ({ target }) => {
     const { closeWindow, minimizeWindow, toggleMaximize } = useWindowStore();
 
     return (
-        <div className="window-controls">
+        <div className="window-controls" onPointerDown={(e) => e.stopPropagation()}>
             <button
                 type="button"
                 aria-label="Close"

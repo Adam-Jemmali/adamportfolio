@@ -3,6 +3,20 @@ import { immer } from "zustand/middleware/immer";
 
 import {INITIAL_Z_INDEX, WINDOW_CONFIG} from "#constants/index.js";
 
+const focusTopWindow = (state) => {
+    const next = Object.entries(state.windows)
+        .filter(([, win]) => win.isOpen && !win.minimized)
+        .sort(([, a], [, b]) => b.zIndex - a.zIndex)[0];
+
+    if (!next) {
+        state.focusedWindow = null;
+        return;
+    }
+
+    state.focusedWindow = next[0];
+    next[1].zIndex = state.nextZIndex++;
+};
+
 const useWindowStore = create(immer((set) => ({
     windows: WINDOW_CONFIG,
     nextZIndex: INITIAL_Z_INDEX + 1,
@@ -28,7 +42,7 @@ const useWindowStore = create(immer((set) => ({
         win.maximized = false;
         win.zIndex = INITIAL_Z_INDEX;
         win.data = null;
-        if (state.focusedWindow === windowKey) state.focusedWindow = null;
+        if (state.focusedWindow === windowKey) focusTopWindow(state);
     }),
 
     closeAllWindows: () => set((state) => {
@@ -48,7 +62,7 @@ const useWindowStore = create(immer((set) => ({
 
         win.minimized = true;
         win.maximized = false;
-        if (state.focusedWindow === windowKey) state.focusedWindow = null;
+        if (state.focusedWindow === windowKey) focusTopWindow(state);
     }),
 
     restoreWindow: (windowKey) => set((state) => {

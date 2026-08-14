@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
 import WindowsControls from "#components/WindowsControls.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import useWindowStore from "#store/window.js";
@@ -108,20 +109,30 @@ const Snake = () => {
         draw();
     }, [draw, endGame]);
 
-    const start = useCallback(() => {
+    const start = useCallback((initialDirection = { x: 1, y: 0 }) => {
         snakeRef.current = [
             { x: 7, y: 10 },
             { x: 6, y: 10 },
             { x: 5, y: 10 },
             { x: 4, y: 10 },
         ];
-        dirRef.current = { x: 1, y: 0 };
-        nextDirRef.current = { x: 1, y: 0 };
+        dirRef.current = initialDirection;
+        nextDirRef.current = initialDirection;
         appleRef.current = spawnApple(snakeRef.current);
         setScore(0);
         setPhase("playing");
         draw();
     }, [draw]);
+
+    const turn = useCallback((direction) => {
+        const current = dirRef.current;
+        if (direction.x === -current.x && direction.y === -current.y) return;
+        if (phase !== "playing") {
+            start(direction);
+            return;
+        }
+        nextDirRef.current = direction;
+    }, [phase, start]);
 
     // Game loop.
     useEffect(() => {
@@ -156,15 +167,12 @@ const Snake = () => {
                 return;
             }
             e.preventDefault();
-            const current = dirRef.current;
-            if (dir.x === -current.x && dir.y === -current.y) return; // no reversing
-            nextDirRef.current = dir;
-            if (phase !== "playing") start();
+            turn(dir);
         };
 
         window.addEventListener("keydown", onKey);
         return () => window.removeEventListener("keydown", onKey);
-    }, [focused, phase, start]);
+    }, [focused, phase, start, turn]);
 
     // First paint when the window opens.
     useEffect(() => {
@@ -209,6 +217,41 @@ const Snake = () => {
                             <p className="!mt-0 opacity-60">arrows / WASD · space to start</p>
                         </div>
                     )}
+                </div>
+
+                <div className="snake-controls" aria-label="Snake controls">
+                    <button
+                        type="button"
+                        className="snake-control snake-control-up"
+                        aria-label="Move up"
+                        onClick={() => turn(KEYS.ArrowUp)}
+                    >
+                        <ChevronUp size={18} />
+                    </button>
+                    <button
+                        type="button"
+                        className="snake-control snake-control-left"
+                        aria-label="Move left"
+                        onClick={() => turn(KEYS.ArrowLeft)}
+                    >
+                        <ChevronLeft size={18} />
+                    </button>
+                    <button
+                        type="button"
+                        className="snake-control snake-control-down"
+                        aria-label="Move down"
+                        onClick={() => turn(KEYS.ArrowDown)}
+                    >
+                        <ChevronDown size={18} />
+                    </button>
+                    <button
+                        type="button"
+                        className="snake-control snake-control-right"
+                        aria-label="Move right"
+                        onClick={() => turn(KEYS.ArrowRight)}
+                    >
+                        <ChevronRight size={18} />
+                    </button>
                 </div>
             </div>
         </>

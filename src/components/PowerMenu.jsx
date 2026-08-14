@@ -22,17 +22,17 @@ const PowerMenu = () => {
     useEffect(() => {
         if (!open) return;
 
-        const onMouseDown = (e) => {
+        const onPointerDown = (e) => {
             if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
         };
         const onKeyDown = (e) => {
             if (e.key === "Escape") setOpen(false);
         };
 
-        document.addEventListener("mousedown", onMouseDown);
+        document.addEventListener("pointerdown", onPointerDown);
         document.addEventListener("keydown", onKeyDown);
         return () => {
-            document.removeEventListener("mousedown", onMouseDown);
+            document.removeEventListener("pointerdown", onPointerDown);
             document.removeEventListener("keydown", onKeyDown);
         };
     }, [open]);

@@ -39,6 +39,9 @@ const WindowWrapper = (Component, windowKey) => {
             const draggable = Draggable.create(ref.current, {
                 trigger: header,
                 bounds: window,
+                // Keep header buttons, links, and form controls interactive on touch screens.
+                ignore: "button, input, textarea, select, option, a, [role='button'], .window-controls",
+                allowNativeTouchScrolling: false,
                 onPress: () => focusWindow(windowKey),
             });
 
@@ -56,7 +59,7 @@ const WindowWrapper = (Component, windowKey) => {
                 ref={ref}
                 style={{ zIndex }}
                 className={`window absolute ${isMaximized ? "maximized" : ""} ${isFocused ? "focused" : ""}`}
-                onMouseDown={() => focusWindow(windowKey)}
+                onPointerDown={() => focusWindow(windowKey)}
             >
                 <Component {...props} />
             </section>

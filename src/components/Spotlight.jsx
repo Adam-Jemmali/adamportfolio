@@ -102,6 +102,11 @@ const Spotlight = () => {
     }, [items, query]);
 
     useEffect(() => {
+        const openFromButton = () => {
+            setQuery("");
+            setActiveIndex(0);
+            setOpen(true);
+        };
         const onKeyDown = (e) => {
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
                 e.preventDefault();
@@ -117,7 +122,11 @@ const Spotlight = () => {
             }
         };
         window.addEventListener("keydown", onKeyDown);
-        return () => window.removeEventListener("keydown", onKeyDown);
+        window.addEventListener("spotlight:open", openFromButton);
+        return () => {
+            window.removeEventListener("keydown", onKeyDown);
+            window.removeEventListener("spotlight:open", openFromButton);
+        };
     }, [open]);
 
     const close = () => setOpen(false);
@@ -143,10 +152,10 @@ const Spotlight = () => {
     if (!open) return null;
 
     return (
-        <div className="spotlight-overlay" onMouseDown={close}>
+        <div className="spotlight-overlay" onPointerDown={close}>
             <div
                 className="spotlight-panel"
-                onMouseDown={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
                 role="dialog"
                 aria-label="Spotlight search"
             >

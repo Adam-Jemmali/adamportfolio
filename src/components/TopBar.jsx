@@ -11,8 +11,10 @@ import {
     Lock,
     RotateCw,
     CircleUserRound,
+    Search,
+    Menu,
 } from "lucide-react";
-import { navLinks, locations } from "#constants/index.js";
+import { navLinks, locations, wallpapers } from "#constants/index.js";
 import useWindowStore from "#store/window.js";
 import useSystemStore from "#store/system.js";
 import PowerMenu from "./PowerMenu.jsx";
@@ -51,8 +53,23 @@ const Slider = ({ value, onChange, icon, ariaLabel }) => (
     </div>
 );
 
+const WINDOW_NAMES = {
+    finder: "Portfolio",
+    contact: "Contact & Booking",
+    resume: "Resume",
+    safari: "Web",
+    photos: "Photos",
+    terminal: "Terminal",
+    txtfile: "Text document",
+    imgfile: "Image preview",
+    snake: "Snake",
+    games: "Games",
+    code: "Code Racer",
+    journey: "Journey",
+};
+
 const TopBar = () => {
-    const { openWindow, focusWindow } = useWindowStore();
+    const { openWindow, focusWindow, restoreWindow, windows } = useWindowStore();
 
     const wifiOn = useSystemStore((s) => s.wifiOn);
     const toggleWifi = useSystemStore((s) => s.toggleWifi);
@@ -64,9 +81,12 @@ const TopBar = () => {
     const toggleMute = useSystemStore((s) => s.toggleMute);
     const lock = useSystemStore((s) => s.lock);
     const restart = useSystemStore((s) => s.restart);
+    const wallpaper = useSystemStore((s) => s.wallpaper);
+    const setWallpaper = useSystemStore((s) => s.setWallpaper);
 
     const [time, setTime] = useState(dayjs());
     const [openPanel, setOpenPanel] = useState(null); // null | "wifi" | "volume" | "brightness" | "profile"
+    const [switcherOpen, setSwitcherOpen] = useState(false);
     const trayRef = useRef(null);
 
     useEffect(() => {
@@ -75,24 +95,45 @@ const TopBar = () => {
     }, []);
 
     useEffect(() => {
-        if (!openPanel) return;
+        if (!openPanel && !switcherOpen) return;
 
-        const onMouseDown = (e) => {
-            if (trayRef.current && !trayRef.current.contains(e.target)) setOpenPanel(null);
+        const onPointerDown = (e) => {
+            if (trayRef.current && !trayRef.current.contains(e.target)) {
+                setOpenPanel(null);
+                setSwitcherOpen(false);
+            }
         };
         const onKeyDown = (e) => {
-            if (e.key === "Escape") setOpenPanel(null);
+            if (e.key === "Escape") {
+                setOpenPanel(null);
+                setSwitcherOpen(false);
+            }
         };
 
-        document.addEventListener("mousedown", onMouseDown);
+        document.addEventListener("pointerdown", onPointerDown);
         document.addEventListener("keydown", onKeyDown);
         return () => {
-            document.removeEventListener("mousedown", onMouseDown);
+            document.removeEventListener("pointerdown", onPointerDown);
             document.removeEventListener("keydown", onKeyDown);
         };
-    }, [openPanel]);
+    }, [openPanel, switcherOpen]);
 
-    const togglePanel = (panel) => setOpenPanel((p) => (p === panel ? null : panel));
+    const togglePanel = (panel) => {
+        setSwitcherOpen(false);
+        setOpenPanel((p) => (p === panel ? null : panel));
+    };
+
+    const openWindows = Object.entries(windows)
+        .filter(([, win]) => win.isOpen)
+        .sort(([, a], [, b]) => b.zIndex - a.zIndex);
+
+    const switchToWindow = (key) => {
+        const win = windows[key];
+        if (!win) return;
+        if (win.minimized) restoreWindow(key);
+        else focusWindow(key);
+        setSwitcherOpen(false);
+    };
 
     const openAbout = () => {
         setOpenPanel(null);
@@ -128,6 +169,55 @@ const TopBar = () => {
             </div>
 
             <div className="topbar-right" ref={trayRef}>
+                <button
+                    type="button"
+                    className="topbar-action mobile-window-switcher-trigger"
+                    onClick={() => {
+                        setOpenPanel(null);
+                        setSwitcherOpen((open) => !open);
+                    }}
+                    aria-label="Open windows"
+                    title="Open windows"
+                    aria-expanded={switcherOpen}
+                >
+                    <Menu size={15} />
+                </button>
+
+                {switcherOpen && (
+                    <div className="mobile-window-switcher" role="dialog" aria-label="Open windows">
+                        <p className="tray-title">Open windows</p>
+                        {openWindows.length === 0 ? (
+                            <p className="mobile-window-empty">No windows open</p>
+                        ) : (
+                            openWindows.map(([key, win]) => (
+                                <button
+                                    key={key}
+                                    type="button"
+                                    className={`mobile-window-item ${win.minimized ? "minimized" : ""}`}
+                                    onClick={() => switchToWindow(key)}
+                                >
+                                    <span className="mobile-window-status" />
+                                    <span className="flex-1 truncate text-left">{WINDOW_NAMES[key] || key}</span>
+                                    {win.minimized && <span className="mobile-window-state">Minimized</span>}
+                                </button>
+                            ))
+                        )}
+                        {openWindows.length > 1 && (
+                            <p className="mobile-window-hint">Swipe left or right over a window to switch.</p>
+                        )}
+                    </div>
+                )}
+
+                <button
+                    type="button"
+                    className="topbar-action spotlight-trigger"
+                    onClick={() => window.dispatchEvent(new CustomEvent("spotlight:open"))}
+                    aria-label="Search apps and files"
+                    title="Search apps and files"
+                >
+                    <Search size={15} />
+                </button>
+
                 {/* Wi-Fi */}
                 <TrayControl
                     icon={WifiIcon}
@@ -216,6 +306,21 @@ const TopBar = () => {
                             <p className="text-[13px] font-semibold text-white">Adam J.</p>
                             <p className="text-[11px] text-zinc-400">@madajbuilds</p>
                         </div>
+                    </div>
+                    <div className="profile-wallpapers">
+                        <p className="tray-title">Wallpaper</p>
+                        {wallpapers.map((wp) => (
+                            <button
+                                key={wp.id}
+                                type="button"
+                                className="profile-wallpaper"
+                                onClick={() => setWallpaper(wp.id)}
+                            >
+                                <span className="desktop-menu-swatch" style={{ background: wp.value }} />
+                                <span>{wp.name}</span>
+                                {wallpaper === wp.id && <span className="text-green-400 ml-auto">✓</span>}
+                            </button>
+                        ))}
                     </div>
                     <div className="profile-menu">
                         <button type="button" onClick={openAbout}>
