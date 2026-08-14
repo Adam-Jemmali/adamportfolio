@@ -7,7 +7,7 @@ import WindowWrapper from "#hoc/WindowWrapper.jsx";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
-/* ── Work experience, chronological (most recent first) ────────────────── */
+/* ── Work experience, chronological (oldest first) ─────────────────────── */
 const WORK_EXPERIENCE = [
     {
         id: "sportlogiq",
@@ -90,7 +90,7 @@ const WORK_EXPERIENCE = [
     },
 ];
 
-/* ── Group work entries by start year so each year is labelled once ────── */
+/* ── Group work entries by start year and assign alternating sides ─────── */
 const WORK_GROUPS = (() => {
     const groups = [];
     let index = 0;
@@ -101,6 +101,7 @@ const WORK_GROUPS = (() => {
         }
         groups[groups.length - 1].entries.push({
             ...entry,
+            side: index % 2 === 0 ? "left" : "right",
             showLine: index < WORK_EXPERIENCE.length - 1,
         });
         index += 1;
@@ -191,9 +192,12 @@ const SUPPORTING_ENTRIES = [
     },
 ];
 
+/* ── Small GSAP hover lift shared by every card ─────────────────────────── */
+const liftCard = (el, y) => gsap.to(el, { y, duration: 0.25, ease: "power2.out", overwrite: "auto" });
+
 const JourneyWorkEntry = ({ entry }) => (
-    <article className={`journey-entry journey-entry-${entry.type}`}>
-        <div className="journey-rail" aria-hidden="true">
+    <article className={`journey-entry journey-entry--${entry.side}`}>
+        <div className="journey-spine" aria-hidden="true">
             <span className="journey-dot">
                 {entry.logo ? (
                     <img className="journey-logo" src={entry.logo} alt="" />
@@ -204,7 +208,11 @@ const JourneyWorkEntry = ({ entry }) => (
             {entry.showLine && <span className="journey-line" />}
         </div>
 
-        <div className="journey-card journey-enter">
+        <div
+            className={`journey-card journey-card--${entry.side}`}
+            onMouseEnter={(e) => liftCard(e.currentTarget, -4)}
+            onMouseLeave={(e) => liftCard(e.currentTarget, 0)}
+        >
             <div className="journey-card-topline">
                 <span className="journey-tag">{entry.tag}</span>
                 <span className="journey-period">{entry.period}</span>
@@ -227,7 +235,11 @@ const JourneyWorkEntry = ({ entry }) => (
 );
 
 const SupportingEntry = ({ entry }) => (
-    <article className={`journey-card journey-enter journey-support journey-support-${entry.type}`}>
+    <article
+        className={`journey-card journey-support journey-support-${entry.type}`}
+        onMouseEnter={(e) => liftCard(e.currentTarget, -4)}
+        onMouseLeave={(e) => liftCard(e.currentTarget, 0)}
+    >
         {(entry.logo || entry.icon) && (
             <div className="journey-support-icon">
                 <img className={entry.logo ? "journey-logo" : ""} src={entry.logo || entry.icon} alt="" />
@@ -272,6 +284,7 @@ const SupportingEntry = ({ entry }) => (
 
 const Journey = () => {
     const bodyRef = useRef(null);
+    const pillRef = useRef(null);
     const [activeYear, setActiveYear] = useState(YEARS[0]);
 
     useEffect(() => {
@@ -299,6 +312,15 @@ const Journey = () => {
         };
     }, []);
 
+    useEffect(() => {
+        if (!pillRef.current) return;
+        gsap.fromTo(
+            pillRef.current,
+            { y: -8, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.35, ease: "power2.out", overwrite: true }
+        );
+    }, [activeYear]);
+
     const scrollToYear = (year) => {
         const container = bodyRef.current;
         if (!container) return;
@@ -312,23 +334,50 @@ const Journey = () => {
         if (!bodyRef.current) return;
 
         const ctx = gsap.context(() => {
+            // Intro staggers in on open.
             gsap.fromTo(
                 ".journey-intro > *",
                 { opacity: 0, y: 24 },
                 { opacity: 1, y: 0, duration: 0.8, stagger: 0.12, ease: "power3.out" }
             );
 
-            ScrollTrigger.batch(".journey-enter", {
+            // Year dividers and supporting cards fade/rise on scroll.
+            ScrollTrigger.batch([".journey-year-divider", ".journey-support"], {
                 scroller: bodyRef.current,
-                start: "top 88%",
+                start: "top 90%",
                 once: true,
                 onEnter: (batch) =>
                     gsap.fromTo(
                         batch,
-                        { opacity: 0, y: 46 },
-                        { opacity: 1, y: 0, duration: 0.7, stagger: 0.08, ease: "power3.out", overwrite: true }
+                        { opacity: 0, y: 30 },
+                        { opacity: 1, y: 0, duration: 0.7, stagger: 0.1, ease: "power3.out", overwrite: true, clearProps: "transform" }
                     ),
             });
+
+            // Work cards slide in from their side of the timeline.
+            bodyRef.current
+                .querySelectorAll(".journey-card--left, .journey-card--right")
+                .forEach((card) => {
+                    const isRight = card.classList.contains("journey-card--right");
+                    gsap.fromTo(
+                        card,
+                        { opacity: 0, x: isRight ? 72 : -72, y: 28 },
+                        {
+                            opacity: 1,
+                            x: 0,
+                            y: 0,
+                            duration: 0.9,
+                            ease: "power3.out",
+                            clearProps: "opacity,transform",
+                            scrollTrigger: {
+                                trigger: card,
+                                scroller: bodyRef.current,
+                                start: "top 88%",
+                                once: true,
+                            },
+                        }
+                    );
+                });
         }, bodyRef);
 
         return () => ctx.revert();
@@ -354,6 +403,10 @@ const Journey = () => {
             </div>
 
             <div ref={bodyRef} className="journey-body">
+                <div className="journey-year-pill" ref={pillRef} aria-live="polite">
+                    {activeYear}
+                </div>
+
                 <header className="journey-intro">
                     <span className="journey-intro-kicker">ADAM JEMMALI</span>
                     <h1>Full-Stack Software Engineer</h1>
@@ -376,7 +429,8 @@ const Journey = () => {
                     <div className="journey-timeline">
                         {WORK_GROUPS.map((group) => (
                             <React.Fragment key={group.year}>
-                                <div className="journey-year-divider journey-enter" data-year={group.year}>
+                                <div className="journey-year-divider" data-year={group.year}>
+                                    <span className="journey-year-divider-line" aria-hidden="true" />
                                     <span className="journey-year-divider-label">{group.year}</span>
                                     <span className="journey-year-divider-line" aria-hidden="true" />
                                 </div>
