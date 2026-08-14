@@ -26,6 +26,11 @@ const LoadingScreen = ({ title = "OS Initialize", onComplete }) => {
             { scale: 1, opacity: 1, rotate: 0, duration: 1.1, ease: "elastic.out(1, 0.7)" }
         );
 
+        gsap.fromTo(".boot-logo .brand-monogram",
+            { opacity: 0, y: -35, rotate: -360, scale: 0.5 },
+            { opacity: 1, y: 0, rotate: 0, scale: 1, duration: 1.1, stagger: 0.14, ease: "back.out(1.5)", delay: 0.35, overwrite: true }
+        );
+
         gsap.fromTo(".boot-content",
             { opacity: 0 },
             { opacity: 1, duration: 1.5, delay: 0.3 }

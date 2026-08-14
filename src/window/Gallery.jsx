@@ -41,14 +41,23 @@ const Gallery = () => {
                 </aside>
 
                 <main className="gallery flex-1 overflow-y-auto">
-                    <ul className="grid grid-cols-5 gap-2.5">
+                    <ul className="listing-grid">
                         {activeCategory.images.map((image) => (
-                            <li 
-                                key={image.id} 
-                                onClick={() => handleImageClick(image)}
-                                className="cursor-pointer hover:opacity-80 transition-opacity"
-                            >
-                                <img src={image.imageUrl} alt={image.name} className="w-full h-full object-cover rounded-lg" />
+                            <li key={image.id}>
+                                <button
+                                    type="button"
+                                    className="listing-tile"
+                                    onClick={() => handleImageClick(image)}
+                                    aria-label={`Open ${image.name}`}
+                                >
+                                    <span className="listing-tile-inner">
+                                        <img src={image.imageUrl} alt={image.name} loading="lazy" />
+                                        <span className="listing-tile-overlay" aria-hidden="true">
+                                            <span className="listing-tile-title">{image.name}</span>
+                                            <span className="listing-tile-sub">{activeCategory.name} · 2026</span>
+                                        </span>
+                                    </span>
+                                </button>
                             </li>
                         ))}
                     </ul>

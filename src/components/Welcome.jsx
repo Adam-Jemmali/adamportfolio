@@ -107,10 +107,16 @@ const Welcome = () => {
 
     useGSAP(() => {
         const cleanup = setTitleHover(titleRef.current);
+        const monograms = titleRef.current?.querySelectorAll(".brand-monogram");
         gsap.fromTo(
             "#welcome > *",
             { opacity: 0, y: 18 },
             { opacity: 1, y: 0, duration: 0.7, stagger: 0.12, ease: "power3.out", delay: 0.2 }
+        );
+        gsap.fromTo(
+            monograms,
+            { opacity: 0, y: -64, rotation: -360, scale: 0.5 },
+            { opacity: 1, y: 0, rotation: 0, scale: 1, duration: 1.15, stagger: 0.16, ease: "back.out(1.5)", delay: 0.42, overwrite: true }
         );
         return () => cleanup?.();
     }, []);

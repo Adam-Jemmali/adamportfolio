@@ -495,11 +495,6 @@ body {
     .boot-logo .brand-monogram {
         width: 1.05em;
         height: 1.05em;
-        animation: boot-monogram-land 0.9s both cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .boot-logo .brand-monogram:nth-child(2) {
-        animation-delay: 0.12s;
     }
 
     .boot-logo .brand-monogram img {
@@ -525,12 +520,6 @@ body {
     .boot-brand .brand-monogram img {
         width: 100%;
         height: 100%;
-    }
-
-    @keyframes boot-monogram-land {
-        from { opacity: 0; transform: translateY(-0.7em) rotate(-360deg) scale(0.5); }
-        75% { opacity: 1; transform: translateY(0.05em) rotate(14deg) scale(1.06); }
-        to { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
     }
 
     .boot-logs {
@@ -810,12 +799,8 @@ body {
     #welcome .brand-monogram {
         width: 0.9em;
         height: 0.9em;
-        margin: 0 0.07em 0 0.035em;
+        margin: 0 0.01em 0 -0.035em;
         vertical-align: -0.08em;
-        animation-name: hero-monogram-land;
-        animation-duration: 0.9s;
-        animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-        animation-fill-mode: both;
     }
 
     #welcome .brand-monogram img {
@@ -829,6 +814,7 @@ body {
         @apply italic font-georama;
         font-size: clamp(1.55rem, 6.4vw, 4.5rem);
         line-height: 1.1;
+        padding-right: 0.14em;
         background: var(--pfp-grad);
         background-size: 200% 100%;
         -webkit-background-clip: text;
@@ -848,20 +834,9 @@ body {
         color: inherit;
     }
 
-    #welcome .brand-monogram.hero-letter {
-        animation: hero-monogram-land 0.9s both cubic-bezier(0.16, 1, 0.3, 1);
-        animation-delay: var(--letter-delay);
-    }
-
     @keyframes hero-letter-enter {
         from { opacity: 0; transform: translateY(0.7em) rotate(5deg); }
         to { opacity: 1; transform: translateY(0) rotate(0); }
-    }
-
-    @keyframes hero-monogram-land {
-        from { opacity: 0; transform: translateY(-0.75em) rotate(-360deg) scale(0.55); }
-        72% { opacity: 1; transform: translateY(0.06em) rotate(18deg) scale(1.06); }
-        to { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
     }
 
     #welcome .hero-type {
@@ -1280,32 +1255,65 @@ body {
         }
 
         .gallery {
-            @apply p-5 overflow-y-auto flex-1 h-full;
+            @apply p-1.5 overflow-y-auto flex-1 h-full;
+            background: #101317;
+        }
 
-            ul {
-                @apply grid grid-cols-5 grid-rows-5 gap-2.5;
+        .listing-grid {
+            @apply grid grid-cols-2 gap-1.5;
+        }
 
-                li {
-                    img {
-                        @apply size-full object-cover rounded-lg;
-                    }
+        .listing-tile {
+            @apply block w-full text-left outline-none;
+        }
 
-                    &:first-child {
-                        @apply row-start-1 row-span-3 col-start-1 col-span-3;
-                    }
+        .listing-tile-inner {
+            @apply relative block w-full overflow-hidden;
+            aspect-ratio: 1;
+            background: #252a31;
+        }
 
-                    &:nth-child(2) {
-                        @apply row-start-1 row-span-3 col-start-4 col-span-2;
-                    }
+        .listing-tile-inner img {
+            @apply absolute inset-0 size-full object-cover;
+            filter: grayscale(100%);
+            transition: filter 500ms ease, transform 500ms ease;
+        }
 
-                    &:nth-child(3) {
-                        @apply row-start-4 row-span-2 col-start-3 col-span-3;
-                    }
+        .listing-tile-overlay {
+            @apply absolute inset-0 flex flex-col items-center justify-center p-3 text-center opacity-0;
+            background: rgb(0 0 0 / 0.48);
+            transition: opacity 300ms ease-out;
+        }
 
-                    &:last-child {
-                        @apply row-start-4 row-span-2 col-start-1 col-span-2;
-                    }
-                }
+        .listing-tile-title {
+            @apply text-xs font-semibold uppercase tracking-widest text-white;
+            font-family: "Roboto Mono", monospace;
+        }
+
+        .listing-tile-sub {
+            @apply mt-1 text-[10px] uppercase tracking-[0.12em] text-white/65;
+            font-family: "Roboto Mono", monospace;
+        }
+
+        .listing-tile:hover img,
+        .listing-tile:focus-visible img {
+            filter: grayscale(0%);
+            transform: scale(1.04);
+        }
+
+        .listing-tile:hover .listing-tile-overlay,
+        .listing-tile:focus-visible .listing-tile-overlay {
+            opacity: 1;
+        }
+
+        .listing-tile:focus-visible {
+            outline: 2px solid rgb(75 213 234);
+            outline-offset: 2px;
+        }
+
+        @media (min-width: 641px) {
+            .listing-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
             }
         }
     }
