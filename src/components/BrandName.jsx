@@ -13,9 +13,9 @@ const LETTERS = [
     { value: "i" },
 ];
 
-const BrandName = ({ className = "", animated = false }) => (
+const BrandName = ({ className = "", animated = false, monogramsOnly = false }) => (
     <span className={`brand-name ${className}`.trim()} aria-label="Adam Jemmali">
-        {LETTERS.map(({ value, monogram }, index) => (
+        {LETTERS.filter(({ monogram }) => !monogramsOnly || monogram).map(({ value, monogram }, index) => (
             <span
                 key={`${value}-${index}`}
                 className={`brand-name-letter${monogram ? " brand-monogram" : ""}${animated ? " hero-letter" : ""}`}

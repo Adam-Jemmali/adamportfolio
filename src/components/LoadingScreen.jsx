@@ -1,6 +1,7 @@
 import { useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import BrandName from "#components/BrandName.jsx";
 
 const BOOT_LOGS = [
     { text: "Stretching the startup process", pct: 8 },
@@ -33,9 +34,12 @@ const LoadingScreen = ({ title = "OS Initialize", onComplete }) => {
 
     return (
         <div className="boot-screen">
-            <div className="boot-logo lock-initials size-20! text-3xl">A J</div>
+            <div className="boot-logo lock-initials size-20! text-3xl">
+                <BrandName monogramsOnly />
+            </div>
 
             <div className="boot-content flex flex-col items-center">
+                <p className="boot-brand"><BrandName /></p>
                 <div className="boot-snake" role="status" aria-label="Loading">
                     <span className="boot-snake-head" />
                     <span /><span /><span /><span /><span /><span />
