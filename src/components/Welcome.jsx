@@ -5,6 +5,7 @@ import { FolderOpen, Send } from "lucide-react";
 import { locations } from "#constants/index.js";
 import useWindowStore from "#store/window.js";
 import useLocationStore from "#store/location.js";
+import BrandName from "#components/BrandName.jsx";
 
 const ROLES = [
     "computer vision systems",
@@ -13,15 +14,10 @@ const ROLES = [
     "things that actually ship",
 ];
 
-const renderText = (text) =>
-    [...text].map((char, i) => (
-        <span key={i}>{char === " " ? "\u00A0" : char}</span>
-    ));
-
 // Per-letter weight response on hover (variable font) + gradient that follows the mouse.
 const setTitleHover = (container) => {
     if (!container) return;
-    const letters = container.querySelectorAll("span");
+    const letters = container.querySelectorAll(".hero-letter");
 
     const mousemove = (e) => {
         const { left, width } = container.getBoundingClientRect();
@@ -121,9 +117,9 @@ const Welcome = () => {
 
     return (
         <section id="welcome">
-            <h1 ref={titleRef} className="hero-title">
-                {renderText("@madajbuilds")}
-            </h1>
+            <div className="hero-brand" ref={titleRef}>
+                <h1 className="hero-title"><BrandName animated /></h1>
+            </div>
 
             <p className="hero-type">
                 <span>I build&nbsp;</span>

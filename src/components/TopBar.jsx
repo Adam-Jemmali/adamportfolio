@@ -17,6 +17,7 @@ import {
 import { navLinks, locations, wallpapers } from "#constants/index.js";
 import useWindowStore from "#store/window.js";
 import useSystemStore from "#store/system.js";
+import BrandName from "#components/BrandName.jsx";
 import PowerMenu from "./PowerMenu.jsx";
 
 // A single top-bar control that opens a popover panel.
@@ -301,10 +302,10 @@ const TopBar = () => {
                     onToggle={() => togglePanel("profile")}
                 >
                     <div className="profile-head">
-                        <span className="lock-initials size-9! text-sm">MJ</span>
+                        <span className="lock-initials size-9! text-sm">AJ</span>
                         <div className="leading-tight">
                             <p className="text-[13px] font-semibold text-white">Adam J.</p>
-                            <p className="text-[11px] text-zinc-400">@madajbuilds</p>
+                            <p className="text-[11px] text-zinc-400"><BrandName className="brand-name--compact" /></p>
                         </div>
                     </div>
                     <div className="profile-wallpapers">

@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { ArrowRight } from "lucide-react";
 import useSystemStore from "#store/system.js";
 import PowerMenu from "./PowerMenu.jsx";
+import BrandName from "#components/BrandName.jsx";
 
 const HINTS = [
     'The password is "password" maybe who knows.',
@@ -77,8 +78,8 @@ const LockScreen = () => {
             </div>
 
             <div ref={cardRef} className="lock-card">
-                <div className="lock-initials">M. J</div>
-                <h1>@madajbuilds</h1>
+                <div className="lock-initials">A J</div>
+                <h1><BrandName /></h1>
 
                 <form className="lock-form" onSubmit={submit}>
                     <input

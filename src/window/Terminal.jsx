@@ -26,7 +26,7 @@ const HELP = [
 ];
 
 const BANNER = [
-    { id: "banner-1", kind: "ok", content: "@madajbuilds OS terminal" },
+    { id: "banner-1", kind: "ok", content: "Adam Jemmali OS terminal" },
     { id: "banner-2", kind: "dim", content: 'Type "help" or "ls" to see what you can do.' },
 ];
 
@@ -76,7 +76,7 @@ const Terminal = () => {
 
     const run = (raw) => {
         const cmd = raw.trim().toLowerCase();
-        const out = [{ id: nextId(), kind: "echo", content: `madaj@builds:~$ ${raw}` }];
+        const out = [{ id: nextId(), kind: "echo", content: `adam@jemmali:~$ ${raw}` }];
 
         if (!cmd) {
             setLines((l) => [...l, ...out]);
@@ -118,14 +118,14 @@ const Terminal = () => {
             const folder = locations.work.children.find((f) => f.name.toLowerCase().includes("aeroguard"));
             push("ok", openFinderAt(folder));
         } else if (cmd === "whoami") {
-            push("out", "@madajbuilds: Computer Vision & AI Systems engineer");
+            push("out", "Adam Jemmali: Computer Vision & AI Systems engineer");
         } else if (cmd === "date") {
             push("out", new Date().toLocaleString());
         } else if (cmd === "clear" || cmd === "cls") {
             setLines([]);
             return;
         } else if (cmd.startsWith("sudo")) {
-            push("err", "madaj is not in the sudoers file. This incident will be reported. \u{1F604}");
+            push("err", "adam is not in the sudoers file. This incident will be reported. \u{1F604}");
         } else {
             push("err", `command not found: ${raw}. Type "help"`);
         }
@@ -190,7 +190,7 @@ const Terminal = () => {
             </div>
 
             <div className="terminal-input-line">
-                <span className="terminal-prompt">madaj@builds:~$</span>
+                <span className="terminal-prompt">adam@jemmali:~$</span>
                 <input
                     ref={inputRef}
                     value={input}

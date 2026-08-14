@@ -682,14 +682,73 @@ body {
         50% { box-shadow: 0 0 0 5px rgb(74 222 128 / 0); }
     }
 
+    #welcome .hero-brand {
+        @apply pointer-events-auto mt-6 flex items-center gap-4;
+    }
+
+    #welcome .brand-name {
+        display: inline-flex;
+        align-items: baseline;
+        white-space: pre;
+    }
+
+    .brand-name-letter {
+        display: inline-block;
+    }
+
+    #welcome .brand-monogram {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 0.82em;
+        height: 0.82em;
+        margin: 0 0.07em 0 0.035em;
+        border-radius: 0.08em;
+        background: var(--pfp-grad);
+        color: #f7fbff;
+        font-size: 0.75em;
+        font-weight: 900;
+        font-style: normal;
+        letter-spacing: -0.08em;
+        box-shadow: 0 0.09em 0.28em rgb(0 0 0 / 0.28);
+        transform: translateY(0.07em) skewX(-8deg);
+    }
+
     #welcome .hero-title {
-        @apply pointer-events-auto mt-6 text-6xl md:text-7xl max-sm:text-4xl italic font-georama;
+        @apply text-6xl md:text-7xl max-sm:text-4xl italic font-georama;
         background: var(--pfp-grad);
         background-size: 200% 100%;
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
         filter: drop-shadow(0 8px 40px rgb(0 0 0 / 0.5));
+    }
+
+    #welcome .hero-letter {
+        min-width: 0.12em;
+        animation: hero-letter-enter 0.72s both cubic-bezier(0.16, 1, 0.3, 1);
+        animation-delay: var(--letter-delay);
+        will-change: transform, opacity;
+    }
+
+    #welcome .hero-letter:hover {
+        animation: hero-letter-rubberband 0.82s both;
+        color: #f7fbff;
+    }
+
+    @keyframes hero-letter-enter {
+        from { opacity: 0; transform: translateY(0.7em) rotate(5deg); }
+        to { opacity: 1; transform: translateY(0) rotate(0); }
+    }
+
+    @keyframes hero-letter-rubberband {
+        0% { transform: scaleX(1); }
+        30% { transform: scale3d(1.22, 0.78, 1); }
+        40% { transform: scale3d(0.8, 1.2, 1); }
+        50% { transform: scale3d(1.12, 0.88, 1); }
+        65% { transform: scale3d(0.96, 1.04, 1); }
+        75% { transform: scale3d(1.04, 0.96, 1); }
+        to { transform: scaleX(1); }
     }
 
     #welcome .hero-type {

@@ -33,7 +33,7 @@ const LoadingScreen = ({ title = "OS Initialize", onComplete }) => {
 
     return (
         <div className="boot-screen">
-            <div className="boot-logo lock-initials size-20! text-3xl">M. J</div>
+            <div className="boot-logo lock-initials size-20! text-3xl">A J</div>
 
             <div className="boot-content flex flex-col items-center">
                 <div className="boot-spinner" />
