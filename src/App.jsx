@@ -16,6 +16,9 @@ import useSystemStore from "#store/system.js";
 import useWindowStore from "#store/window.js";
 
 gsap.registerPlugin(Draggable);
+// Advance animations by wall-clock time even when rAF is throttled (e.g. the
+// Preview tab), so the boot screen can't stall for minutes.
+gsap.ticker.lagSmoothing(0);
 
 const App = () => {
     const screen = useSystemStore((s) => s.screen);

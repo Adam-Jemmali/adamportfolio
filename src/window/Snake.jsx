@@ -3,10 +3,9 @@ import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react"
 import WindowsControls from "#components/WindowsControls.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import useWindowStore from "#store/window.js";
+import { SNAKE_GRID, SNAKE_SPEED, initialSnake, spawnApple, stepSnake, drawSnake } from "#game/snake.js";
 
-const COLS = 20;
-const ROWS = 20;
-const CELL = 20;
+const { COLS, ROWS, CELL } = SNAKE_GRID;
 
 const KEYS = {
     ArrowUp: { x: 0, y: -1 },
@@ -19,23 +18,18 @@ const KEYS = {
     d: { x: 1, y: 0 },
 };
 
-const spawnApple = (snake) => {
-    let pos;
-    do {
-        pos = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) };
-    } while (snake.some((s) => s.x === pos.x && s.y === pos.y));
-    return pos;
-};
-
 const Snake = () => {
     const canvasRef = useRef(null);
     const [phase, setPhase] = useState("ready"); // ready | playing | over
     const [score, setScore] = useState(0);
     const [high, setHigh] = useState(() => Number(localStorage.getItem("mj-snake-high")) || 0);
 
+    const [started, setStarted] = useState(false);
+
     const snakeRef = useRef([]);
-    const dirRef = useRef({ x: 1, y: 0 });
-    const nextDirRef = useRef({ x: 1, y: 0 });
+    const dirRef = useRef({ x: 0, y: 0 });
+    const nextDirRef = useRef({ x: 0, y: 0 });
+    const movingRef = useRef(false);
     const appleRef = useRef(null);
     const lastRef = useRef(0);
     const focused = useWindowStore((s) => s.focusedWindow === "snake");
@@ -44,40 +38,12 @@ const Snake = () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext("2d");
-
-        ctx.fillStyle = "#0b0f14";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.strokeStyle = "rgba(255,255,255,0.04)";
-        ctx.lineWidth = 1;
-        for (let i = 1; i < COLS; i++) {
-            ctx.beginPath();
-            ctx.moveTo(i * CELL, 0);
-            ctx.lineTo(i * CELL, canvas.height);
-            ctx.stroke();
-        }
-        for (let i = 1; i < ROWS; i++) {
-            ctx.beginPath();
-            ctx.moveTo(0, i * CELL);
-            ctx.lineTo(canvas.width, i * CELL);
-            ctx.stroke();
-        }
-
-        // Apple
-        const apple = appleRef.current;
-        if (apple) {
-            ctx.fillStyle = "#ff5f57";
-            ctx.beginPath();
-            ctx.arc(apple.x * CELL + CELL / 2, apple.y * CELL + CELL / 2, CELL / 2 - 2, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
-        // Snake
-        snakeRef.current.forEach((seg, i) => {
-            ctx.fillStyle = i === 0 ? "#86efac" : "#22c55e";
-            ctx.beginPath();
-            ctx.roundRect(seg.x * CELL + 1, seg.y * CELL + 1, CELL - 2, CELL - 2, 4);
-            ctx.fill();
+        drawSnake(ctx, {
+            snake: snakeRef.current,
+            apple: appleRef.current,
+            cell: CELL,
+            headColor: "#86efac",
+            bodyColor: "#22c55e",
         });
     }, []);
 
@@ -93,31 +59,25 @@ const Snake = () => {
     const stepGame = useCallback(() => {
         const dir = nextDirRef.current;
         dirRef.current = dir;
-        const head = snakeRef.current[0];
-        const next = { x: head.x + dir.x, y: head.y + dir.y };
 
-        if (next.x < 0 || next.y < 0 || next.x >= COLS || next.y >= ROWS) return endGame();
-        if (snakeRef.current.some((s) => s.x === next.x && s.y === next.y)) return endGame();
+        const result = stepSnake(snakeRef.current, dir, appleRef.current, COLS, ROWS);
+        if (result.dead) return endGame();
 
-        snakeRef.current.unshift(next);
-        if (appleRef.current && next.x === appleRef.current.x && next.y === appleRef.current.y) {
+        snakeRef.current = result.snake;
+        if (result.ate) {
             setScore((s) => s + 10);
-            appleRef.current = spawnApple(snakeRef.current);
-        } else {
-            snakeRef.current.pop();
+            appleRef.current = spawnApple(snakeRef.current, COLS, ROWS);
         }
         draw();
     }, [draw, endGame]);
 
-    const start = useCallback((initialDirection = { x: 1, y: 0 }) => {
-        snakeRef.current = [
-            { x: 7, y: 10 },
-            { x: 6, y: 10 },
-            { x: 5, y: 10 },
-            { x: 4, y: 10 },
-        ];
-        dirRef.current = initialDirection;
-        nextDirRef.current = initialDirection;
+    // Start places the snake but it stays still until the first direction input.
+    const start = useCallback(() => {
+        snakeRef.current = initialSnake();
+        dirRef.current = { x: 0, y: 0 };
+        nextDirRef.current = { x: 0, y: 0 };
+        movingRef.current = false;
+        setStarted(false);
         appleRef.current = spawnApple(snakeRef.current);
         setScore(0);
         setPhase("playing");
@@ -125,32 +85,30 @@ const Snake = () => {
     }, [draw]);
 
     const turn = useCallback((direction) => {
-        const current = dirRef.current;
-        if (direction.x === -current.x && direction.y === -current.y) return;
-        if (phase !== "playing") {
-            start(direction);
-            return;
-        }
+        if (phase !== "playing") start();
+        const current = movingRef.current ? dirRef.current : null;
+        if (current && direction.x === -current.x && direction.y === -current.y) return;
+        dirRef.current = direction;
         nextDirRef.current = direction;
+        movingRef.current = true;
+        setStarted(true);
     }, [phase, start]);
 
-    // Game loop.
+    // Game loop (timer-based so it keeps running in throttled/background tabs).
     useEffect(() => {
         if (phase !== "playing") return;
         lastRef.current = performance.now();
-        let raf;
 
-        const tick = (now) => {
-            const speed = Math.max(65, 150 - score * 1.5);
+        const id = setInterval(() => {
+            const now = performance.now();
+            const speed = Math.max(SNAKE_SPEED.MIN, SNAKE_SPEED.BASE - score * 1.5);
             if (now - lastRef.current >= speed) {
                 lastRef.current = now;
-                stepGame();
+                if (movingRef.current) stepGame();
             }
-            raf = requestAnimationFrame(tick);
-        };
+        }, 32);
 
-        raf = requestAnimationFrame(tick);
-        return () => cancelAnimationFrame(raf);
+        return () => clearInterval(id);
     }, [phase, score, stepGame]);
 
     // Keyboard input (only while this window is focused).
@@ -158,7 +116,9 @@ const Snake = () => {
         if (!focused) return;
 
         const onKey = (e) => {
-            const dir = KEYS[e.key];
+            // Normalize WASD so Caps Lock / Shift doesn't break input.
+            const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+            const dir = KEYS[key];
             if (!dir) {
                 if (e.key === " " || e.key === "Enter") {
                     e.preventDefault();
@@ -177,12 +137,7 @@ const Snake = () => {
     // First paint when the window opens.
     useEffect(() => {
         if (!snakeRef.current.length) {
-            snakeRef.current = [
-                { x: 7, y: 10 },
-                { x: 6, y: 10 },
-                { x: 5, y: 10 },
-                { x: 4, y: 10 },
-            ];
+            snakeRef.current = initialSnake();
             appleRef.current = spawnApple(snakeRef.current);
         }
         draw();
@@ -203,18 +158,31 @@ const Snake = () => {
 
                 <div className="snake-wrap">
                     <canvas ref={canvasRef} width={COLS * CELL} height={ROWS * CELL} />
-                    {phase !== "playing" && (
+                    {phase === "ready" && (
                         <div className="snake-overlay">
-                            <h3>{phase === "over" ? "Game over" : "Snake"}</h3>
-                            <p>
-                                {phase === "over"
-                                    ? `You scored ${score}. Nice run!`
-                                    : "Eat the red dot, don't hit the walls or yourself."}
-                            </p>
+                            <h3>Snake</h3>
+                            <p>Eat the red dot, don't hit the walls or yourself.</p>
                             <button type="button" className="snake-start" onClick={start}>
-                                {phase === "over" ? "Play again" : "Start"}
+                                Start
                             </button>
                             <p className="!mt-0 opacity-60">arrows / WASD · space to start</p>
+                        </div>
+                    )}
+
+                    {phase === "playing" && !started && (
+                        <div className="snake-overlay">
+                            <h3>Ready</h3>
+                            <p>Press arrows or WASD to move</p>
+                        </div>
+                    )}
+
+                    {phase === "over" && (
+                        <div className="snake-overlay">
+                            <h3>Game over</h3>
+                            <p>You scored {score}. Nice run!</p>
+                            <button type="button" className="snake-start" onClick={start}>
+                                Play again
+                            </button>
                         </div>
                     )}
                 </div>

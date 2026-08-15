@@ -30,7 +30,7 @@ const Gallery = () => {
                                 key={category.id} 
                                 onClick={() => setActiveCategory(category)}
                                 className={clsx(
-                                    activeCategory.id === category.id && "bg-white/10 !text-white"
+                                    activeCategory.id === category.id && "bg-white/10 text-white!"
                                 )}
                             >
                                 <img src={category.icon} alt={category.name} />

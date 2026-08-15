@@ -1,19 +1,17 @@
 import React, { createElement, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-import { Folder, Check, Palette } from "lucide-react";
+import { Check, Palette } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { Draggable } from "gsap/Draggable";
-import { locations, desktopApps, wallpapers } from "#constants/index.js";
+import { desktopApps, wallpapers } from "#constants/index.js";
 import useWindowStore from "#store/window.js";
-import useLocationStore from "#store/location.js";
 import useSystemStore from "#store/system.js";
 
 gsap.registerPlugin(Draggable);
 
 const Home = () => {
     const { openWindow, focusWindow } = useWindowStore();
-    const { setActiveLocation } = useLocationStore();
     const containerRef = useRef(null);
     const menuRef = useRef(null);
     const [selectedId, setSelectedId] = useState(null);
@@ -22,32 +20,25 @@ const Home = () => {
     const wallpaper = useSystemStore((s) => s.wallpaper);
     const setWallpaper = useSystemStore((s) => s.setWallpaper);
 
-    const folderItems = (locations.work?.children ?? []).map((item) => ({
-        id: `folder-${item.id}`,
-        name: item.name,
-        kind: "folder",
-        item,
-        open: () => {
-            setActiveLocation(item);
-            openWindow("finder");
-            focusWindow("finder");
-        },
-    }));
+    // Exactly these apps on the desktop — no folders, no duplicates of the dock.
+    const DESKTOP_APP_IDS = ["web", "gallery", "contact", "skills", "journey", "games"];
 
-    const appItems = desktopApps.map((app) => ({
-        id: `app-${app.id}`,
-        name: app.name,
-        kind: "app",
-        app,
-        open: () => {
-            openWindow(app.appId);
-            focusWindow(app.appId);
-        },
-    }));
+    const items = DESKTOP_APP_IDS
+        .map((id) => desktopApps.find((app) => app.id === id))
+        .filter(Boolean)
+        .map((app) => ({
+            id: `app-${app.id}`,
+            name: app.name,
+            kind: "app",
+            app,
+            open: () => {
+                openWindow(app.appId);
+                focusWindow(app.appId);
+            },
+        }));
 
-    const items = [...folderItems, ...appItems];
-    const leftItems = items.slice(0, 5);
-    const rightItems = items.slice(5);
+    const leftItems = items.slice(0, 3);
+    const rightItems = items.slice(3);
 
     const renderItem = (item) => (
         <div
@@ -70,23 +61,13 @@ const Home = () => {
             }}
             title={item.name}
         >
-            {item.kind === "folder" ? (
-                <Folder
-                    strokeWidth={1.4}
-                    className={clsx(
-                        "desktop-folder-icon",
-                        selectedId === item.id && "text-sky-200"
-                    )}
-                />
-            ) : (
-                <span className="desktop-app-icon" style={{ background: item.app.tile }}>
-                    {typeof item.app.icon === "string" ? (
-                        <img src={item.app.icon} alt={item.app.name} />
-                    ) : (
-                        createElement(item.app.icon, { strokeWidth: 1.6 })
-                    )}
-                </span>
-            )}
+            <span className="desktop-app-icon" style={{ background: item.app.tile }}>
+                {typeof item.app.icon === "string" ? (
+                    <img src={item.app.icon} alt={item.app.name} />
+                ) : (
+                    createElement(item.app.icon, { strokeWidth: 1.6 })
+                )}
+            </span>
             <p className="desktop-label">{item.name}</p>
         </div>
     );

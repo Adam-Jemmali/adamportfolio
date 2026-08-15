@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { FolderOpen, Send } from "lucide-react";
-import { locations } from "#constants/index.js";
+import { Send } from "lucide-react";
 import useWindowStore from "#store/window.js";
-import useLocationStore from "#store/location.js";
 import BrandName from "#components/BrandName.jsx";
 
 const ROLES = [
@@ -14,18 +12,14 @@ const ROLES = [
     "things that actually ship",
 ];
 
-// Per-letter weight response on hover (variable font) + gradient that follows the mouse.
+// Per-letter weight response on hover (variable font).
 const setTitleHover = (container) => {
     if (!container) return;
     const letters = container.querySelectorAll(".hero-letter");
 
     const mousemove = (e) => {
-        const { left, width } = container.getBoundingClientRect();
+        const { left } = container.getBoundingClientRect();
         const mouseX = e.clientX - left;
-
-        // Shift the pfp gradient so it follows the cursor.
-        const pct = Math.max(0, Math.min(100, (mouseX / width) * 100));
-        gsap.to(container, { backgroundPosition: `${pct}% 50%`, duration: 0.25, ease: "power1.out" });
 
         letters.forEach((letter) => {
             const { left: l, width: w } = letter.getBoundingClientRect();
@@ -37,7 +31,6 @@ const setTitleHover = (container) => {
     };
 
     const mouseleave = () => {
-        gsap.to(container, { backgroundPosition: "0% 50%", duration: 0.5, ease: "power2.out" });
         letters.forEach((letter) => {
             gsap.killTweensOf(letter);
             gsap.to(letter, { duration: 0.3, ease: "power2.out", fontVariationSettings: `"wght" 400` });
@@ -57,13 +50,6 @@ const Welcome = () => {
     const [typed, setTyped] = useState("");
 
     const { openWindow, focusWindow } = useWindowStore();
-    const setActiveLocation = useLocationStore((s) => s.setActiveLocation);
-
-    const openProjects = () => {
-        setActiveLocation(locations.work);
-        openWindow("finder");
-        focusWindow("finder");
-    };
 
     const openContact = () => {
         openWindow("contact");
@@ -113,10 +99,11 @@ const Welcome = () => {
             { opacity: 0, y: 18 },
             { opacity: 1, y: 0, duration: 0.7, stagger: 0.12, ease: "power3.out", delay: 0.2 }
         );
+        // A + J gravity-fall into the name (same motion as the boot screen).
         gsap.fromTo(
             monograms,
-            { opacity: 0, y: -64, rotation: -360, scale: 0.5 },
-            { opacity: 1, y: 0, rotation: 0, scale: 1, duration: 1.15, stagger: 0.16, ease: "back.out(1.5)", delay: 0.42, overwrite: true }
+            { y: -window.innerHeight * 0.85, opacity: 0, rotation: 0, scale: 1.55 },
+            { y: 0, opacity: 1, rotation: 360, scale: 1, duration: 2.2, ease: "bounce.out", stagger: 0.26, overwrite: true }
         );
         return () => cleanup?.();
     }, []);
@@ -134,10 +121,6 @@ const Welcome = () => {
             </p>
 
             <div className="hero-ctas">
-                <button type="button" className="hero-cta hero-cta-primary" onClick={openProjects}>
-                    <FolderOpen size={15} />
-                    View projects
-                </button>
                 <button type="button" className="hero-cta hero-cta-secondary" onClick={openContact}>
                     <Send size={15} />
                     Get in touch

@@ -4,6 +4,9 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import WindowsControls from "#components/WindowsControls.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
+import { locations, skillMeta } from "#constants/index.js";
+import useWindowStore from "#store/window.js";
+import useLocationStore from "#store/location.js";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -200,6 +203,65 @@ const SUPPORTING_ENTRIES = [
     },
 ];
 
+const SkillChips = ({ skills, label }) => {
+    const openWindow = useWindowStore((s) => s.openWindow);
+    const focusWindow = useWindowStore((s) => s.focusWindow);
+    const setActiveLocation = useLocationStore((s) => s.setActiveLocation);
+    const setHighlightIds = useLocationStore((s) => s.setHighlightIds);
+
+    // Exact project match, with a few display-name aliases resolved first.
+    const SKILL_ALIASES = {
+        "Next.js 14": "Next.js",
+        "WebSockets": "WebSocket",
+        "Postgres": "PostgreSQL",
+    };
+
+    const matchesFor = (skill) => {
+        const key = SKILL_ALIASES[skill] || skill;
+        return locations.work.children.filter((p) => (p.stack || []).includes(key));
+    };
+
+    const openProjects = (skill) => {
+        const matches = matchesFor(skill);
+        setActiveLocation(locations.work);
+        setHighlightIds(matches.map((p) => p.id));
+        openWindow("finder");
+        focusWindow("finder");
+    };
+
+    return (
+        <ul className="journey-skill-chips" aria-label={label}>
+            {skills.map((skill) => {
+                const meta = skillMeta[skill];
+                const matches = matchesFor(skill);
+                const linked = matches.length > 0;
+                const tip = meta
+                    ? `${skill} · ${meta.category}${linked ? ` — view ${matches.length} project${matches.length > 1 ? "s" : ""}` : ""}`
+                    : skill;
+                return (
+                    <li
+                        key={skill}
+                        className={`journey-skill-chip${linked ? " journey-skill-chip--linked" : ""}`}
+                        title={tip}
+                        role={linked ? "button" : undefined}
+                        tabIndex={linked ? 0 : undefined}
+                        onClick={linked ? () => openProjects(skill) : undefined}
+                        onKeyDown={linked ? (e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                openProjects(skill);
+                            }
+                        } : undefined}
+                    >
+                        {meta?.logo && <img className="journey-skill-logo" src={meta.logo} alt="" loading="lazy" />}
+                        <span>{skill}</span>
+                    </li>
+                );
+            })}
+        </ul>
+    );
+};
+
 const JourneyWorkEntry = ({ entry }) => (
     <article className={`journey-entry journey-entry--${entry.side}`}>
         <div className="journey-spine" aria-hidden="true">
@@ -225,9 +287,7 @@ const JourneyWorkEntry = ({ entry }) => (
             <h3>{entry.title}</h3>
             {entry.location && <p className="journey-location">{entry.location}</p>}
             <p className="journey-summary">{entry.summary}</p>
-            {entry.skills && (
-                <p className="journey-skills" aria-label={`${entry.title} technologies`}>{entry.skills.slice(0, 4).join("  ·  ")}</p>
-            )}
+            {entry.skills && <SkillChips skills={entry.skills} label={`${entry.title} technologies`} />}
         </div>
     </article>
 );
@@ -278,9 +338,7 @@ const SupportingEntry = ({ entry }) => (
             </ul>
         )}
 
-        {entry.skills && (
-            <p className="journey-skills" aria-label={`${entry.title} technologies`}>{entry.skills.slice(0, 5).join("  ·  ")}</p>
-        )}
+        {entry.skills && <SkillChips skills={entry.skills} label={`${entry.title} technologies`} />}
     </article>
 );
 

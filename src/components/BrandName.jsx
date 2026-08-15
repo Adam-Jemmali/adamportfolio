@@ -18,7 +18,7 @@ const BrandName = ({ className = "", animated = false, monogramsOnly = false }) 
         {LETTERS.filter(({ monogram }) => !monogramsOnly || monogram).map(({ value, monogram }, index) => (
             <span
                 key={`${value}-${index}`}
-                className={`brand-name-letter${monogram ? " brand-monogram" : ""}${animated ? " hero-letter" : ""}`}
+                className={`brand-name-letter${monogram ? " brand-monogram" : ""}${animated && !monogram ? " hero-letter" : ""}`}
                 style={animated ? { "--letter-delay": `${0.24 + index * 0.055}s` } : undefined}
                 aria-hidden="true"
             >

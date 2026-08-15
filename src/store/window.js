@@ -1,5 +1,6 @@
 import {create} from "zustand";
 import { immer } from "zustand/middleware/immer";
+import { persist } from "zustand/middleware";
 
 import {INITIAL_Z_INDEX, WINDOW_CONFIG} from "#constants/index.js";
 
@@ -17,7 +18,7 @@ const focusTopWindow = (state) => {
     next[1].zIndex = state.nextZIndex++;
 };
 
-const useWindowStore = create(immer((set) => ({
+const useWindowStore = create(persist(immer((set) => ({
     windows: WINDOW_CONFIG,
     nextZIndex: INITIAL_Z_INDEX + 1,
     focusedWindow: null,
@@ -90,6 +91,9 @@ const useWindowStore = create(immer((set) => ({
         win.zIndex = state.nextZIndex++;
         state.focusedWindow = windowKey;
     }),
-})));
+})), {
+    name: "mj-windows",
+    partialize: (state) => ({ windows: state.windows, nextZIndex: state.nextZIndex }),
+}));
 
 export default useWindowStore;

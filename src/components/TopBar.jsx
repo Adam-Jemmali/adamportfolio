@@ -11,10 +11,9 @@ import {
     Lock,
     RotateCw,
     CircleUserRound,
-    Search,
     Menu,
 } from "lucide-react";
-import { navLinks, locations, wallpapers } from "#constants/index.js";
+import { locations, wallpapers } from "#constants/index.js";
 import useWindowStore from "#store/window.js";
 import useSystemStore from "#store/system.js";
 import BrandName from "#components/BrandName.jsx";
@@ -151,22 +150,10 @@ const TopBar = () => {
         <header id="topbar">
             <div className="topbar-left">
                 <button type="button" className="topbar-logo" onClick={restart} title="Restart">
-                    <span className="logo-badge">MJ</span>
+                    <span className="logo-badge" aria-hidden="true">
+                        <BrandName monogramsOnly />
+                    </span>
                 </button>
-                <nav>
-                    {navLinks.map(({ id, name, type }) => (
-                        <button
-                            key={id}
-                            type="button"
-                            onClick={() => {
-                                openWindow(type);
-                                focusWindow(type);
-                            }}
-                        >
-                            {name}
-                        </button>
-                    ))}
-                </nav>
             </div>
 
             <div className="topbar-right" ref={trayRef}>
@@ -208,16 +195,6 @@ const TopBar = () => {
                         )}
                     </div>
                 )}
-
-                <button
-                    type="button"
-                    className="topbar-action spotlight-trigger"
-                    onClick={() => window.dispatchEvent(new CustomEvent("spotlight:open"))}
-                    aria-label="Search apps and files"
-                    title="Search apps and files"
-                >
-                    <Search size={15} />
-                </button>
 
                 {/* Wi-Fi */}
                 <TrayControl
@@ -351,7 +328,7 @@ const TopBar = () => {
                     </div>
                 </TrayControl>
 
-                <span className="topbar-clock">{time.format("ddd MMM D  h:mm A")}</span>
+                <span className="topbar-clock">{time.format("ddd MMM D  HH:mm")}</span>
                 <PowerMenu />
             </div>
         </header>

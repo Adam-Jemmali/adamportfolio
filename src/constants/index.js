@@ -86,8 +86,8 @@ const dockApps = [
 
 const desktopApps = [
     {
-        id: "blog",
-        name: "Blog",
+        id: "web",
+        name: "Web",
         icon: Globe,
         appId: "safari",
         tile: "linear-gradient(135deg, #38bdf8, #2563eb)",
@@ -204,6 +204,85 @@ const techStack = [
     },
 ];
 
+// Shared skill metadata (brand logo + category), reused across Journey, Terminal, and Portfolio.
+const skillMeta = {
+    // Languages
+    "Python": { logo: "public/images/skills/python.svg", category: "Languages" },
+    "TypeScript": { logo: "public/images/skills/typescript.svg", category: "Languages" },
+    "JavaScript": { logo: "public/images/skills/javascript.svg", category: "Languages" },
+    "Go": { logo: "public/images/skills/go.svg", category: "Languages" },
+    "C++": { logo: "public/images/skills/cplusplus.svg", category: "Languages" },
+    "Java": { logo: "public/images/skills/openjdk.svg", category: "Languages" },
+    "SQL": { logo: "", category: "Languages" },
+    "Bash": { logo: "public/images/skills/gnubash.svg", category: "Languages" },
+    // AI & CV
+    "PyTorch": { logo: "public/images/skills/pytorch.svg", category: "AI & CV" },
+    "OpenCV": { logo: "public/images/skills/opencv.svg", category: "AI & CV" },
+    "NumPy": { logo: "public/images/skills/numpy.svg", category: "AI & CV" },
+    "TensorFlow": { logo: "public/images/skills/tensorflow.svg", category: "AI & CV" },
+    "YOLOv8": { logo: "public/images/skills/ultralytics.svg", category: "AI & CV" },
+    "LangChain": { logo: "public/images/skills/langchain.svg", category: "AI & CV" },
+    "RAG": { logo: "", category: "AI & CV" },
+    "HuggingFace": { logo: "public/images/skills/huggingface.svg", category: "AI & CV" },
+    "DeepSeek AI": { logo: "public/images/skills/deepseek.svg", category: "AI & CV" },
+    "Google Gemini": { logo: "public/images/skills/googlegemini.svg", category: "AI & CV" },
+    "OpenRouter": { logo: "public/images/skills/openrouter.svg", category: "AI & CV" },
+    // Backend
+    "FastAPI": { logo: "public/images/skills/fastapi.svg", category: "Backend" },
+    "Node.js": { logo: "public/images/skills/nodedotjs.svg", category: "Backend" },
+    "Docker": { logo: "public/images/skills/docker.svg", category: "Backend" },
+    "Kubernetes": { logo: "public/images/skills/kubernetes.svg", category: "Backend" },
+    "AWS": { logo: "", category: "Backend" },
+    "Supabase": { logo: "public/images/skills/supabase.svg", category: "Backend" },
+    "WebSockets": { logo: "public/images/skills/websocket.svg", category: "Backend" },
+    "WebSocket": { logo: "public/images/skills/websocket.svg", category: "Backend" },
+    "WebRTC": { logo: "public/images/skills/webrtc.svg", category: "Backend" },
+    "RabbitMQ": { logo: "public/images/skills/rabbitmq.svg", category: "Backend" },
+    "NATS/JetStream": { logo: "public/images/skills/natsdotio.svg", category: "Backend" },
+    "Twilio": { logo: "", category: "Backend" },
+    "Backboard.io": { logo: "", category: "Backend" },
+    // Frontend
+    "Next.js": { logo: "public/images/skills/nextdotjs.svg", category: "Frontend" },
+    "Next.js 14": { logo: "public/images/skills/nextdotjs.svg", category: "Frontend" },
+    "React": { logo: "public/images/skills/react.svg", category: "Frontend" },
+    "Tailwind": { logo: "public/images/skills/tailwindcss.svg", category: "Frontend" },
+    "Vercel": { logo: "public/images/skills/vercel.svg", category: "Frontend" },
+    "Stripe": { logo: "public/images/skills/stripe.svg", category: "Frontend" },
+    "Streamlit": { logo: "public/images/skills/streamlit.svg", category: "Frontend" },
+    "Plotly": { logo: "public/images/skills/plotly.svg", category: "Frontend" },
+    "MediaRecorder API": { logo: "", category: "Frontend" },
+    // Databases
+    "Postgres": { logo: "public/images/skills/postgresql.svg", category: "Databases" },
+    "PostgreSQL": { logo: "public/images/skills/postgresql.svg", category: "Databases" },
+    "MongoDB": { logo: "public/images/skills/mongodb.svg", category: "Databases" },
+    "MongoDB Atlas": { logo: "public/images/skills/mongodb.svg", category: "Databases" },
+    "Redis": { logo: "public/images/skills/redis.svg", category: "Databases" },
+    "Snowflake": { logo: "public/images/skills/snowflake.svg", category: "Databases" },
+    "SQLite": { logo: "public/images/skills/sqlite.svg", category: "Databases" },
+    // DevOps
+    "Git": { logo: "public/images/skills/git.svg", category: "DevOps" },
+    "GitHub Actions": { logo: "public/images/skills/githubactions.svg", category: "DevOps" },
+    "CI/CD": { logo: "", category: "DevOps" },
+    "Linux": { logo: "public/images/skills/linux.svg", category: "DevOps" },
+    "Playwright": { logo: "", category: "DevOps" },
+    "Sentry": { logo: "public/images/skills/sentry.svg", category: "DevOps" },
+    "Make.com": { logo: "public/images/skills/make.svg", category: "DevOps" },
+    "Zapier": { logo: "public/images/skills/zapier.svg", category: "DevOps" },
+    "Monday.com": { logo: "public/images/skills/monday.svg", category: "DevOps" },
+    "Jenkins": { logo: "public/images/skills/jenkins.svg", category: "DevOps" },
+    "PyTest": { logo: "public/images/skills/pytest.svg", category: "DevOps" },
+    "Agile/Scrum": { logo: "", category: "Process" },
+    // Automation / practice
+    "CRM Automation": { logo: "", category: "Automation" },
+    "AI Workflows": { logo: "", category: "Automation" },
+    "DSA (NeetCode)": { logo: "", category: "Practice" },
+    "Linux debugging (SadServers)": { logo: "", category: "Practice" },
+    "Shell tools": { logo: "", category: "Practice" },
+    "Git internals": { logo: "", category: "Practice" },
+    "MIT Missing Semester": { logo: "", category: "Practice" },
+    "SQLZoo": { logo: "", category: "Practice" },
+};
+
 const socials = [
     {
         id: 1,
@@ -283,6 +362,7 @@ export {
     wallpapers,
     blogPosts,
     techStack,
+    skillMeta,
     socials,
     photosLinks,
     gallery,
@@ -301,6 +381,8 @@ const WORK_LOCATION = {
             name: "OmniContext OS",
             icon: "public/images/folder.png",
             kind: "folder",
+            category: "Agentic AI",
+            stack: ["TypeScript", "Node.js", "RAG"],
             position: "top-10 left-80",
             windowPosition: "top-[5vh] left-5",
             children: [
@@ -348,6 +430,8 @@ const WORK_LOCATION = {
             name: "AeroGuard (A.E.G.I.S)",
             icon: "public/images/folder.png",
             kind: "folder",
+            category: "Real-time Systems",
+            stack: ["Snowflake", "MongoDB", "Google Gemini", "OpenRouter", "FastAPI"],
             position: "top-10 left-5",
             windowPosition: "top-[20vh] left-7",
             children: [
@@ -396,6 +480,8 @@ const WORK_LOCATION = {
             name: "NeuroDesk",
             icon: "public/images/folder.png",
             kind: "folder",
+            category: "Agentic AI",
+            stack: ["FastAPI", "PostgreSQL", "Redis", "Next.js", "Python"],
             position: "top-10 left-45  ",
             windowPosition: "top-[20vh] left-7",
             children: [
@@ -445,6 +531,8 @@ const WORK_LOCATION = {
             name: "Solen AI",
             icon: "public/images/folder.png",
             kind: "folder",
+            category: "Agentic AI",
+            stack: ["Docker", "Python", "GitHub Actions"],
             position: "top-10 left-80",
             windowPosition: "top-[5vh] left-5",
             children: [
@@ -479,6 +567,8 @@ const WORK_LOCATION = {
             name: "A.E.G.I.S. Garden",
             icon: "public/images/folder.png",
             kind: "folder",
+            category: "Real-time Systems",
+            stack: ["FastAPI", "React", "MongoDB", "Google Gemini", "OpenRouter", "WebSocket", "Docker"],
             position: "top-10 left-5",
             windowPosition: "top-[20vh] left-7",
             children: [
@@ -514,6 +604,8 @@ const WORK_LOCATION = {
             name: "Chronos Cloud",
             icon: "public/images/folder.png",
             kind: "folder",
+            category: "Real-time Systems",
+            stack: ["Python", "FastAPI", "NATS/JetStream", "Docker", "RabbitMQ", "Redis", "PyTest", "Jenkins"],
             position: "top-10 left-45",
             windowPosition: "top-[20vh] left-7",
             children: [
@@ -549,6 +641,8 @@ const WORK_LOCATION = {
             name: "B2B AI Workforce Optimizer",
             icon: "public/images/folder.png",
             kind: "folder",
+            category: "Automation & Backend",
+            stack: ["FastAPI", "Streamlit", "DeepSeek AI", "Plotly", "SQLite", "Twilio"],
             position: "top-10 left-80",
             windowPosition: "top-[20vh] left-7",
             children: [
@@ -583,6 +677,8 @@ const WORK_LOCATION = {
             name: "Distributed Systems (AI+ Society)",
             icon: "public/images/folder.png",
             kind: "folder",
+            category: "Automation & Backend",
+            stack: ["RabbitMQ", "GitHub Actions", "Git"],
             position: "top-10 left-5",
             windowPosition: "top-[20vh] left-7",
             children: [

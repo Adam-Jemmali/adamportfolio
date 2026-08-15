@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import WindowsControls from "#components/WindowsControls.jsx";
-import { techStack, locations } from "#constants/index.js";
+import { techStack, skillMeta, locations } from "#constants/index.js";
 import useWindowStore from "#store/window.js";
 import useLocationStore from "#store/location.js";
 
@@ -67,13 +67,6 @@ const Terminal = () => {
         return `opened ${location?.name ?? "portfolio"}…`;
     };
 
-    const renderTechStack = () => {
-        const rows = techStack
-            .map((t) => `  ${t.category.padEnd(18)} ${t.items.join(", ")}`)
-            .join("\n");
-        return `  Category             Technologies\n${rows}\n\n  \u2713 full stack was loaded successfully (100%)`;
-    };
-
     const run = (raw) => {
         const cmd = raw.trim().toLowerCase();
         const out = [{ id: nextId(), kind: "echo", content: `adam@jemmali:~$ ${raw}` }];
@@ -89,7 +82,7 @@ const Terminal = () => {
             out.push({ id: nextId(), kind: "out", content: "Available commands:" });
             HELP.forEach(([c, d]) => out.push({ id: nextId(), kind: "help", cmd: c, desc: d }));
         } else if (["tech", "techstack", "stack", "skills", "npm show tech stack"].includes(cmd)) {
-            push("out", renderTechStack());
+            out.push({ id: nextId(), kind: "stack" });
         } else if (["portfolio", "projects", "finder"].includes(cmd)) {
             push("ok", openFinderAt(locations.work));
         } else if (["blog", "web", "safari"].includes(cmd)) {
@@ -176,7 +169,29 @@ const Terminal = () => {
                 onClick={() => inputRef.current?.focus()}
             >
                 {lines.map((line) => (
-                    line.kind === "help" ? (
+                    line.kind === "stack" ? (
+                        <div key={line.id} className="terminal-stack">
+                            {techStack.map((group) => (
+                                <div key={group.category} className="terminal-stack-group">
+                                    <span className="terminal-stack-cat">{group.category}</span>
+                                    <div className="terminal-stack-items">
+                                        {group.items.map((item) => (
+                                            <span
+                                                key={item}
+                                                className="terminal-stack-chip"
+                                                title={skillMeta[item] ? `${item} · ${skillMeta[item].category}` : item}
+                                            >
+                                                {skillMeta[item]?.logo && (
+                                                    <img src={skillMeta[item].logo} alt="" loading="lazy" />
+                                                )}
+                                                <span>{item}</span>
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : line.kind === "help" ? (
                         <div key={line.id} className="terminal-line help">
                             <span className="help-cmd">{line.cmd.padEnd(20)}</span>
                             <span className="help-desc">{line.desc}</span>

@@ -73,12 +73,14 @@ const LockScreen = () => {
             <div className="lock-blur" />
 
             <div className="lock-clock">
-                <p className="lock-time">{time.format("h:mm")}</p>
+                <p className="lock-time">{time.format("HH:mm")}</p>
                 <p className="lock-date">{time.format("dddd, MMMM D")}</p>
             </div>
 
             <div ref={cardRef} className="lock-card">
-                <div className="lock-initials">A J</div>
+                <div className="lock-initials" aria-hidden="true">
+                    <BrandName monogramsOnly />
+                </div>
                 <h1><BrandName /></h1>
 
                 <form className="lock-form" onSubmit={submit}>

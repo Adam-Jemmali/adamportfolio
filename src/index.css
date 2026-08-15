@@ -24,6 +24,7 @@ body {
 @theme {
     --font-georama: "Georama", sans-serif;
     --font-roboto: "Roboto Mono", monospace;
+    --font-pixel: "Press Start 2P", monospace;
     --breakpoint-3xl: 1920px;
 }
 
@@ -31,6 +32,13 @@ body {
     font-family: 'Georama';
     src: url('Georama,Urbanist/Georama/Georama-VariableFont_wdth,wght.ttf') format('truetype');
     font-weight: 100 900;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Press Start 2P';
+    src: url('fonts/PressStart2P-Regular.ttf') format('truetype');
+    font-weight: 400;
     font-display: swap;
 }
 
@@ -87,21 +95,25 @@ body {
     }
 
     .topbar-logo .logo-badge {
-        @apply flex items-center justify-center size-4.5 rounded-full text-[9px] font-bold text-zinc-100;
-        background: var(--pfp-grad);
+        @apply flex items-center justify-center size-6 rounded-md;
     }
 
-    #topbar nav {
-        @apply flex items-center h-full;
+    .topbar-logo .logo-badge .brand-name {
+        @apply flex items-center;
+        gap: 3px;
     }
 
-    #topbar nav button {
-        @apply h-full px-2.5 rounded-sm transition-colors whitespace-nowrap;
-        touch-action: manipulation;
-        flex-shrink: 0;
+    .topbar-logo .logo-badge .brand-monogram {
+        width: 9px;
+        height: 9px;
     }
 
-    #topbar nav button:hover,
+    .topbar-logo .logo-badge .brand-monogram img {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+
     .topbar-action:hover {
         background: rgb(255 255 255 / 0.1);
     }
@@ -442,84 +454,57 @@ body {
         @apply fixed inset-0 z-9999 bg-black flex flex-col items-center justify-center font-georama overflow-hidden;
     }
 
-    .boot-snake {
-        @apply flex items-center gap-1.5 h-10 mt-5;
-        animation: boot-snake-travel 1.35s ease-in-out infinite;
+    .boot-monograms {
+        @apply flex items-center gap-7;
+        perspective: 900px;
     }
 
-    .boot-snake span {
-        @apply size-3 rounded-full;
-        background: linear-gradient(135deg, #4ade80, #22c55e);
-        box-shadow: 0 0 12px rgb(74 222 128 / 0.5);
-        animation: boot-snake-wave 0.75s ease-in-out infinite alternate;
+    .boot-monograms .brand-name {
+        @apply flex items-center gap-7;
     }
 
-    .boot-snake span:nth-child(2) { animation-delay: 0.06s; opacity: 0.88; }
-    .boot-snake span:nth-child(3) { animation-delay: 0.12s; opacity: 0.76; }
-    .boot-snake span:nth-child(4) { animation-delay: 0.18s; opacity: 0.64; }
-    .boot-snake span:nth-child(5) { animation-delay: 0.24s; opacity: 0.52; }
-    .boot-snake span:nth-child(6) { animation-delay: 0.3s; opacity: 0.4; }
-    .boot-snake span:nth-child(7) { animation-delay: 0.36s; opacity: 0.28; }
-
-    .boot-snake-head {
-        @apply relative size-4!;
-        background: linear-gradient(135deg, #86efac, #22c55e) !important;
+    .boot-monograms .brand-monogram {
+        @apply relative;
+        width: 5.5rem;
+        height: 5.5rem;
+        filter: drop-shadow(0 18px 26px rgb(0 0 0 / 0.55));
+        will-change: transform, opacity;
     }
 
-    .boot-snake-head::after {
-        content: "";
-        position: absolute;
-        top: 0.28rem;
-        left: 0.34rem;
-        width: 0.16rem;
-        height: 0.16rem;
-        border-radius: 999px;
-        background: #082f49;
-        box-shadow: 0.34rem 0 #082f49;
-    }
-
-    @keyframes boot-snake-wave {
-        from { transform: translateY(-0.16rem) scale(1); }
-        to { transform: translateY(0.16rem) scale(0.86); }
-    }
-
-    @keyframes boot-snake-travel {
-        0%, 100% { transform: translateX(-0.35rem); }
-        50% { transform: translateX(0.35rem); }
-    }
-
-    .boot-logo .brand-name {
-        @apply flex items-center gap-1;
-    }
-
-    .boot-logo .brand-monogram {
-        width: 1.05em;
-        height: 1.05em;
-    }
-
-    .boot-logo .brand-monogram img {
+    .boot-monograms .brand-monogram img {
         width: 100%;
         height: 100%;
+        display: block;
     }
 
-    .boot-brand {
-        @apply mt-6 text-2xl italic font-georama text-white;
+    .boot-title {
+        @apply mt-8 text-center text-white;
+        font-family: var(--font-pixel);
+        font-size: clamp(1.35rem, 4.5vw, 2.3rem);
+        line-height: 1.25;
     }
 
-    .boot-brand .brand-name {
-        @apply inline-flex items-baseline whitespace-pre;
+    .boot-title-accent {
+        color: #0088ff;
     }
 
-    .boot-brand .brand-monogram {
-        width: 0.85em;
-        height: 0.85em;
-        margin: 0 0.05em;
-        vertical-align: -0.08em;
+    .boot-sub {
+        @apply mt-4 text-center;
+        font-family: var(--font-pixel);
+        font-size: 9px;
+        letter-spacing: 0.03em;
+        color: #0088ff;
     }
 
-    .boot-brand .brand-monogram img {
-        width: 100%;
-        height: 100%;
+    .boot-status {
+        @apply mt-5 flex items-center gap-2;
+        font-family: var(--font-pixel);
+        font-size: 10px;
+        color: rgb(255 255 255 / 0.7);
+    }
+
+    .boot-status-pct {
+        color: #0088ff;
     }
 
     .boot-logs {
@@ -530,46 +515,26 @@ body {
         @apply flex items-center justify-between text-white/45;
     }
 
-    .boot-ok {
-        @apply inline-flex items-center gap-1.5 text-[11px] font-semibold;
-        color: #4ade80;
-        animation: boot-ok-pop 0.35s ease-out;
-    }
-
-    .boot-check {
-        @apply inline-flex items-center justify-center size-4 rounded-full;
-        background: rgb(74 222 128 / 0.16);
-    }
-
-    .boot-check svg {
-        @apply size-2.5;
-        color: #4ade80;
-    }
-
-    @keyframes boot-ok-pop {
-        from { opacity: 0; transform: scale(0.6); }
-        to { opacity: 1; transform: scale(1); }
-    }
-
     .boot-bar {
         @apply mt-10 w-80;
+        border: 1px solid #9aa0aa;
+        background: #c9cdd3;
+        padding: 2px;
+        box-shadow: inset 1px 1px 0 rgb(255 255 255 / 0.6), inset -1px -1px 0 rgb(0 0 0 / 0.2);
     }
 
     .boot-bar-track {
-        @apply h-1.5 rounded-full overflow-hidden bg-white/10 border border-white/10;
+        position: relative;
+        height: 14px;
+        background-color: #c9cdd3;
+        background-image: repeating-linear-gradient(90deg, #c9cdd3 0 16px, #6b7280 16px 18px);
+        overflow: hidden;
     }
 
     .boot-bar-fill {
-        @apply h-full rounded-full;
-        background: linear-gradient(90deg, #3c6eb4, #7b5ea7, #4ade80);
-        background-size: 200% 100%;
-        animation: boot-shimmer 2s linear infinite;
+        height: 100%;
+        background-image: repeating-linear-gradient(90deg, #000080 0 16px, #6b7280 16px 18px);
         transition: width 75ms linear;
-    }
-
-    @keyframes boot-shimmer {
-        from { background-position: 0% 0; }
-        to { background-position: 200% 0; }
     }
 
     /* ============ Lock / suspend screens ============ */
@@ -590,10 +555,38 @@ body {
     }
 
     .lock-initials {
-        @apply size-28 rounded-full flex items-center justify-center text-4xl font-bold tracking-tight shadow-2xl;
-        background: var(--pfp-grad);
-        border: 2px solid rgb(255 255 255 / 0.5);
-        text-shadow: 0 2px 8px rgb(0 0 0 / 0.3);
+        @apply size-28 rounded-full flex items-center justify-center shadow-2xl;
+        background: rgb(255 255 255 / 0.06);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1.5px solid rgb(255 255 255 / 0.22);
+    }
+
+    .lock-initials .brand-name {
+        @apply flex items-center;
+        gap: 0.35rem;
+    }
+
+    .lock-initials .brand-monogram {
+        width: 2.15rem;
+        height: 2.15rem;
+        animation: lock-monogram-float 3.4s ease-in-out infinite;
+    }
+
+    .lock-initials .brand-monogram:nth-child(2) {
+        animation-delay: 0.5s;
+    }
+
+    .lock-initials .brand-monogram img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        filter: drop-shadow(0 4px 10px rgb(0 0 0 / 0.45));
+    }
+
+    @keyframes lock-monogram-float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-4px) rotate(-5deg); }
     }
 
     .lock-card h1 {
@@ -815,11 +808,7 @@ body {
         font-size: clamp(1.55rem, 6.4vw, 4.5rem);
         line-height: 1.1;
         padding-right: 0.14em;
-        background: var(--pfp-grad);
-        background-size: 200% 100%;
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
+        color: rgb(255 255 255 / 0.96);
         filter: drop-shadow(0 8px 40px rgb(0 0 0 / 0.5));
     }
 
@@ -1039,6 +1028,36 @@ body {
         .terminal-line.help .help-desc {
             color: #fbbf24;
             opacity: 0.85;
+        }
+
+        .terminal-stack {
+            @apply my-1 space-y-3;
+        }
+
+        .terminal-stack-group {
+            @apply flex items-start gap-3;
+        }
+
+        .terminal-stack-cat {
+            @apply shrink-0 w-20 text-[11px] font-semibold uppercase tracking-wider text-zinc-500 pt-1;
+        }
+
+        .terminal-stack-items {
+            @apply flex flex-wrap gap-1.5;
+        }
+
+        .terminal-stack-chip {
+            @apply inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] text-zinc-300;
+            background: rgb(255 255 255 / 0.05);
+            border: 1px solid rgb(255 255 255 / 0.08);
+        }
+
+        .terminal-stack-chip img {
+            height: 12px;
+            width: auto;
+            object-fit: contain;
+            flex-shrink: 0;
+            pointer-events: none;
         }
 
         .terminal-input-line {
@@ -1495,8 +1514,34 @@ body {
         @apply mt-2 max-w-lg text-[13px] leading-relaxed text-zinc-300;
     }
 
-    .journey-skills {
-        @apply mt-3 text-[11px] font-medium leading-relaxed text-zinc-500;
+    .journey-skill-chips {
+        @apply mt-3 flex flex-wrap items-center gap-1.5;
+        list-style: none;
+    }
+
+    .journey-skill-chip {
+        @apply inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] font-medium text-zinc-300;
+        background: rgb(255 255 255 / 0.06);
+        border: 1px solid rgb(255 255 255 / 0.1);
+        transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .journey-skill-chip:hover {
+        background: rgb(255 255 255 / 0.12);
+        border-color: rgb(255 255 255 / 0.2);
+        transform: translateY(-1px);
+    }
+
+    .journey-skill-logo {
+        height: 13px;
+        width: auto;
+        object-fit: contain;
+        flex-shrink: 0;
+        pointer-events: none;
+    }
+
+    .journey-skill-chip--linked {
+        cursor: pointer;
     }
 
     .journey-support-grid {
@@ -1620,7 +1665,7 @@ body {
     }
 
     #finder {
-        @apply w-3xl h-[70vh] bg-[#14171c];
+        @apply w-4xl h-[70vh] bg-[#14171c];
 
         #window-header {
             @apply bg-[#1a1e24] border-white/10 text-zinc-300;
@@ -1658,28 +1703,160 @@ body {
             }
         }
 
+        .sidebar-nav {
+            @apply flex items-center gap-1 mb-1;
+        }
+
+        .sidebar-nav-btn {
+            @apply flex items-center justify-center size-7 rounded-md text-zinc-400 transition-colors;
+        }
+
+        .sidebar-nav-btn:hover:not(:disabled) {
+            @apply bg-white/10 text-zinc-100;
+        }
+
+        .sidebar-nav-btn:disabled {
+            @apply text-zinc-600 cursor-default;
+        }
+
         .content {
-            @apply flex-1 p-8 bg-[#14171c] max-w-2xl relative overflow-y-auto h-full;
+            @apply flex-1 p-6 bg-[#14171c] overflow-y-auto h-full;
 
             .finder-empty {
-                @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-sm text-zinc-500 whitespace-nowrap;
+                @apply flex items-center justify-center h-full text-sm text-zinc-500;
             }
+        }
 
-            li {
-                @apply absolute flex items-center flex-col gap-3 cursor-pointer;
+        .project-group {
+            @apply mb-7;
+        }
 
-                img {
-                    @apply object-contain object-center size-16 relative group-hover:scale-105 transition-transform;
-                }
+        .project-group-title {
+            @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500 mb-2.5;
+        }
 
-                .finder-folder-icon {
-                    @apply size-16 text-sky-400 drop-shadow-lg;
-                }
+        .project-grid {
+            @apply grid gap-3;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        }
 
-                p {
-                    @apply text-sm text-center font-medium w-40 text-zinc-200;
-                }
-            }
+        .project-card {
+            @apply flex flex-col items-start gap-2 rounded-xl p-4 text-left transition-colors;
+            background: rgb(255 255 255 / 0.04);
+            border: 1px solid rgb(255 255 255 / 0.08);
+        }
+
+        .project-card:hover {
+            background: rgb(255 255 255 / 0.08);
+            border-color: rgb(255 255 255 / 0.14);
+        }
+
+        .project-card-head {
+            @apply flex items-center gap-2 w-full;
+        }
+
+        .project-card-category {
+            @apply text-[10px] font-medium uppercase tracking-wider text-zinc-500;
+        }
+
+        .project-card h4 {
+            @apply text-sm font-semibold text-zinc-100;
+        }
+
+        .project-card-summary {
+            @apply text-xs leading-relaxed text-zinc-400;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .project-card-stack {
+            @apply flex flex-wrap gap-1.5;
+        }
+
+        .project-card-tech {
+            @apply inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-zinc-400;
+            background: rgb(255 255 255 / 0.05);
+            border: 1px solid rgb(255 255 255 / 0.08);
+        }
+
+        .project-card-tech img {
+            height: 11px;
+            width: auto;
+            object-fit: contain;
+            flex-shrink: 0;
+            pointer-events: none;
+        }
+
+        .project-card.is-highlighted {
+            border-color: rgb(96 165 250 / 0.55);
+            box-shadow: 0 0 0 1px rgb(96 165 250 / 0.35);
+        }
+
+        .project-card:focus-visible {
+            outline: none;
+            border-color: rgb(255 255 255 / 0.45);
+            box-shadow: 0 0 0 2px rgb(96 165 250 / 0.5);
+        }
+
+        .project-detail {
+            @apply max-w-3xl;
+        }
+
+        .project-detail-back {
+            @apply inline-flex items-center gap-1 text-[12px] font-medium text-zinc-400 hover:text-zinc-200 transition-colors mb-4;
+        }
+
+        .project-detail-head {
+            @apply flex items-center gap-3 mb-3;
+        }
+
+        .project-detail-head h3 {
+            @apply text-2xl font-semibold text-zinc-100 tracking-[-0.02em];
+        }
+
+        .project-detail-desc {
+            @apply space-y-3 text-[14px] leading-relaxed text-zinc-300 mb-5;
+        }
+
+        .project-card-links {
+            @apply flex flex-wrap gap-1.5 mt-auto pt-1;
+        }
+
+        .project-card-link {
+            @apply inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-zinc-300 cursor-pointer;
+            background: rgb(255 255 255 / 0.06);
+            border: 1px solid rgb(255 255 255 / 0.08);
+        }
+
+        .project-card-link:hover {
+            background: rgb(255 255 255 / 0.12);
+        }
+
+        .finder-grid {
+            @apply grid gap-4;
+            grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+        }
+
+        .finder-item {
+            @apply flex flex-col items-center gap-2 rounded-lg p-3 text-center cursor-pointer;
+        }
+
+        .finder-item:hover {
+            background: rgb(255 255 255 / 0.06);
+        }
+
+        .finder-item img {
+            @apply object-contain object-center size-12;
+        }
+
+        .finder-item .finder-folder-icon {
+            @apply size-12 text-zinc-400;
+        }
+
+        .finder-item p {
+            @apply text-xs font-medium text-zinc-200 break-words w-full;
         }
     }
 
@@ -2218,33 +2395,13 @@ body {
         .traffic.minimize::after { background: #febc2e; }
         .traffic.zoom::after { background: #28c840; }
 
-        /* Finder: turn the scattered desktop-style icons into a tidy column */
-        #finder .content {
-            display: flex;
-            flex-direction: column;
-            align-content: flex-start;
-            gap: 0.75rem;
-            padding: 1rem;
+        /* Finder: collapse the card grid to a single column on phones */
+        #finder .project-grid {
+            grid-template-columns: 1fr;
         }
 
-        #finder .content li {
-            position: static !important;
-            flex-direction: row;
-            justify-content: flex-start;
-            gap: 0.75rem;
-        }
-
-        #finder .content li img,
-        #finder .content li .finder-folder-icon {
-            width: 2.5rem;
-            height: 2.5rem;
-            margin: 0;
-        }
-
-        #finder .content li p {
-            width: auto;
-            text-align: left;
-            margin: 0;
+        #finder .finder-grid {
+            grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
         }
 
         #finder .sidebar {

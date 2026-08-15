@@ -10,59 +10,61 @@ const BOOT_LOGS = [
     { text: "Starting python virtual environment", pct: 92 },
 ];
 
-const LoadingScreen = ({ title = "OS Initialize", onComplete }) => {
+const LoadingScreen = ({ onComplete }) => {
     const [progress, setProgress] = useState(0);
 
     useGSAP(() => {
+        const bootProgress = { v: 0 };
         const tl = gsap.timeline({ onComplete });
-        tl.to({}, {
-            duration: 3.5,
+
+        // Progress bar (drives the boot logs and percentage readout).
+        tl.to(bootProgress, {
+            v: 100,
+            duration: 3.6,
             ease: "power1.inOut",
-            onUpdate: () => setProgress(Math.round(tl.progress() * 100)),
-        });
+            onUpdate: () => setProgress(Math.round(bootProgress.v)),
+        }, 0);
 
-        gsap.fromTo(".boot-logo",
-            { scale: 0.4, opacity: 0, rotate: -30 },
-            { scale: 1, opacity: 1, rotate: 0, duration: 1.1, ease: "elastic.out(1, 0.7)" }
+        // A + J gravity-fall: drop in from above, spin a full 360°, fade in.
+        tl.fromTo(
+            ".boot-monograms .brand-monogram",
+            { y: -window.innerHeight * 0.85, opacity: 0, rotation: 0, scale: 1.55 },
+            { y: 0, opacity: 1, rotation: 360, scale: 1, duration: 2.2, ease: "bounce.out", stagger: 0.26 },
+            0
         );
 
-        gsap.fromTo(".boot-logo .brand-monogram",
-            { opacity: 0, y: -35, rotate: -360, scale: 0.5 },
-            { opacity: 1, y: 0, rotate: 0, scale: 1, duration: 1.1, stagger: 0.14, ease: "back.out(1.5)", delay: 0.35, overwrite: true }
+        // Fade in/out breath once the letters have landed.
+        tl.to(
+            ".boot-monograms .brand-monogram",
+            { opacity: 0.4, duration: 0.45, yoyo: true, repeat: 1, ease: "sine.inOut" },
+            2.35
         );
 
-        gsap.fromTo(".boot-content",
-            { opacity: 0 },
-            { opacity: 1, duration: 1.5, delay: 0.3 }
-        );
+        // Exit fade — the whole boot screen (letters included) fades out.
+        tl.to(".boot-screen", { opacity: 0, duration: 0.5, ease: "power2.in" }, 3.1);
+
+        // Boot copy fades in under the falling letters.
+        tl.fromTo(".boot-content", { opacity: 0 }, { opacity: 1, duration: 1.0 }, 0.5);
     }, []);
 
     return (
         <div className="boot-screen">
-            <div className="boot-logo lock-initials size-20! text-3xl">
+            <div className="boot-monograms" aria-hidden="true">
                 <BrandName monogramsOnly />
             </div>
 
             <div className="boot-content flex flex-col items-center">
-                <p className="boot-brand"><BrandName /></p>
-                <div className="boot-snake" role="status" aria-label="Loading">
-                    <span className="boot-snake-head" />
-                    <span /><span /><span /><span /><span /><span />
-                </div>
+                <h1 className="boot-title">
+                    AdamJemmali <span className="boot-title-accent">OS</span>
+                </h1>
+
+                <p className="boot-sub">Full-Stack Engineer &middot; rebuilt for 2026</p>
 
                 <div className="boot-logs">
                     {BOOT_LOGS.map((log) =>
                         progress >= log.pct ? (
                             <div key={log.text} className="boot-log">
                                 <span>{log.text}</span>
-                                <span className="boot-ok">
-                                    <span className="boot-check">
-                                        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M2 6.5l2.5 2.5L10 3.5" />
-                                        </svg>
-                                    </span>
-                                    okay
-                                </span>
                             </div>
                         ) : null
                     )}
@@ -74,11 +76,9 @@ const LoadingScreen = ({ title = "OS Initialize", onComplete }) => {
                     </div>
                 </div>
 
-                <p className="mt-6 text-white/40 text-[11px] tracking-[0.3em] font-medium uppercase">
-                    {title}
-                    <span className="ml-2 font-mono normal-case tracking-normal text-white/60">
-                        {progress.toString().padStart(2, "0")}%
-                    </span>
+                <p className="boot-status">
+                    Loading...
+                    <span className="boot-status-pct">{progress.toString().padStart(2, "0")}%</span>
                 </p>
             </div>
         </div>
