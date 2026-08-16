@@ -4,15 +4,8 @@
       <stop offset="0%" stop-color="#2DD4BF" />
       <stop offset="100%" stop-color="#0EA5E9" />
     </linearGradient>
-    <linearGradient id="t-accent-grad" x1="100%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#BEF264" />
-      <stop offset="100%" stop-color="#22D3EE" />
-    </linearGradient>
   </defs>
   <path d="M 50 30 H 150 V 58 H 112 V 160 H 88 V 58 H 50 Z" fill="url(#t-body-grad)" />
-  <rect x="156" y="30" width="22" height="8" rx="4" fill="url(#t-accent-grad)" />
-  <rect x="156" y="44" width="14" height="8" rx="4" fill="url(#t-accent-grad)" />
-  <circle cx="175" cy="62" r="4" fill="#BEF264" />
   <circle cx="76" cy="45" r="13" fill="#FFFFFF" />
   <circle cx="124" cy="45" r="13" fill="#FFFFFF" />
   <circle cx="76" cy="45" r="6" fill="#0B1526" />

@@ -1,5 +1,5 @@
-import { useLayoutEffect, useRef, useState, useEffect } from "react";
-import { ArrowLeft, ArrowRight, X } from "lucide-react";
+import { useLayoutEffect, useRef, useState, useEffect, useCallback } from "react";
+import { ArrowLeft, ArrowRight, X, Monitor, Mail, Wifi, Folder, PanelsTopLeft, PartyPopper, Volume2, VolumeX } from "lucide-react";
 import useTourStore from "#store/tour.js";
 import TrappieLogo from "#components/TrappieLogo.jsx";
 
@@ -10,13 +10,16 @@ const STEPS = [
         id: "welcome",
         target: "#welcome .hero-title",
         placement: "bottom",
+        mascot: "target",
+        icon: Monitor,
         title: "Welcome to Adam Jemmali OS",
-        body: "Hey, I'm Trappie — your tour guide. This is a desktop you can click, drag and open things in.",
+        body: "Hey, I'm Trappie, your tour guide. This is a desktop you can click, drag and open things in.",
     },
     {
         id: "contact",
         target: "#welcome .hero-cta-secondary",
         placement: "bottom",
+        icon: Mail,
         title: "Get in touch",
         body: "Ready to say hi? This button opens the contact window.",
     },
@@ -24,6 +27,7 @@ const STEPS = [
         id: "topbar",
         target: "#topbar",
         placement: "bottom",
+        icon: Wifi,
         title: "The top bar",
         body: "Wi-Fi, sound, brightness, profile and the power menu live up here.",
     },
@@ -31,6 +35,7 @@ const STEPS = [
         id: "desktop",
         target: "#home .desktop-item",
         placement: "right",
+        icon: Folder,
         title: "Desktop icons",
         body: "Double-click an icon to open an app, or right-click the wallpaper to change it.",
     },
@@ -38,13 +43,15 @@ const STEPS = [
         id: "dock",
         target: "#dock",
         placement: "top",
+        icon: PanelsTopLeft,
         title: "The dock",
-        body: "Launch every app from here — and find me whenever you're lost.",
+        body: "Launch every app from here. Find me whenever you're lost.",
     },
     {
         id: "done",
         target: null,
         placement: "center",
+        icon: PartyPopper,
         title: "You're all set!",
         body: "Explore, drag windows around, play a game. Tap my dock icon any time for another tour.",
     },
@@ -52,6 +59,130 @@ const STEPS = [
 
 const PAD = 18;
 const SPOT_MARGIN = 8;
+const MASCOT_SIZE = 168;
+const MASCOT_GAP = 12;
+const MASCOT_PEEK = 56;
+
+const CONFETTI_COLORS = ["#22d3ee", "#a3e635", "#f472b6", "#fbbf24", "#ffffff", "#4ade80"];
+const CONFETTI_COUNT = 18;
+
+// Tiny synthesized "tick" for the icon pop — no audio asset needed.
+let audioCtx = null;
+let soundMuted = false;
+const setSoundMuted = (value) => {
+    soundMuted = value;
+};
+
+const playTick = () => {
+    if (soundMuted) return;
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!audioCtx) audioCtx = new AudioCtx();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(820, now);
+        osc.frequency.exponentialRampToValueAtTime(1260, now + 0.08);
+
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.1, now + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.22);
+    } catch {
+        // Audio unavailable — the tour still works silently.
+    }
+};
+
+const getStoredMute = () => {
+    try {
+        return localStorage.getItem("trappie-sounds-muted") === "1";
+    } catch {
+        return false;
+    }
+};
+
+// A quick rising two-note chirp for the outro, reusing the shared audio ctx.
+const playChirp = () => {
+    if (soundMuted) return;
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!audioCtx) audioCtx = new AudioCtx();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+
+        const now = audioCtx.currentTime;
+        const note = (freq, start, dur) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, now + start);
+            osc.frequency.exponentialRampToValueAtTime(freq * 1.35, now + start + dur * 0.6);
+            gain.gain.setValueAtTime(0.0001, now + start);
+            gain.gain.exponentialRampToValueAtTime(0.09, now + start + 0.012);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + start + dur);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + start);
+            osc.stop(now + start + dur + 0.02);
+        };
+
+        note(660, 0, 0.12);
+        note(990, 0.09, 0.18);
+    } catch {
+        // Audio unavailable — Trappie stays quiet.
+    }
+};
+
+// A soft airy sweep for when Trappie hops between steps.
+const playWhoosh = () => {
+    if (soundMuted) return;
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!audioCtx) audioCtx = new AudioCtx();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+
+        const now = audioCtx.currentTime;
+        const length = Math.floor(audioCtx.sampleRate * 0.26);
+        const buffer = audioCtx.createBuffer(1, length, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < length; i += 1) {
+            data[i] = (Math.random() * 2 - 1) * (1 - i / length);
+        }
+
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = "bandpass";
+        filter.Q.value = 1.1;
+        filter.frequency.setValueAtTime(340, now);
+        filter.frequency.exponentialRampToValueAtTime(1500, now + 0.14);
+        filter.frequency.exponentialRampToValueAtTime(300, now + 0.26);
+
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.07, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
+
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        source.start(now);
+        source.stop(now + 0.28);
+    } catch {
+        // Audio unavailable — Trappie stays quiet.
+    }
+};
 
 const TourGuide = () => {
     const active = useTourStore((s) => s.active);
@@ -61,10 +192,37 @@ const TourGuide = () => {
     const end = useTourStore((s) => s.end);
 
     const tooltipRef = useRef(null);
+    const mascotRef = useRef(null);
     const [layout, setLayout] = useState(null);
+    const [wink, setWink] = useState(0);
+    const [hopKey, setHopKey] = useState(0);
+    const [muted, setMuted] = useState(getStoredMute);
+    const [windDirection, setWindDirection] = useState(1);
+    const prevStepRef = useRef(null);
+
+    useEffect(() => {
+        setSoundMuted(muted);
+        try {
+            localStorage.setItem("trappie-sounds-muted", muted ? "1" : "0");
+        } catch {
+            // Storage unavailable — the mute preference just won't persist.
+        }
+    }, [muted]);
 
     const stepDef = STEPS[Math.min(step, STEPS.length - 1)];
     const isLast = step >= STEPS.length - 1;
+
+    const advance = useCallback(() => {
+        if (isLast) {
+            end();
+            return;
+        }
+        if (step === 0) setHopKey((k) => k + 1);
+        // Flip the confetti wind each time we cross into the outro.
+        if (step === STEPS.length - 2) setWindDirection((d) => -d);
+        setWink((w) => w + 1);
+        next();
+    }, [isLast, step, end, next]);
 
     const clamp = (value, min, max) => Math.max(min, Math.min(value, max));
 
@@ -74,6 +232,37 @@ const TourGuide = () => {
         const tw = tooltipRef.current?.offsetWidth || 320;
         const th = tooltipRef.current?.offsetHeight || 160;
 
+        // Trappie is a free-floating mascot. For the welcome step he sits above
+        // the hero logo; everywhere else he stands beside the speech bubble on
+        // whichever side has room.
+        const computeMascot = (targetRect, tipLeft, tipTop, tw, th) => {
+            const maxLeft = Math.max(PAD, vw - MASCOT_SIZE - PAD);
+            const maxTop = Math.max(PAD, vh - MASCOT_SIZE - PAD);
+
+            let mascotLeft;
+            let mascotTop;
+
+            if (stepDef.mascot === "target" && targetRect) {
+                mascotLeft = targetRect.left + targetRect.width / 2 - MASCOT_SIZE / 2;
+                // Let his lower body tuck behind the top edge of the logo so he
+                // reads as peeking over it instead of hovering above it.
+                mascotTop = targetRect.top + MASCOT_PEEK - MASCOT_SIZE;
+            } else {
+                const fitsRight = tipLeft + tw + MASCOT_GAP + MASCOT_SIZE <= vw - PAD;
+                const fitsLeft = tipLeft - MASCOT_GAP - MASCOT_SIZE >= PAD;
+                const side = fitsRight || !fitsLeft ? "right" : "left";
+                mascotLeft = side === "right"
+                    ? tipLeft + tw + MASCOT_GAP
+                    : tipLeft - MASCOT_GAP - MASCOT_SIZE;
+                mascotTop = tipTop + th / 2 - MASCOT_SIZE / 2;
+            }
+
+            return {
+                left: clamp(mascotLeft, PAD, maxLeft),
+                top: clamp(mascotTop, PAD, maxTop),
+            };
+        };
+
         const target = stepDef.target ? document.querySelector(stepDef.target) : null;
         const rect = target ? target.getBoundingClientRect() : null;
 
@@ -81,6 +270,7 @@ const TourGuide = () => {
             return {
                 spot: null,
                 tip: { left: vw / 2, top: vh / 2, arrow: "none", centered: true },
+                mascot: computeMascot(null, vw / 2, vh / 2, tw, th),
             };
         }
 
@@ -144,7 +334,11 @@ const TourGuide = () => {
         left = clamp(left, PAD, vw - tw - PAD);
         top = clamp(top, PAD, Math.max(vh - th - PAD, PAD));
 
-        return { spot, tip: { left, top, arrow, centered: false } };
+        return {
+            spot,
+            tip: { left, top, arrow, centered: false },
+            mascot: computeMascot(rect, left, top, tw, th),
+        };
     };
 
     useLayoutEffect(() => {
@@ -161,16 +355,65 @@ const TourGuide = () => {
         if (!active) return;
         const onKey = (e) => {
             if (e.key === "Escape") end();
-            else if (e.key === "ArrowRight") (isLast ? end : next)();
+            else if (e.key === "ArrowRight") advance();
             else if (e.key === "ArrowLeft" && step > 0) back();
         };
         document.addEventListener("keydown", onKey);
         return () => document.removeEventListener("keydown", onKey);
-    }, [active, step, isLast, next, back, end]);
+    }, [active, step, advance, back, end]);
+
+    // Soft tick whenever the tooltip advances to a new step (icon pop-in).
+    useEffect(() => {
+        if (!active) {
+            prevStepRef.current = null;
+            return;
+        }
+        if (prevStepRef.current !== step) {
+            playTick();
+            prevStepRef.current = step;
+        }
+    }, [active, step]);
+
+    // Leaving the welcome step: Trappie hops from above the logo down beside
+    // the bubble instead of sliding there in a straight line.
+    useEffect(() => {
+        if (!hopKey) return;
+        playWhoosh();
+        const el = mascotRef.current;
+        if (!el) return;
+
+        el.animate(
+            [
+                { transform: "translateY(0) scale(1, 1)", offset: 0 },
+                { transform: "translateY(-46px) scale(1.04, 0.94)", offset: 0.28 },
+                { transform: "translateY(-14px) scale(0.97, 1.03)", offset: 0.6 },
+                { transform: "translateY(4px) scale(1.02, 0.98)", offset: 0.82 },
+                { transform: "translateY(0) scale(1, 1)", offset: 1 },
+            ],
+            { duration: 760, easing: "ease-out" }
+        );
+    }, [hopKey]);
+
+    // A tiny celebratory hop when Trappie's happy squint fires on the outro.
+    useEffect(() => {
+        if (!isLast) return;
+        playChirp();
+        const el = mascotRef.current;
+        if (!el) return;
+
+        el.animate(
+            [
+                { transform: "translateY(0) scale(1, 1)", offset: 0 },
+                { transform: "translateY(-16px) scale(1.03, 0.97)", offset: 0.35 },
+                { transform: "translateY(0) scale(1.05, 0.95)", offset: 0.7 },
+                { transform: "translateY(0) scale(1, 1)", offset: 1 },
+            ],
+            { duration: 620, easing: "ease-out" }
+        );
+    }, [isLast]);
 
     if (!active) return null;
 
-    const advance = () => (isLast ? end() : next());
     const spot = layout?.spot;
     const tip = layout?.tip;
 
@@ -202,16 +445,37 @@ const TourGuide = () => {
                 aria-live="polite"
             >
                 <span className={`tour-arrow ${tip?.arrow || "none"}`} aria-hidden="true" />
-                <div className="tour-tooltip-head">
-                    <span className="tour-avatar">
-                        <TrappieLogo size={48} />
+                <div className="tour-tip-head">
+                    <span key={step} className="tour-tip-icon" aria-hidden="true">
+                        <stepDef.icon size={18} />
+                        {isLast && (
+                            <span className="tour-confetti" aria-hidden="true">
+                                {Array.from({ length: CONFETTI_COUNT }).map((_, i) => {
+                                    const angle = (i / CONFETTI_COUNT) * Math.PI * 2;
+                                    const dist = 20 + (i % 4) * 5;
+                                    const color = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+                                    const spin = (i % 2 ? 1 : -1) * (160 + ((i * 53) % 200));
+                                    const fall = 16 + (i % 5) * 6;
+                                    const drift = windDirection * (12 + (i % 3) * 4);
+                                    return (
+                                        <i
+                                            key={i}
+                                            style={{
+                                                "--c": color,
+                                                "--dx": `${(Math.cos(angle) * dist).toFixed(1)}px`,
+                                                "--dy": `${(Math.sin(angle) * dist).toFixed(1)}px`,
+                                                "--rot": `${spin}deg`,
+                                                "--fall": `${fall}px`,
+                                                "--drift": `${drift}px`,
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </span>
+                        )}
                     </span>
-                    <div className="min-w-0">
-                        <p className="tour-guide-name">Trappie</p>
-                        <p className="tour-guide-role">Your OS tour guide</p>
-                    </div>
+                    <h3 className="tour-tip-title">{stepDef.title}</h3>
                 </div>
-                <h3 className="tour-tip-title">{stepDef.title}</h3>
                 <p className="tour-tip-body">{stepDef.body}</p>
                 <div className="tour-tip-foot">
                     <div className="tour-dots">
@@ -220,6 +484,16 @@ const TourGuide = () => {
                         ))}
                     </div>
                     <div className="tour-actions">
+                        <button
+                            type="button"
+                            className={`tour-btn ghost icon ${muted ? "is-muted" : ""}`}
+                            onClick={() => setMuted((m) => !m)}
+                            aria-label={muted ? "Unmute tour sounds" : "Mute tour sounds"}
+                            aria-pressed={muted}
+                            title={muted ? "Unmute tour sounds" : "Mute tour sounds"}
+                        >
+                            {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                        </button>
                         <button type="button" className="tour-btn ghost" onClick={end}>
                             <X size={14} />
                             Skip
@@ -234,7 +508,23 @@ const TourGuide = () => {
                         </button>
                     </div>
                 </div>
+
             </div>
+
+            {layout?.mascot && (
+                <div
+                    ref={mascotRef}
+                    className="tour-mascot"
+                    style={{ top: layout.mascot.top, left: layout.mascot.left }}
+                    aria-hidden="true"
+                >
+                    <TrappieLogo size={MASCOT_SIZE} className="tour-mascot-float" wink={wink} happy={isLast} />
+                    <div className="tour-mascot-caption">
+                        <p className="tour-mascot-name">Trappie</p>
+                        <p className="tour-mascot-role">Your OS tour guide</p>
+                    </div>
+                </div>
+            )}
         </>
     );
 };

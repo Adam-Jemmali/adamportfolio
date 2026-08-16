@@ -2372,7 +2372,9 @@ body {
     /* ============ Trappie guided tour ============ */
     .trappie-logo {
         display: block;
-        filter: drop-shadow(0 6px 16px rgb(14 165 233 / 0.35));
+        filter:
+            drop-shadow(0 0 8px rgb(255 255 255 / 0.4))
+            drop-shadow(0 8px 22px rgb(14 165 233 / 0.5));
     }
 
     .trappie-eye {
@@ -2383,6 +2385,12 @@ body {
 
     .trappie-pupil {
         transition: transform 0.14s ease-out;
+    }
+
+    .trappie-sparkle {
+        opacity: 0;
+        transform-box: fill-box;
+        transform-origin: center;
     }
 
     @keyframes trappie-blink {
@@ -2512,27 +2520,125 @@ body {
         display: none;
     }
 
-    .tour-tooltip-head {
-        @apply flex items-center gap-3 mb-3;
+    .tour-tip-head {
+        @apply flex items-center gap-2.5 mb-1.5;
     }
 
-    .tour-avatar {
-        @apply flex items-center justify-center size-14 rounded-xl shrink-0;
-        background: linear-gradient(135deg, #134e4a, #0c4a6e);
-        border: 1px solid rgb(255 255 255 / 0.12);
-        box-shadow: 0 4px 14px rgb(45 212 191 / 0.4);
+    .tour-tip-icon {
+        @apply relative flex items-center justify-center size-9 rounded-lg shrink-0;
+        background: linear-gradient(135deg, #2dd4bf, #0ea5e9);
+        color: #06283a;
+        box-shadow: 0 4px 12px rgb(45 212 191 / 0.35);
+        animation: tour-tip-icon-pop 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
 
-    .tour-guide-name {
+    .tour-tip-icon svg {
+        @apply size-4.5;
+    }
+
+    @keyframes tour-tip-icon-pop {
+        0% {
+            transform: scale(0.55);
+            opacity: 0;
+        }
+        60% {
+            transform: scale(1.12);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .tour-confetti {
+        @apply absolute inset-0 pointer-events-none;
+    }
+
+    .tour-confetti i {
+        @apply absolute left-1/2 top-1/2 size-1 rounded-full;
+        background: var(--c);
+        --rot: 0deg;
+        --fall: 0px;
+        --drift: 0px;
+        animation: tour-confetti-burst 1.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes tour-confetti-burst {
+        0% {
+            transform: translate(-50%, -50%) scale(1) rotate(0deg);
+            opacity: 1;
+        }
+        55% {
+            transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.7) rotate(var(--rot));
+            opacity: 1;
+        }
+        100% {
+            transform: translate(calc(-50% + var(--dx) + var(--drift)), calc(-50% + var(--dy) + var(--fall))) scale(0.2) rotate(var(--rot));
+            opacity: 0;
+        }
+    }
+
+    .tour-mascot {
+        @apply fixed flex flex-col items-center pointer-events-none;
+        z-index: 9600;
+        animation: tour-mascot-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+        transition:
+            top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+            left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tour-mascot-caption {
+        @apply flex flex-col items-center mt-1.5 px-3 py-1.5 rounded-2xl text-center select-none;
+        background: rgb(8 12 22 / 0.62);
+        backdrop-filter: blur(14px) saturate(1.4);
+        -webkit-backdrop-filter: blur(14px) saturate(1.4);
+        border: 1px solid rgb(255 255 255 / 0.22);
+        box-shadow: 0 8px 24px rgb(0 0 0 / 0.4);
+    }
+
+    .tour-mascot-name {
         @apply text-sm font-bold text-white leading-tight;
     }
 
-    .tour-guide-role {
-        @apply text-[11px] text-zinc-400;
+    .tour-mascot-role {
+        @apply text-[11px] font-semibold text-cyan-100 leading-tight;
+    }
+
+    .tour-mascot-float {
+        animation: tour-mascot-float 3.4s ease-in-out infinite;
+    }
+
+    @keyframes tour-mascot-in {
+        from {
+            opacity: 0;
+            transform: translateY(14px) scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    @keyframes tour-mascot-float {
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-8px);
+        }
+    }
+
+    /* The floating mascot needs side room the narrow phone layout doesn't have. */
+    @media (max-width: 640px) {
+        .tour-mascot {
+            display: none;
+        }
     }
 
     .tour-tip-title {
-        @apply text-[17px] font-bold text-white mb-1.5;
+        @apply text-[17px] font-bold text-white;
     }
 
     .tour-tip-body {
@@ -2565,6 +2671,18 @@ body {
 
     .tour-btn.ghost {
         @apply text-zinc-300 hover:bg-white/10;
+    }
+
+    .tour-btn.icon {
+        @apply px-2;
+    }
+
+    .tour-btn.icon.is-muted {
+        @apply text-red-300 bg-red-400/10;
+    }
+
+    .tour-btn.icon.is-muted:hover {
+        @apply text-red-200 bg-red-400/20;
     }
 
     .tour-btn.ghost:disabled {
