@@ -94,6 +94,11 @@ const useWindowStore = create(persist(immer((set) => ({
 })), {
     name: "mj-windows",
     partialize: (state) => ({ windows: state.windows, nextZIndex: state.nextZIndex }),
+    merge: (persisted, current) => ({
+        ...current,
+        ...persisted,
+        windows: { ...current.windows, ...(persisted?.windows ?? {}) },
+    }),
 }));
 
 export default useWindowStore;

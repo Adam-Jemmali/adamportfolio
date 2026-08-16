@@ -10,7 +10,7 @@ import Spotlight from "#components/Spotlight.jsx";
 import LoadingScreen from "#components/LoadingScreen.jsx";
 import LockScreen from "#components/LockScreen.jsx";
 import SuspendScreen from "#components/SuspendScreen.jsx";
-import { Terminal, Finder, Text, Image, Safari, Resume, Contact, Gallery, Snake, Games, Code, Journey } from "#window/index.js";
+import { Terminal, Finder, Text, Image, Safari, Resume, Contact, Gallery, Snake, Games, Code, Journey, KidPix } from "#window/index.js";
 import { wallpapers } from "#constants/index.js";
 import useSystemStore from "#store/system.js";
 import useWindowStore from "#store/window.js";
@@ -45,7 +45,7 @@ const App = () => {
         if (!media.matches) return;
 
         let start = null;
-        const ignored = "button, input, textarea, select, a, [role='button'], #topbar, #dock, #window-header";
+        const ignored = "button, input, textarea, select, a, [role='button'], canvas, #topbar, #dock, #window-header";
 
         const onPointerDown = (event) => {
             if (event.pointerType === "mouse") return;
@@ -135,6 +135,7 @@ const App = () => {
             <Games />
             <Code />
             <Journey />
+            <KidPix />
             <Spotlight />
             <Dock />
         </main>

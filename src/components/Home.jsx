@@ -21,7 +21,7 @@ const Home = () => {
     const setWallpaper = useSystemStore((s) => s.setWallpaper);
 
     // Exactly these apps on the desktop — no folders, no duplicates of the dock.
-    const DESKTOP_APP_IDS = ["web", "gallery", "contact", "skills", "journey", "games"];
+    const DESKTOP_APP_IDS = ["web", "gallery", "contact", "skills", "journey", "games", "kidpix"];
 
     const items = DESKTOP_APP_IDS
         .map((id) => desktopApps.find((app) => app.id === id))

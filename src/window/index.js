@@ -10,7 +10,8 @@ import Snake from './Snake';
 import Games from './Games';
 import Code from './CodeGame';
 import Journey from './Journey';
+import KidPix from './KidPix';
 import Home from '#components/Home.jsx'
 
 
-export { Terminal, Finder, Text, Image, Safari, Resume ,Contact,Home, Gallery, Snake, Games, Code, Journey};
+export { Terminal, Finder, Text, Image, Safari, Resume ,Contact,Home, Gallery, Snake, Games, Code, Journey, KidPix};

@@ -804,12 +804,14 @@ body {
     }
 
     #welcome .hero-title {
-        @apply italic font-georama;
-        font-size: clamp(1.55rem, 6.4vw, 4.5rem);
-        line-height: 1.1;
-        padding-right: 0.14em;
-        color: rgb(255 255 255 / 0.96);
-        filter: drop-shadow(0 8px 40px rgb(0 0 0 / 0.5));
+        @apply flex justify-center;
+        line-height: 1;
+    }
+
+    #welcome .pixel-title-canvas {
+        display: block;
+        width: min(82vw, 460px);
+        height: auto;
     }
 
     #welcome .hero-letter {
@@ -2031,6 +2033,103 @@ body {
         .game-card p {
             @apply text-xs text-gray-400 text-center;
         }
+    }
+
+    /* ============ Kid Pix ============ */
+    #kidpix {
+        @apply w-[640px] h-[560px] bg-[#eceef1] text-zinc-800;
+        top: 2.5rem;
+        bottom: auto;
+        max-height: calc(100dvh - 8rem);
+
+        #window-header {
+            @apply bg-[#2b3f7d] border-black/10 text-white;
+        }
+
+        #window-header h2 {
+            @apply text-white;
+        }
+
+        .kidpix-body {
+            @apply flex-1 flex flex-col min-h-0;
+        }
+
+        .kidpix-canvas-wrap {
+            @apply flex-1 flex items-center justify-center p-4 min-h-0;
+            background: #dfe3e8;
+        }
+
+        .kidpix-canvas-wrap canvas {
+            @apply rounded-md bg-white max-w-full max-h-full;
+            border: 1px solid rgb(0 0 0 / 0.15);
+            box-shadow: 0 10px 24px rgb(0 0 0 / 0.15);
+            touch-action: none;
+        }
+
+        .kidpix-toolbar {
+            @apply flex flex-col gap-2 p-3;
+            background: #d7d5d2;
+            border-top: 1px solid rgb(0 0 0 / 0.15);
+        }
+
+        .kidpix-row {
+            @apply flex items-center gap-1.5 flex-wrap;
+        }
+
+        .kidpix-tool {
+            @apply size-10 rounded-md border flex items-center justify-center text-zinc-700 cursor-pointer;
+            background: #c9c7c4;
+            border-color: #9ca3af;
+            border-bottom-width: 3px;
+        }
+
+        .kidpix-tool:hover { background: #e2e0dd; }
+        .kidpix-tool.active { background: #facc15; }
+
+        .kidpix-stamp {
+            @apply size-10 rounded-md border flex items-center justify-center text-xl cursor-pointer;
+            background: #c9c7c4;
+            border-color: #9ca3af;
+            border-bottom-width: 3px;
+        }
+
+        .kidpix-stamp:hover { background: #e2e0dd; }
+        .kidpix-stamp.active { background: #facc15; }
+
+        .kidpix-swatch {
+            @apply size-6 rounded-sm cursor-pointer;
+            border: 1px solid #6b7280;
+        }
+
+        .kidpix-swatch.active {
+            outline: 2px solid #4f46e5;
+            outline-offset: 1px;
+        }
+
+        .kidpix-size {
+            @apply size-10 rounded-md border flex items-center justify-center cursor-pointer;
+            background: #c9c7c4;
+            border-color: #9ca3af;
+        }
+
+        .kidpix-size.active { background: #fde68a; }
+
+        .kidpix-size-dot {
+            @apply rounded-full bg-zinc-700 inline-block;
+        }
+
+        .kidpix-spacer {
+            @apply flex-1;
+        }
+
+        .kidpix-action {
+            @apply h-10 px-3 rounded-md border flex items-center gap-1.5 text-[13px] font-semibold text-zinc-700 cursor-pointer;
+            background: #c9c7c4;
+            border-color: #9ca3af;
+            border-bottom-width: 3px;
+        }
+
+        .kidpix-action:hover { background: #e2e0dd; }
     }
 
     /* ============ Code Racer game ============ */
