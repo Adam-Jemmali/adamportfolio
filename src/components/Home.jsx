@@ -7,11 +7,13 @@ import { Draggable } from "gsap/Draggable";
 import { desktopApps, wallpapers } from "#constants/index.js";
 import useWindowStore from "#store/window.js";
 import useSystemStore from "#store/system.js";
+import useTourStore from "#store/tour.js";
 
 gsap.registerPlugin(Draggable);
 
 const Home = () => {
     const { openWindow, focusWindow } = useWindowStore();
+    const startTour = useTourStore((s) => s.start);
     const containerRef = useRef(null);
     const menuRef = useRef(null);
     const [selectedId, setSelectedId] = useState(null);
@@ -20,8 +22,8 @@ const Home = () => {
     const wallpaper = useSystemStore((s) => s.wallpaper);
     const setWallpaper = useSystemStore((s) => s.setWallpaper);
 
-    // Exactly these apps on the desktop — no folders, no duplicates of the dock.
-    const DESKTOP_APP_IDS = ["web", "gallery", "contact", "skills", "journey", "games", "kidpix"];
+    // Exactly these apps on the desktop — Trappie lives here instead of the dock.
+    const DESKTOP_APP_IDS = ["trappie", "web", "gallery", "contact", "skills", "journey", "games", "kidpix"];
 
     const items = DESKTOP_APP_IDS
         .map((id) => desktopApps.find((app) => app.id === id))
@@ -32,6 +34,10 @@ const Home = () => {
             kind: "app",
             app,
             open: () => {
+                if (app.id === "trappie") {
+                    startTour();
+                    return;
+                }
                 openWindow(app.appId);
                 focusWindow(app.appId);
             },

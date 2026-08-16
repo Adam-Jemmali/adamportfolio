@@ -2369,6 +2369,213 @@ body {
         @apply text-zinc-500 shrink-0;
     }
 
+    /* ============ Trappie guided tour ============ */
+    .trappie-logo {
+        display: block;
+        filter: drop-shadow(0 6px 16px rgb(14 165 233 / 0.35));
+    }
+
+    .trappie-eye {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: trappie-blink 4.6s ease-in-out infinite;
+    }
+
+    .trappie-pupil {
+        transition: transform 0.14s ease-out;
+    }
+
+    @keyframes trappie-blink {
+        0%,
+        90%,
+        100% {
+            transform: scaleY(1);
+        }
+        94% {
+            transform: scaleY(0.12);
+        }
+    }
+
+    .tour-backdrop {
+        @apply fixed inset-0 z-9000;
+    }
+
+    .tour-backdrop[data-dim="true"] {
+        background: rgb(2 6 23 / 0.6);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+    }
+
+    .tour-spotlight,
+    .tour-spotlight-ring {
+        @apply fixed z-9000 pointer-events-none;
+        transition:
+            top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+            left 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+            width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+            height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tour-spotlight {
+        border-radius: 16px;
+        box-shadow: 0 0 0 9999px rgb(2 6 23 / 0.66);
+    }
+
+    .tour-spotlight-ring {
+        border-radius: 18px;
+        border: 2px solid rgb(45 212 191 / 0.9);
+        animation: tour-ring-pulse 2.2s ease-in-out infinite;
+    }
+
+    @keyframes tour-ring-pulse {
+        0%,
+        100% {
+            box-shadow: 0 0 16px rgb(45 212 191 / 0.25);
+        }
+        50% {
+            box-shadow: 0 0 30px rgb(45 212 191 / 0.5);
+        }
+    }
+
+    .tour-tooltip {
+        @apply fixed z-9500 text-left;
+        width: min(340px, calc(100vw - 2rem));
+        padding: 18px 18px 16px;
+        background: rgb(15 19 33 / 0.94);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgb(255 255 255 / 0.12);
+        border-radius: 18px;
+        box-shadow: 0 20px 60px rgb(0 0 0 / 0.55);
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+        transition:
+            opacity 0.25s ease,
+            transform 0.25s ease,
+            top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+            left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tour-tooltip.is-visible {
+        opacity: 1;
+        transform: none;
+    }
+
+    .tour-tooltip.centered {
+        transform: translate(-50%, -50%);
+    }
+
+    .tour-tooltip.centered.is-visible {
+        transform: translate(-50%, -50%);
+    }
+
+    .tour-arrow {
+        @apply absolute;
+        width: 0;
+        height: 0;
+        border: 8px solid transparent;
+    }
+
+    .tour-arrow.top {
+        top: -16px;
+        left: 50%;
+        margin-left: -8px;
+        border-top: none;
+        border-bottom: 16px solid rgb(15 19 33 / 0.94);
+    }
+
+    .tour-arrow.bottom {
+        bottom: -16px;
+        left: 50%;
+        margin-left: -8px;
+        border-bottom: none;
+        border-top: 16px solid rgb(15 19 33 / 0.94);
+    }
+
+    .tour-arrow.left {
+        left: -16px;
+        top: 50%;
+        margin-top: -8px;
+        border-left: none;
+        border-right: 16px solid rgb(15 19 33 / 0.94);
+    }
+
+    .tour-arrow.right {
+        right: -16px;
+        top: 50%;
+        margin-top: -8px;
+        border-right: none;
+        border-left: 16px solid rgb(15 19 33 / 0.94);
+    }
+
+    .tour-arrow.none {
+        display: none;
+    }
+
+    .tour-tooltip-head {
+        @apply flex items-center gap-3 mb-3;
+    }
+
+    .tour-avatar {
+        @apply flex items-center justify-center size-14 rounded-xl shrink-0;
+        background: linear-gradient(135deg, #134e4a, #0c4a6e);
+        border: 1px solid rgb(255 255 255 / 0.12);
+        box-shadow: 0 4px 14px rgb(45 212 191 / 0.4);
+    }
+
+    .tour-guide-name {
+        @apply text-sm font-bold text-white leading-tight;
+    }
+
+    .tour-guide-role {
+        @apply text-[11px] text-zinc-400;
+    }
+
+    .tour-tip-title {
+        @apply text-[17px] font-bold text-white mb-1.5;
+    }
+
+    .tour-tip-body {
+        @apply text-[13px] leading-relaxed text-zinc-300;
+    }
+
+    .tour-tip-foot {
+        @apply flex items-center justify-between gap-3 mt-4;
+    }
+
+    .tour-dots {
+        @apply flex items-center gap-1.5;
+    }
+
+    .tour-dot {
+        @apply size-2 rounded-full bg-white/20 transition-all;
+    }
+
+    .tour-dot.active {
+        @apply bg-teal-400 w-5;
+    }
+
+    .tour-actions {
+        @apply flex items-center gap-2;
+    }
+
+    .tour-btn {
+        @apply inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-colors whitespace-nowrap;
+    }
+
+    .tour-btn.ghost {
+        @apply text-zinc-300 hover:bg-white/10;
+    }
+
+    .tour-btn.ghost:disabled {
+        @apply opacity-40 pointer-events-none;
+    }
+
+    .tour-btn.primary {
+        @apply text-[#06283a] hover:brightness-110;
+        background: linear-gradient(135deg, #2dd4bf, #0ea5e9);
+    }
+
     /* ============ Mobile (small screens) ============ */
     @media (max-width: 640px) {
         #topbar .topbar-clock {

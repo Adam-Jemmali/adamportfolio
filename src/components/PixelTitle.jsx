@@ -134,6 +134,13 @@ const PixelTitle = () => {
 
         const tmp = { tx: 0, ty: 0 };
         const repel = (cx, cy, boost) => {
+            // Only scatter the dots while the pointer is actually over the title.
+            // Once it leaves, the field relaxes back to the resting positions.
+            if (!mouse.active) {
+                tmp.tx = 0;
+                tmp.ty = 0;
+                return;
+            }
             const dx = cx - mouse.x;
             const dy = cy - mouse.y;
             const dist = Math.hypot(dx, dy);
@@ -243,6 +250,7 @@ const PixelTitle = () => {
         };
         const onLeave = () => {
             mouse.active = false;
+            mouse.speed = 0;
         };
 
         const init = async () => {

@@ -92,6 +92,13 @@ const dockApps = [
 
 const desktopApps = [
     {
+        id: "trappie",
+        name: "Trappie",
+        icon: "public/icons/t-monogram.svg",
+        appId: null,
+        tile: "linear-gradient(135deg, #0f172a, #1e293b)",
+    },
+    {
         id: "web",
         name: "Web",
         icon: Globe,

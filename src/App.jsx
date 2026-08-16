@@ -7,6 +7,7 @@ import Dock from "#components/Dock.jsx";
 import Welcome from "#components/Welcome.jsx";
 import Home from "#components/Home.jsx";
 import Spotlight from "#components/Spotlight.jsx";
+import TourGuide from "#components/TourGuide.jsx";
 import LoadingScreen from "#components/LoadingScreen.jsx";
 import LockScreen from "#components/LockScreen.jsx";
 import SuspendScreen from "#components/SuspendScreen.jsx";
@@ -14,6 +15,7 @@ import { Terminal, Finder, Text, Image, Safari, Resume, Contact, Gallery, Snake,
 import { wallpapers } from "#constants/index.js";
 import useSystemStore from "#store/system.js";
 import useWindowStore from "#store/window.js";
+import useTourStore from "#store/tour.js";
 
 gsap.registerPlugin(Draggable);
 // Advance animations by wall-clock time even when rAF is throttled (e.g. the
@@ -29,6 +31,31 @@ const App = () => {
     const windows = useWindowStore((s) => s.windows);
     const focusedWindow = useWindowStore((s) => s.focusedWindow);
     const focusWindow = useWindowStore((s) => s.focusWindow);
+    const startTour = useTourStore((s) => s.start);
+
+    // Auto-open Trappie's guided tour the first time the desktop appears.
+    // The flag is cached in localStorage so returning visitors aren't greeted
+    // by the overlay on every reload; the desktop icon still opens it manually.
+    useEffect(() => {
+        if (screen !== "desktop") return;
+        try {
+            if (localStorage.getItem("trappie-tour-seen")) return;
+        } catch {
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            try {
+                localStorage.setItem("trappie-tour-seen", "1");
+            } catch {
+                // Storage unavailable — still show the tour this once.
+            }
+            // Don't stomp a tour the user may have already opened manually.
+            if (!useTourStore.getState().active) startTour();
+        }, 900);
+
+        return () => clearTimeout(timer);
+    }, [screen, startTour]);
 
     // Apply the selected wallpaper to the body background.
     useEffect(() => {
@@ -138,6 +165,7 @@ const App = () => {
             <KidPix />
             <Spotlight />
             <Dock />
+            <TourGuide />
         </main>
     );
 };
