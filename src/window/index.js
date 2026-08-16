@@ -11,7 +11,9 @@ import Games from './Games';
 import Code from './CodeGame';
 import Journey from './Journey';
 import KidPix from './KidPix';
+import PopQuiz from './PopQuiz';
+import Backgrounds from './Backgrounds';
 import Home from '#components/Home.jsx'
 
 
-export { Terminal, Finder, Text, Image, Safari, Resume ,Contact,Home, Gallery, Snake, Games, Code, Journey, KidPix};
+export { Terminal, Finder, Text, Image, Safari, Resume ,Contact,Home, Gallery, Snake, Games, Code, Journey, KidPix, PopQuiz, Backgrounds};

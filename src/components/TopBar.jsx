@@ -83,6 +83,8 @@ const TopBar = () => {
     const restart = useSystemStore((s) => s.restart);
     const wallpaper = useSystemStore((s) => s.wallpaper);
     const setWallpaper = useSystemStore((s) => s.setWallpaper);
+    const customWallpapers = useSystemStore((s) => s.customWallpapers);
+    const allWallpapers = [...wallpapers, ...customWallpapers];
 
     const [time, setTime] = useState(dayjs());
     const [openPanel, setOpenPanel] = useState(null); // null | "wifi" | "volume" | "brightness" | "profile"
@@ -287,14 +289,21 @@ const TopBar = () => {
                     </div>
                     <div className="profile-wallpapers">
                         <p className="tray-title">Wallpaper</p>
-                        {wallpapers.map((wp) => (
+                        {allWallpapers.map((wp) => (
                             <button
                                 key={wp.id}
                                 type="button"
                                 className="profile-wallpaper"
                                 onClick={() => setWallpaper(wp.id)}
                             >
-                                <span className="desktop-menu-swatch" style={{ background: wp.value }} />
+                                <span
+                                    className="desktop-menu-swatch"
+                                    style={{
+                                        backgroundImage: wp.type === "gradient" ? wp.value : `url("${wp.value}")`,
+                                        backgroundSize: "cover",
+                                        backgroundPosition: "center",
+                                    }}
+                                />
                                 <span>{wp.name}</span>
                                 {wallpaper === wp.id && <span className="text-green-400 ml-auto">✓</span>}
                             </button>

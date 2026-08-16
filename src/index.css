@@ -2035,6 +2035,297 @@ body {
         }
     }
 
+    /* ============ Pop Quiz ============ */
+    #popquiz {
+        @apply w-[560px] h-[620px] bg-[#14171c] text-gray-200;
+
+        #window-header {
+            @apply bg-[#1a1e24] border-white/10 text-zinc-300;
+        }
+
+        #window-header h2 {
+            @apply text-gray-300;
+        }
+
+        .popquiz-body {
+            @apply flex-1 flex flex-col gap-4 p-6 overflow-y-auto;
+        }
+
+        .popquiz-stats {
+            @apply flex items-center gap-4 text-[12px] text-zinc-400;
+        }
+
+        .popquiz-stats b {
+            @apply text-white font-semibold ml-1;
+        }
+
+        .popquiz-restart {
+            @apply ml-auto px-3 py-1.5 rounded-lg text-[12px] font-semibold text-zinc-300 hover:bg-white/10 transition-colors;
+        }
+
+        .popquiz-card {
+            @apply rounded-2xl border border-white/10 bg-white/5 p-5;
+        }
+
+        .popquiz-badge {
+            @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider text-cyan-300;
+            background: rgb(34 211 238 / 0.12);
+            border: 1px solid rgb(34 211 238 / 0.3);
+        }
+
+        .popquiz-prompt {
+            @apply mt-3 text-xl font-semibold text-white leading-snug;
+        }
+
+        .popquiz-options {
+            @apply mt-4 flex flex-col gap-2;
+        }
+
+        .popquiz-option {
+            @apply flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-left text-sm text-zinc-200 transition-colors;
+        }
+
+        .popquiz-option:hover:not(:disabled) {
+            @apply bg-white/10 border-white/20;
+        }
+
+        .popquiz-option:disabled {
+            @apply cursor-default;
+        }
+
+        .popquiz-option.is-correct {
+            @apply border-green-400/60 bg-green-400/10 text-white;
+        }
+
+        .popquiz-option.is-wrong {
+            @apply border-red-400/60 bg-red-400/10 text-white;
+        }
+
+        .popquiz-letter {
+            @apply flex items-center justify-center size-6 rounded-md shrink-0 text-[12px] font-bold text-[#06283a];
+            background: rgb(255 255 255 / 0.15);
+        }
+
+        .popquiz-option.is-correct .popquiz-letter {
+            background: #4ade80;
+        }
+
+        .popquiz-option.is-wrong .popquiz-letter {
+            background: #f87171;
+        }
+
+        .popquiz-feedback {
+            @apply mt-4 text-sm font-medium rounded-lg px-3 py-2;
+        }
+
+        .popquiz-feedback.is-correct {
+            @apply text-green-300 bg-green-400/10;
+        }
+
+        .popquiz-feedback.is-wrong {
+            @apply text-red-300 bg-red-400/10;
+        }
+
+        .popquiz-next {
+            @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-[#06283a] transition-transform active:scale-95;
+            background: var(--pfp-grad);
+        }
+
+        .popquiz-next.ghost {
+            background: rgb(255 255 255 / 0.08);
+            color: #e4e4e7;
+            border: 1px solid rgb(255 255 255 / 0.12);
+        }
+
+        .popquiz-next:disabled {
+            @apply opacity-40 cursor-default active:scale-100;
+        }
+
+        .popquiz-setup {
+            @apply justify-center;
+        }
+
+        .popquiz-setup-head {
+            @apply text-center;
+        }
+
+        .popquiz-setup-head .popquiz-prompt {
+            @apply mt-3;
+        }
+
+        .popquiz-setup-sub {
+            @apply mt-1.5 text-[13px] text-zinc-400;
+        }
+
+        .popquiz-categories {
+            @apply grid grid-cols-2 gap-2 mt-2;
+        }
+
+        .popquiz-category {
+            @apply rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm font-semibold text-zinc-200 transition-colors hover:bg-white/10;
+        }
+
+        .popquiz-category.active {
+            @apply border-cyan-300/60 bg-cyan-300/10 text-white;
+        }
+
+        .popquiz-timed {
+            @apply flex items-center gap-3 mt-2 p-3 rounded-xl border border-white/10 bg-white/5 cursor-pointer;
+        }
+
+        .popquiz-timed input {
+            @apply sr-only;
+        }
+
+        .popquiz-timed-box {
+            @apply flex items-center justify-center size-8 rounded-lg shrink-0 text-[#06283a];
+            background: rgb(255 255 255 / 0.2);
+        }
+
+        .popquiz-timed input:checked + .popquiz-timed-box {
+            background: var(--pfp-grad);
+        }
+
+        .popquiz-timed-copy {
+            @apply flex flex-col text-left;
+        }
+
+        .popquiz-timed-copy b {
+            @apply inline-flex items-center gap-1 text-[13px] font-bold text-white;
+        }
+
+        .popquiz-timed-copy span {
+            @apply text-[11px] text-zinc-400;
+        }
+
+        .popquiz-timer {
+            @apply flex items-center gap-2.5;
+        }
+
+        .popquiz-timer-label {
+            @apply inline-flex items-center gap-1.5 text-[12px] font-semibold text-zinc-300 w-12 shrink-0;
+        }
+
+        .popquiz-timer-track {
+            @apply flex-1 h-1.5 rounded-full overflow-hidden;
+            background: rgb(255 255 255 / 0.1);
+        }
+
+        .popquiz-timer-bar {
+            @apply block h-full rounded-full transition-all duration-1000 ease-linear;
+            background: var(--pfp-grad);
+        }
+
+        .popquiz-timer-bar.low {
+            background: #f87171;
+        }
+
+        .popquiz-results {
+            @apply items-center justify-center text-center;
+        }
+
+        .popquiz-results-icon {
+            @apply flex items-center justify-center size-16 rounded-2xl mb-1 text-[#06283a];
+            background: var(--pfp-grad);
+        }
+
+        .popquiz-results-score {
+            @apply mt-1 text-lg text-zinc-200;
+        }
+
+        .popquiz-results-score b {
+            @apply text-white;
+        }
+
+        .popquiz-results-sub {
+            @apply mt-1 text-[13px] text-zinc-400;
+        }
+
+        .popquiz-results-actions {
+            @apply flex items-center gap-2 mt-6;
+        }
+    }
+
+    /* ============ Backgrounds ============ */
+    #backgrounds {
+        @apply w-[520px] h-[480px] bg-[#14171c] text-gray-200;
+
+        #window-header {
+            @apply bg-[#1a1e24] border-white/10 text-zinc-300;
+        }
+
+        #window-header h2 {
+            @apply text-gray-300;
+        }
+
+        .backgrounds-body {
+            @apply flex-1 p-6 overflow-y-auto;
+        }
+
+        .backgrounds-hint {
+            @apply text-[12px] text-zinc-500 mb-3;
+        }
+
+        .backgrounds-add {
+            @apply flex items-center gap-2 mb-3 p-2 rounded-xl text-zinc-400;
+            background: rgb(255 255 255 / 0.04);
+            border: 1px solid rgb(255 255 255 / 0.1);
+        }
+
+        .backgrounds-add input {
+            @apply flex-1 min-w-0 bg-transparent outline-none text-[13px] text-zinc-100 placeholder:text-zinc-500;
+        }
+
+        .backgrounds-add button {
+            @apply flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-[#06283a] transition-transform active:scale-95 shrink-0;
+            background: var(--pfp-grad);
+        }
+
+        .backgrounds-error {
+            @apply mb-3 text-[12px] text-red-300;
+        }
+
+        .backgrounds-grid {
+            @apply grid grid-cols-2 gap-3;
+        }
+
+        .backgrounds-card {
+            @apply relative rounded-xl border border-white/10 bg-white/5 transition-colors hover:bg-white/10;
+        }
+
+        .backgrounds-card.active {
+            @apply border-cyan-300/60;
+        }
+
+        .backgrounds-card-main {
+            @apply block w-full p-2.5 text-left cursor-pointer;
+            background: transparent;
+            border: 0;
+        }
+
+        .backgrounds-swatch {
+            @apply block w-full h-24 rounded-lg;
+        }
+
+        .backgrounds-name {
+            @apply block mt-2 text-[13px] font-medium text-zinc-200;
+        }
+
+        .backgrounds-check {
+            @apply absolute top-3 right-3 text-green-400;
+        }
+
+        .backgrounds-remove {
+            @apply absolute top-2.5 left-2.5 size-6 flex items-center justify-center rounded-md text-zinc-300;
+            background: rgb(0 0 0 / 0.5);
+            border: 1px solid rgb(255 255 255 / 0.15);
+        }
+
+        .backgrounds-remove:hover {
+            @apply text-red-300 bg-red-500/20;
+        }
+    }
+
     /* ============ Kid Pix ============ */
     #kidpix {
         @apply w-[640px] h-[560px] bg-[#eceef1] text-zinc-800;
@@ -2414,35 +2705,15 @@ body {
         -webkit-backdrop-filter: blur(2px);
     }
 
-    .tour-spotlight,
-    .tour-spotlight-ring {
+    .tour-spotlight {
         @apply fixed z-9000 pointer-events-none;
         transition:
             top 0.35s cubic-bezier(0.16, 1, 0.3, 1),
             left 0.35s cubic-bezier(0.16, 1, 0.3, 1),
             width 0.35s cubic-bezier(0.16, 1, 0.3, 1),
             height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .tour-spotlight {
         border-radius: 16px;
         box-shadow: 0 0 0 9999px rgb(2 6 23 / 0.66);
-    }
-
-    .tour-spotlight-ring {
-        border-radius: 18px;
-        border: 2px solid rgb(45 212 191 / 0.9);
-        animation: tour-ring-pulse 2.2s ease-in-out infinite;
-    }
-
-    @keyframes tour-ring-pulse {
-        0%,
-        100% {
-            box-shadow: 0 0 16px rgb(45 212 191 / 0.25);
-        }
-        50% {
-            box-shadow: 0 0 30px rgb(45 212 191 / 0.5);
-        }
     }
 
     .tour-tooltip {

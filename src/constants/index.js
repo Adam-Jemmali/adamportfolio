@@ -1,4 +1,4 @@
-import { Folder, Globe, Images, Mail, Terminal, Gamepad2, FileText, Palette } from "lucide-react";
+import { Folder, Globe, Images, Mail, Terminal, Gamepad2, FileText, Palette, Wallpaper } from "lucide-react";
 
 const navLinks = [
     {
@@ -88,6 +88,12 @@ const dockApps = [
         icon: Palette,
         canOpen: true,
     },
+    {
+        id: "backgrounds",
+        name: "Backgrounds",
+        icon: Wallpaper,
+        canOpen: true,
+    },
 ];
 
 const desktopApps = [
@@ -153,6 +159,13 @@ const desktopApps = [
         icon: Palette,
         appId: "kidpix",
         tile: "linear-gradient(135deg, #fb7185, #f59e0b)",
+    },
+    {
+        id: "backgrounds",
+        name: "Backgrounds",
+        icon: Wallpaper,
+        appId: "backgrounds",
+        tile: "linear-gradient(135deg, #22d3ee, #6366f1)",
     },
 ];
 
@@ -824,6 +837,8 @@ const WINDOW_CONFIG = {
     code: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
     journey: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
     kidpix: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
+    popquiz: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
+    backgrounds: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
 };
 
 export { INITIAL_Z_INDEX, WINDOW_CONFIG, GALLERY_DATA };

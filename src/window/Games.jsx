@@ -1,4 +1,4 @@
-import { Gamepad2, Keyboard } from "lucide-react";
+import { Gamepad2, Keyboard, Brain } from "lucide-react";
 import WindowsControls from "#components/WindowsControls.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import useWindowStore from "#store/window.js";
@@ -29,6 +29,12 @@ const Games = () => {
                     <span className="game-icon"><Keyboard size={28} /></span>
                     <h3>Code Racer</h3>
                     <p>Type real code. Learn. Go fast.</p>
+                </button>
+
+                <button type="button" className="game-card" onClick={() => launch("popquiz")}>
+                    <span className="game-icon"><Brain size={28} /></span>
+                    <h3>Dev Quiz</h3>
+                    <p>Coding, full stack &amp; system design.</p>
                 </button>
             </div>
         </>

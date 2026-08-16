@@ -21,9 +21,11 @@ const Home = () => {
 
     const wallpaper = useSystemStore((s) => s.wallpaper);
     const setWallpaper = useSystemStore((s) => s.setWallpaper);
+    const customWallpapers = useSystemStore((s) => s.customWallpapers);
+    const allWallpapers = [...wallpapers, ...customWallpapers];
 
     // Exactly these apps on the desktop — Trappie lives here instead of the dock.
-    const DESKTOP_APP_IDS = ["trappie", "web", "gallery", "contact", "skills", "journey", "games", "kidpix"];
+    const DESKTOP_APP_IDS = ["trappie", "web", "gallery", "contact", "skills", "journey", "games", "kidpix", "backgrounds"];
 
     const items = DESKTOP_APP_IDS
         .map((id) => desktopApps.find((app) => app.id === id))
@@ -145,7 +147,7 @@ const Home = () => {
                         <Palette size={13} />
                         Wallpaper
                     </p>
-                    {wallpapers.map((wp) => (
+                    {allWallpapers.map((wp) => (
                         <button
                             key={wp.id}
                             type="button"
@@ -155,7 +157,14 @@ const Home = () => {
                                 setMenu(null);
                             }}
                         >
-                            <span className="desktop-menu-swatch" style={{ background: wp.value }} />
+                            <span
+                                className="desktop-menu-swatch"
+                                style={{
+                                    backgroundImage: wp.type === "gradient" ? wp.value : `url("${wp.value}")`,
+                                    backgroundSize: "cover",
+                                    backgroundPosition: "center",
+                                }}
+                            />
                             <span className="flex-1 text-left">{wp.name}</span>
                             {wallpaper === wp.id && <Check size={14} className="text-green-400" />}
                         </button>

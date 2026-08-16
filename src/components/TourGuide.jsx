@@ -428,13 +428,6 @@ const TourGuide = () => {
                     aria-hidden="true"
                 />
             )}
-            {spot && (
-                <div
-                    className="tour-spotlight-ring"
-                    style={{ top: spot.top, left: spot.left, width: spot.width, height: spot.height }}
-                    aria-hidden="true"
-                />
-            )}
 
             <div
                 ref={tooltipRef}

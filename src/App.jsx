@@ -11,7 +11,7 @@ import TourGuide from "#components/TourGuide.jsx";
 import LoadingScreen from "#components/LoadingScreen.jsx";
 import LockScreen from "#components/LockScreen.jsx";
 import SuspendScreen from "#components/SuspendScreen.jsx";
-import { Terminal, Finder, Text, Image, Safari, Resume, Contact, Gallery, Snake, Games, Code, Journey, KidPix } from "#window/index.js";
+import { Terminal, Finder, Text, Image, Safari, Resume, Contact, Gallery, Snake, Games, Code, Journey, KidPix, PopQuiz, Backgrounds } from "#window/index.js";
 import { wallpapers } from "#constants/index.js";
 import useSystemStore from "#store/system.js";
 import useWindowStore from "#store/window.js";
@@ -27,6 +27,7 @@ const App = () => {
     const bootDone = useSystemStore((s) => s.bootDone);
     const brightness = useSystemStore((s) => s.brightness);
     const wallpaper = useSystemStore((s) => s.wallpaper);
+    const customWallpapers = useSystemStore((s) => s.customWallpapers);
     const desktopRef = useRef(null);
     const windows = useWindowStore((s) => s.windows);
     const focusedWindow = useWindowStore((s) => s.focusedWindow);
@@ -59,9 +60,10 @@ const App = () => {
 
     // Apply the selected wallpaper to the body background.
     useEffect(() => {
-        const wp = wallpapers.find((w) => w.id === wallpaper) || wallpapers[0];
+        const all = [...wallpapers, ...customWallpapers];
+        const wp = all.find((w) => w.id === wallpaper) || all[0];
         document.body.style.backgroundImage = wp.type === "gradient" ? wp.value : `url("${wp.value}")`;
-    }, [wallpaper]);
+    }, [wallpaper, customWallpapers]);
 
     // On phones, swipe across a window's content to move through open apps.
     // Headers remain dedicated to dragging and controls/inputs remain untouched.
@@ -163,6 +165,8 @@ const App = () => {
             <Code />
             <Journey />
             <KidPix />
+            <PopQuiz />
+            <Backgrounds />
             <Spotlight />
             <Dock />
             <TourGuide />
