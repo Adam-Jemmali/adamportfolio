@@ -25,7 +25,7 @@ const Home = () => {
     const allWallpapers = [...wallpapers, ...customWallpapers];
 
     // Exactly these apps on the desktop — Trappie lives here instead of the dock.
-    const DESKTOP_APP_IDS = ["trappie", "web", "gallery", "contact", "skills", "journey", "games", "kidpix", "backgrounds"];
+    const DESKTOP_APP_IDS = ["trappie", "finder", "aboutme", "resume", "web", "skills", "gallery", "journey", "games", "contact", "drawpix", "backgrounds", "guestbook"];
 
     const items = DESKTOP_APP_IDS
         .map((id) => desktopApps.find((app) => app.id === id))
@@ -45,8 +45,10 @@ const Home = () => {
             },
         }));
 
-    const leftItems = items.slice(0, 3);
-    const rightItems = items.slice(3);
+    // Split evenly so the left side doesn't lag behind as apps get added.
+    const half = Math.ceil(items.length / 2);
+    const leftItems = items.slice(0, half);
+    const rightItems = items.slice(half);
 
     const renderItem = (item) => (
         <div
@@ -129,10 +131,10 @@ const Home = () => {
             onContextMenu={handleContextMenu}
         >
             <div className="flex justify-between h-[calc(100dvh-15rem)] pointer-events-none">
-                <div className="flex flex-col flex-wrap gap-1 items-start content-start max-w-[12rem] h-full pointer-events-none">
+                <div className="flex flex-col flex-wrap gap-1 items-start content-start max-w-48 h-full pointer-events-none">
                     {leftItems.map(renderItem)}
                 </div>
-                <div className="flex flex-col flex-wrap gap-1 items-end content-end max-w-[12rem] h-full pointer-events-none">
+                <div className="flex flex-col flex-wrap gap-1 items-end content-end max-w-48 h-full pointer-events-none">
                     {rightItems.map(renderItem)}
                 </div>
             </div>

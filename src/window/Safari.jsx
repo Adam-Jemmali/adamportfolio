@@ -8,7 +8,7 @@ import { blogPosts } from "#constants/index.js";
 const NEWSLETTER_ENDPOINT = import.meta.env.VITE_NEWSLETTER_ENDPOINT;
 
 const Safari = () => {
-    const [query, setQuery] = useState("");
+    const [query] = useState("");
     const [email, setEmail] = useState("");
     const [subscribed, setSubscribed] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -53,17 +53,7 @@ const Safari = () => {
             <WindowsControls target="safari"/>
             <Spider />
 
-            <div className="search">
-                <Search className=""/>
-                <input
-                    type="text"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search top videos…"
-                    aria-label="Search top videos"
-                    className="flex-1 outline-none bg-transparent"
-                />
-            </div>
+         
         </div>
 
         <div className="blog">

@@ -160,4 +160,57 @@ const Bookworm = ({ className = "" }) => (
     </svg>
 );
 
-export { Fox, Spider, Panda, Pigeon, Penguin, Turtle, Frog, Chameleon, Sloth, Owl, SnakeMascot, Bookworm };
+// A mafia cat — fedora, whiskers, and a red tie — for Imposter MAFIA.
+const MafiaCat = ({ className = "" }) => (
+    <svg viewBox="0 0 32 28" className={`title-mascot ${className}`} aria-hidden="true">
+        <ellipse cx="16" cy="10" rx="12" ry="3" fill="#1f2937" stroke="#0b0f14" strokeWidth="1.2" />
+        <path d="M10 9 q6 -7 12 0 q-1.2 2.6 -6 2.6 q-4.8 0 -6 -2.6 z" fill="#374151" stroke="#0b0f14" strokeWidth="1.2" />
+        <path d="M10 11 q6 2.4 12 0" fill="none" stroke="#111827" strokeWidth="1.4" strokeLinecap="round" />
+        <ellipse cx="16" cy="18.5" rx="8" ry="6.5" fill="#8b5cf6" stroke="#4c2ea8" strokeWidth="1.2" />
+        <path d="M9.5 14.5 l-2 -3.5 M12.5 13.5 l-1.5 -3 M22.5 14.5 l2 -3.5 M19.5 13.5 l1.5 -3" fill="#8b5cf6" stroke="#4c2ea8" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="12.5" cy="17.5" r="2" fill="#ffffff" stroke="#2b1c0e" strokeWidth="0.8" />
+        <circle cx="19.5" cy="17.5" r="2" fill="#ffffff" stroke="#2b1c0e" strokeWidth="0.8" />
+        <circle cx="12.5" cy="17.5" r="0.9" fill="#2b1c0e" />
+        <circle cx="19.5" cy="17.5" r="0.9" fill="#2b1c0e" />
+        <path d="M14.5 20.5 q1.5 1 3 0" fill="none" stroke="#2b1c0e" strokeWidth="1" strokeLinecap="round" />
+        <path d="M16 20.5 l0 2.5 M14.5 22.5 l3 0" stroke="#2b1c0e" strokeWidth="0.8" strokeLinecap="round" />
+        <path d="M8 18.5 h-2 M8 20.5 h-2 M24 18.5 h2 M24 20.5 h2" stroke="#2b1c0e" strokeWidth="0.8" strokeLinecap="round" />
+        <path d="M13.5 24 l-1.5 1.5 M18.5 24 l1.5 1.5 M16 24 l0 1.5" fill="#ef4444" stroke="#991b1b" strokeWidth="0.9" strokeLinejoin="round" />
+    </svg>
+);
+
+// A snail with an ink trail — slow, nostalgic, leaving its mark. For the Guestbook.
+const Snail = ({ className = "" }) => (
+    <svg viewBox="0 0 32 28" className={`title-mascot ${className}`} aria-hidden="true">
+        <circle cx="3.5" cy="22.5" r="0.9" fill="#c2874a" opacity="0.3" />
+        <circle cx="6.3" cy="21.2" r="1.2" fill="#c2874a" opacity="0.5" />
+        <path d="M9 20 q-3.5 2.5 -8.5 1.5" fill="none" stroke="#c2874a" strokeWidth="1" strokeLinecap="round" opacity="0.4" />
+        <path d="M8 21.5 q6 4 13.5 0.8 q4.5 -2.2 3.5 -6.3" fill="#8fbf6b" stroke="#365314" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="19.5" cy="13.5" r="8.5" fill="#d9a15c" stroke="#7a4a1f" strokeWidth="1.2" />
+        <path d="M19.5 13.5 m-5.5 0 a5.5 5.5 0 0 1 5.5 -5.5" fill="none" stroke="#7a4a1f" strokeWidth="1" opacity="0.6" />
+        <path d="M19.5 13.5 m-3 0 a3 3 0 0 1 3 -3" fill="none" stroke="#7a4a1f" strokeWidth="1" opacity="0.6" />
+        <path d="M8.5 19 q-1.2 -4 1.3 -5.7" fill="none" stroke="#365314" strokeWidth="1.3" strokeLinecap="round" />
+        <circle cx="10.3" cy="12.2" r="1.3" fill="#2b1c0e" />
+        <path d="M6 19.5 q-1.2 -3.2 0.8 -4.8" fill="none" stroke="#365314" strokeWidth="1.3" strokeLinecap="round" />
+        <circle cx="7.3" cy="14" r="1.2" fill="#2b1c0e" />
+        <path d="M7 23 q2.2 1.4 4.6 0.3" fill="none" stroke="#365314" strokeWidth="1" strokeLinecap="round" />
+    </svg>
+);
+
+// A rabbit — warm and approachable, for the About Me introduction.
+const Rabbit = ({ className = "" }) => (
+    <svg viewBox="0 0 32 28" className={`title-mascot ${className}`} aria-hidden="true">
+        <path d="M11 11 Q9 2 12.5 1 Q15 2 13.5 11 Z" fill="#f5f0ea" stroke="#8a8378" strokeWidth="1.1" />
+        <path d="M19 11 Q21 2 17.5 1 Q15 2 16.5 11 Z" fill="#f5f0ea" stroke="#8a8378" strokeWidth="1.1" />
+        <path d="M12 10.3 Q11 4.5 12.7 3.5 Q13.8 4.5 13 10.3 Z" fill="#f2b8c6" />
+        <path d="M18 10.3 Q19 4.5 17.3 3.5 Q16.2 4.5 17 10.3 Z" fill="#f2b8c6" />
+        <ellipse cx="16" cy="18" rx="10" ry="8.5" fill="#f5f0ea" stroke="#8a8378" strokeWidth="1.2" />
+        <circle cx="12" cy="17" r="1.8" fill="#2b1c0e" />
+        <circle cx="20" cy="17" r="1.8" fill="#2b1c0e" />
+        <path d="M15 20.6 q1 1 2 0" fill="none" stroke="#8a8378" strokeWidth="1" strokeLinecap="round" />
+        <path d="M16 19.6 q-0.8 0 -0.8 0.7 q0 0.8 0.8 0.8 q0.8 0 0.8 -0.8 q0 -0.7 -0.8 -0.7 Z" fill="#f2b8c6" />
+        <path d="M9 20 l-4 -1 M9 21.5 l-4 0.8 M23 20 l4 -1 M23 21.5 l4 0.8" stroke="#8a8378" strokeWidth="0.6" strokeLinecap="round" />
+    </svg>
+);
+
+export { Fox, Spider, Panda, Pigeon, Penguin, Turtle, Frog, Chameleon, Sloth, Owl, SnakeMascot, Bookworm, MafiaCat, Snail, Rabbit };

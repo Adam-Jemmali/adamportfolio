@@ -21,7 +21,7 @@ import WindowWrapper from "#hoc/WindowWrapper.jsx";
 
 const W = 800;
 const H = 520;
-const STORAGE_KEY = "kidpix-drawing-v1";
+const STORAGE_KEY = "drawpix-drawing-v1";
 
 const STAMPS = [
     "🧸", "⭐", "❤️", "🌸", "🚀", "🌈",
@@ -92,7 +92,7 @@ const drawWelcomeCanvas = (canvas) => {
 
     g.font = "500 16px Georama, -apple-system, 'Segoe UI', sans-serif";
     g.fillStyle = "#c2c7cf";
-    g.fillText("✏️ erase me — then draw your own!", cx, H - 42);
+    g.fillText("✏️ Draw your own!", cx, H - 42);
 };
 
 const floodFill = (g, w, h, sx, sy, fillHex) => {
@@ -131,7 +131,7 @@ const floodFill = (g, w, h, sx, sy, fillHex) => {
     g.putImageData(img, 0, 0);
 };
 
-const KidPix = () => {
+const DrawPix = () => {
     const canvasRef = useRef(null);
     const drawingRef = useRef(null);
     const historyRef = useRef([]);
@@ -396,7 +396,7 @@ const KidPix = () => {
 
     const save = () => {
         const link = document.createElement("a");
-        link.download = "kidpix-drawing.png";
+        link.download = "drawpix-drawing.png";
         link.href = canvasRef.current.toDataURL("image/png");
         link.click();
     };
@@ -404,12 +404,12 @@ const KidPix = () => {
     return (
         <>
             <div id="window-header">
-                <WindowsControls target="kidpix" />
-                <h2><Chameleon />Kid Pix</h2>
+                <WindowsControls target="drawpix" />
+                <h2><Chameleon />Draw Pix</h2>
             </div>
 
-            <div className="kidpix-body">
-                <div className="kidpix-canvas-wrap">
+            <div className="drawpix-body">
+                <div className="drawpix-canvas-wrap">
                     <canvas
                         ref={canvasRef}
                         width={W}
@@ -421,13 +421,13 @@ const KidPix = () => {
                     />
                 </div>
 
-                <div className="kidpix-toolbar">
-                    <div className="kidpix-row">
+                <div className="drawpix-toolbar">
+                    <div className="drawpix-row">
                         {TOOLS.map((t) => (
                             <button
                                 key={t.id}
                                 type="button"
-                                className={`kidpix-tool${tool === t.id ? " active" : ""}`}
+                                className={`drawpix-tool${tool === t.id ? " active" : ""}`}
                                 onClick={() => setTool(t.id)}
                                 title={t.label}
                                 aria-label={t.label}
@@ -438,12 +438,12 @@ const KidPix = () => {
                     </div>
 
                     {tool === "stamp" && (
-                        <div className="kidpix-row" role="group" aria-label="Stickers">
+                        <div className="drawpix-row" role="group" aria-label="Stickers">
                             {STAMPS.map((s) => (
                                 <button
                                     key={s}
                                     type="button"
-                                    className={`kidpix-stamp${stamp === s ? " active" : ""}`}
+                                    className={`drawpix-stamp${stamp === s ? " active" : ""}`}
                                     onClick={() => setStamp(s)}
                                     title={`Stamp ${s}`}
                                     aria-label={`Stamp ${s}`}
@@ -454,12 +454,12 @@ const KidPix = () => {
                         </div>
                     )}
 
-                    <div className="kidpix-row">
+                    <div className="drawpix-row">
                         {COLORS.map((c) => (
                             <button
                                 key={c}
                                 type="button"
-                                className={`kidpix-swatch${color === c ? " active" : ""}`}
+                                className={`drawpix-swatch${color === c ? " active" : ""}`}
                                 style={{ background: c }}
                                 onClick={() => setColor(c)}
                                 aria-label={c}
@@ -467,35 +467,35 @@ const KidPix = () => {
                         ))}
                     </div>
 
-                    <div className="kidpix-row">
+                    <div className="drawpix-row">
                         {SIZES.map((s) => (
                             <button
                                 key={s.id}
                                 type="button"
-                                className={`kidpix-size${size === s.id ? " active" : ""}`}
+                                className={`drawpix-size${size === s.id ? " active" : ""}`}
                                 onClick={() => setSize(s.id)}
                                 title={s.label}
                                 aria-label={s.label}
                             >
-                                <span className="kidpix-size-dot" style={{ width: s.dot, height: s.dot }} />
+                                <span className="drawpix-size-dot" style={{ width: s.dot, height: s.dot }} />
                             </button>
                         ))}
 
-                        <span className="kidpix-spacer" />
+                        <span className="drawpix-spacer" />
 
-                        <button type="button" className="kidpix-action" onClick={undo} title="Undo">
+                        <button type="button" className="drawpix-action" onClick={undo} title="Undo">
                             <Undo2 size={16} />
                             Undo
                         </button>
-                        <button type="button" className="kidpix-action" onClick={clear} title="Clear">
+                        <button type="button" className="drawpix-action" onClick={clear} title="Clear">
                             <Trash2 size={16} />
                             Clear
                         </button>
-                        <button type="button" className="kidpix-action" onClick={reset} title="Reset">
+                        <button type="button" className="drawpix-action" onClick={reset} title="Reset">
                             <RotateCcw size={16} />
                             Reset
                         </button>
-                        <button type="button" className="kidpix-action" onClick={save} title="Save">
+                        <button type="button" className="drawpix-action" onClick={save} title="Save">
                             <Download size={16} />
                             Save
                         </button>
@@ -506,5 +506,5 @@ const KidPix = () => {
     );
 };
 
-const KidPixWindow = WindowWrapper(KidPix, "kidpix");
-export default KidPixWindow;
+const DrawPixWindow = WindowWrapper(DrawPix, "drawpix");
+export default DrawPixWindow;

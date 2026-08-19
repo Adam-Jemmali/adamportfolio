@@ -65,17 +65,16 @@ const Finder = () => {
     const activeLocation = useLocationStore((state) => state.activeLocation);
     const setActiveLocation = useLocationStore((state) => state.setActiveLocation);
     const goBack = useLocationStore((state) => state.goBack);
-    const goForward = useLocationStore((state) => state.goForward);
-    const historyIndex = useLocationStore((state) => state.historyIndex);
-    const historyLength = useLocationStore((state) => state.history.length);
+  
+    
     const highlightIds = useLocationStore((state) => state.highlightIds);
     const setHighlightIds = useLocationStore((state) => state.setHighlightIds);
     const [query, setQuery] = useState("");
     const contentRef = useRef(null);
 
     const isFinderFocused = focusedWindow === "finder";
-    const canGoBack = historyIndex > 0;
-    const canGoForward = historyIndex < historyLength - 1;
+    
+    
 
     const isWorkRoot = activeLocation?.type === "work";
     const project = isWorkRoot ? null : locations.work.children.find((p) => p.id === activeLocation?.id);
@@ -192,29 +191,10 @@ const Finder = () => {
             <div className="flex flex-1 min-h-0">
                 <div className="sidebar">
                     <div className="sidebar-nav" role="group" aria-label="Navigation history">
-                        <button
-                            type="button"
-                            className="sidebar-nav-btn"
-                            onClick={() => { setQuery(""); goBack(); }}
-                            disabled={!canGoBack}
-                            aria-label="Back"
-                            title="Back"
-                        >
-                            <ChevronLeft size={15} />
-                        </button>
-                        <button
-                            type="button"
-                            className="sidebar-nav-btn"
-                            onClick={() => { setQuery(""); goForward(); }}
-                            disabled={!canGoForward}
-                            aria-label="Forward"
-                            title="Forward"
-                        >
-                            <ChevronRight size={15} />
-                        </button>
+                      
                     </div>
                     <div>
-                        <h3>Locations</h3>
+                        
                         <ul>
                             {Object.values(locations).map((item) => (
                                 <li

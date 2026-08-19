@@ -1,4 +1,6 @@
 import { Folder, Globe, Images, Mail, Terminal, Gamepad2, FileText, Palette, Wallpaper } from "lucide-react";
+import { GuestbookTileIcon } from "#components/GuestbookIcons.jsx";
+import { AboutMeTileIcon } from "#components/AboutMeIcons.jsx";
 
 const navLinks = [
     {
@@ -45,42 +47,56 @@ const dockApps = [
         name: "Portfolio",
         icon: Folder,
         canOpen: true,
+        tile: "linear-gradient(135deg, #60a5fa, #4f46e5)",
+        glow: "#60a5fa",
     },
     {
         id: "safari",
         name: "Web",
         icon: Globe,
         canOpen: true,
+        tile: "linear-gradient(135deg, #38bdf8, #2563eb)",
+        glow: "#38bdf8",
     },
     {
         id: "photos",
         name: "Gallery",
         icon: Images,
         canOpen: true,
+        tile: "linear-gradient(135deg, #f472b6, #a855f7)",
+        glow: "#f472b6",
     },
     {
         id: "contact",
         name: "Contact",
         icon: Mail,
         canOpen: true,
+        tile: "linear-gradient(135deg, #fbbf24, #f59e0b)",
+        glow: "#fbbf24",
     },
     {
         id: "terminal",
         name: "Skills",
         icon: Terminal,
         canOpen: true,
+        tile: "linear-gradient(135deg, #34d399, #0f766e)",
+        glow: "#34d399",
     },
     {
         id: "journey",
         name: "Journey",
         icon: "public/icons/journey.svg",
         canOpen: true,
+        tile: "linear-gradient(135deg, #a78bfa, #7c3aed)",
+        glow: "#a78bfa",
     },
     {
         id: "games",
         name: "Games",
         icon: Gamepad2,
         canOpen: true,
+        tile: "linear-gradient(135deg, #fb923c, #ef4444)",
+        glow: "#fb923c",
     },
     // Kid Pix and Backgrounds stay on the desktop so the dock stays focused
     // on the essentials.
@@ -89,10 +105,24 @@ const dockApps = [
 const desktopApps = [
     {
         id: "trappie",
-        name: "Trappie",
+        name: "Trappie Help",
         icon: "public/icons/t-monogram.svg",
         appId: null,
         tile: "linear-gradient(135deg, #0f172a, #1e293b)",
+    },
+    {
+        id: "finder",
+        name: "Portfolio",
+        icon: Folder,
+        appId: "finder",
+        tile: "linear-gradient(135deg, #60a5fa, #4f46e5)",
+    },
+    {
+        id: "aboutme",
+        name: "About Me",
+        icon: AboutMeTileIcon,
+        appId: "aboutme",
+        tile: "linear-gradient(135deg, #f2b8c6, #c2874a)",
     },
     {
         id: "web",
@@ -144,10 +174,10 @@ const desktopApps = [
         tile: "linear-gradient(135deg, #a78bfa, #7c3aed)",
     },
     {
-        id: "kidpix",
-        name: "Kid Pix",
+        id: "drawpix",
+        name: "DrawPix",
         icon: Palette,
-        appId: "kidpix",
+        appId: "drawpix",
         tile: "linear-gradient(135deg, #fb7185, #f59e0b)",
     },
     {
@@ -157,6 +187,13 @@ const desktopApps = [
         appId: "backgrounds",
         tile: "linear-gradient(135deg, #22d3ee, #6366f1)",
     },
+    {
+        id: "guestbook",
+        name: "Guestbook",
+        icon: GuestbookTileIcon,
+        appId: "guestbook",
+        tile: "linear-gradient(135deg, #fbbf24, #b45309)",
+    },
 ];
 
 const wallpapers = [
@@ -164,6 +201,10 @@ const wallpapers = [
     { id: "midnight", name: "Midnight", type: "gradient", value: "linear-gradient(160deg, #0b1526 0%, #1e3a5f 55%, #3c6eb4 100%)" },
     { id: "sunset", name: "Sunset", type: "gradient", value: "linear-gradient(160deg, #1a0b2e 0%, #5f1e3a 50%, #b4653c 100%)" },
     { id: "forest", name: "Forest", type: "gradient", value: "linear-gradient(160deg, #06251f 0%, #0f4c3a 55%, #2e7d5b 100%)" },
+    { id: "matrix", name: "Matrix Rain", type: "live", value: "matrix", preview: "linear-gradient(160deg, #000000 0%, #04170c 55%, #0c3d21 100%)" },
+    { id: "pipes", name: "Pipes", type: "live", value: "pipes", preview: "linear-gradient(160deg, #000000 0%, #1a1030 55%, #0d2b3d 100%)" },
+    { id: "bubbles", name: "Bubbles", type: "live", value: "bubbles", preview: "linear-gradient(160deg, #0b1526 0%, #123252 55%, #1c4f78 100%)" },
+    { id: "warp", name: "Warp Speed", type: "live", value: "warp", preview: "linear-gradient(160deg, #000000 0%, #0b1330 55%, #1b2b66 100%)" },
 ];
 
 const blogPosts = [
@@ -826,9 +867,13 @@ const WINDOW_CONFIG = {
     games: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
     code: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
     journey: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
-    kidpix: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
+    drawpix: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
     popquiz: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
+    mafia: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
+    highscores: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
     backgrounds: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
+    guestbook: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
+    aboutme: { isOpen: false, minimized: false, maximized: false, zIndex: INITIAL_Z_INDEX, data: null },
 };
 
 export { INITIAL_Z_INDEX, WINDOW_CONFIG, GALLERY_DATA };

@@ -5,6 +5,7 @@ import gsap from 'gsap'
 import WindowsControls from "#components/WindowsControls.jsx";
 import { Pigeon } from "#components/AppMascots.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
+import BrandName from "#components/BrandName.jsx";
 import { socials } from "#constants/index.js";
 
 const CAL_URL = "https://cal.com/madaj/15meeting";
@@ -108,7 +109,9 @@ const Contact = () => {
 
             <div className="contact-layout">
                 <section className="contact-intro">
-                    <div className="lock-initials size-16! text-xl">M. J</div>
+                    <div className="lock-initials size-16! text-xl">
+                        <BrandName monogramsOnly />
+                    </div>
                     <h3>Let's build something.</h3>
                     <p className="contact-tagline">
                         Computer Vision &amp; AI Systems Engineer, open to sports tech, agentic AI

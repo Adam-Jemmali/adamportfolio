@@ -16,12 +16,42 @@ import {
 } from "lucide-react";
 import WindowsControls from "#components/WindowsControls.jsx";
 import { Owl } from "#components/AppMascots.jsx";
+import { EasyIcon, NormalIcon, HardIcon, AllIcon } from "#components/GameIcons.jsx";
+import { SystemDesignIcon, FullStackIcon, CodingIcon, WebIcon, LanguageIcon } from "#components/QuizIcons.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import { DIFFICULTIES, QUIZ_CATEGORIES, prepareQuestion, quizPool, shuffleDeck } from "#game/popquiz.js";
 import { playClick, playWhoosh } from "#utils/sound.js";
+import { recordGameResult } from "#game/highscores.js";
 import { hashSeed, roughArrowHead, roughLinePaths, roughRectPaths } from "#utils/rough.js";
 
 const norm = (s) => s.trim().toLowerCase().replace(/[\s.'"-]+/g, "");
+
+const DIFFICULTY_ICONS = { easy: EasyIcon, normal: NormalIcon, hard: HardIcon };
+const CATEGORY_ICONS = {
+    "system-design": SystemDesignIcon,
+    "full-stack": FullStackIcon,
+    coding: CodingIcon,
+    web: WebIcon,
+    languages: LanguageIcon,
+};
+
+// Results-screen portrait: the owl mascot celebrating, with a few sparkles.
+const OwlVictoryScene = () => (
+    <div className="popquiz-victory">
+        <Owl className="popquiz-victory-owl" />
+        <span className="spark-glyph">✦</span>
+        <span className="spark-glyph">✦</span>
+        <span className="spark-glyph">✦</span>
+    </div>
+);
+
+// Opening portrait — the owl mascot mulling over a question before you start.
+const OwlReadyScene = () => (
+    <div className="popquiz-victory">
+        <Owl className="popquiz-victory-owl" />
+        <span className="quiz-think-mark">?</span>
+    </div>
+);
 
 const BEST_KEY = "mj-popquiz-bests";
 const readBests = () => {
@@ -894,6 +924,7 @@ const PopQuiz = () => {
 
     const nextQuestion = () => {
         if (index + 1 >= deck.length) {
+            recordGameResult("popquiz", score);
             setPhase("done");
             return;
         }
@@ -954,24 +985,28 @@ const PopQuiz = () => {
                     <div className="popquiz-setup-head">
                         <span className="popquiz-badge"><Terminal size={13} /> dev quiz</span>
                         <h3 className="popquiz-prompt">Pick a category</h3>
+                        <OwlReadyScene />
                         <p className="popquiz-setup-sub">
-                            System design, full stack, coding and web. Mix of multiple choice,
-                            true/false, fill in, drag to order and draw questions.
+                            System design, full stack, coding, web, and language interviews.
                         </p>
                     </div>
 
                     <div className="popquiz-difficulty">
-                        {DIFFICULTIES.map((d) => (
-                            <button
-                                key={d.id}
-                                type="button"
-                                className={`popquiz-diff ${difficulty === d.id ? "active" : ""}`}
-                                onClick={() => setDifficulty(d.id)}
-                            >
-                                <b>{d.label}</b>
-                                <small>{d.timer}s</small>
-                            </button>
-                        ))}
+                        {DIFFICULTIES.map((d) => {
+                            const DiffIcon = DIFFICULTY_ICONS[d.id];
+                            return (
+                                <button
+                                    key={d.id}
+                                    type="button"
+                                    className={`popquiz-diff ${difficulty === d.id ? "active" : ""}`}
+                                    onClick={() => setDifficulty(d.id)}
+                                >
+                                    {DiffIcon && <DiffIcon />}
+                                    <b>{d.label}</b>
+                                    <small>{d.timer}s</small>
+                                </button>
+                            );
+                        })}
                     </div>
 
                     <div className="popquiz-length">
@@ -996,24 +1031,29 @@ const PopQuiz = () => {
                             className={`popquiz-category ${category === "all" ? "active" : ""}`}
                             onClick={() => setCategory("all")}
                         >
+                            <AllIcon />
                             <span>All topics</span>
                             {bestFor("all", difficulty) > 0 && (
                                 <small className="popquiz-cat-best">Best {bestFor("all", difficulty)}</small>
                             )}
                         </button>
-                        {QUIZ_CATEGORIES.map((c) => (
-                            <button
-                                key={c.id}
-                                type="button"
-                                className={`popquiz-category ${category === c.id ? "active" : ""}`}
-                                onClick={() => setCategory(c.id)}
-                            >
-                                <span>{c.label}</span>
-                                {bestFor(c.id, difficulty) > 0 && (
-                                    <small className="popquiz-cat-best">Best {bestFor(c.id, difficulty)}</small>
-                                )}
-                            </button>
-                        ))}
+                        {QUIZ_CATEGORIES.map((c) => {
+                            const CatIcon = CATEGORY_ICONS[c.id];
+                            return (
+                                <button
+                                    key={c.id}
+                                    type="button"
+                                    className={`popquiz-category ${category === c.id ? "active" : ""}`}
+                                    onClick={() => setCategory(c.id)}
+                                >
+                                    {CatIcon && <CatIcon />}
+                                    <span>{c.label}</span>
+                                    {bestFor(c.id, difficulty) > 0 && (
+                                        <small className="popquiz-cat-best">Best {bestFor(c.id, difficulty)}</small>
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
 
                     <label className="popquiz-timed">
@@ -1026,7 +1066,7 @@ const PopQuiz = () => {
                             <Clock size={13} />
                         </span>
                         <span className="popquiz-timed-copy">
-                            <b>Timed mode</b>
+                            <b>Timed</b>
                             <span>{timeBudget}s per question. Answer faster to score more.</span>
                         </span>
                     </label>
@@ -1198,7 +1238,7 @@ const PopQuiz = () => {
 
             {phase === "done" && (
                 <div className="popquiz-body popquiz-results">
-                    <span className="popquiz-results-icon"><Terminal size={28} /></span>
+                    <OwlVictoryScene />
                     <h3 className="popquiz-prompt">Quiz complete!</h3>
                     <p className="popquiz-results-score">
                         You scored <b>{score}</b> points

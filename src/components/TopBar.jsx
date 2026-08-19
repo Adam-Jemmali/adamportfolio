@@ -84,12 +84,27 @@ const TopBar = () => {
     const wallpaper = useSystemStore((s) => s.wallpaper);
     const setWallpaper = useSystemStore((s) => s.setWallpaper);
     const customWallpapers = useSystemStore((s) => s.customWallpapers);
+    const startTimeTravel = useSystemStore((s) => s.startTimeTravel);
     const allWallpapers = [...wallpapers, ...customWallpapers];
 
     const [time, setTime] = useState(dayjs());
     const [openPanel, setOpenPanel] = useState(null); // null | "wifi" | "volume" | "brightness" | "profile"
     const [switcherOpen, setSwitcherOpen] = useState(false);
     const trayRef = useRef(null);
+    // Hidden easter egg: three quick clicks on the clock time-travels out.
+    // The tooltip is the only hint — the mechanic itself stays undocumented.
+    const clockClicksRef = useRef([]);
+
+    const handleClockClick = () => {
+        const now = Date.now();
+        const recent = clockClicksRef.current.filter((t) => now - t < 1200);
+        recent.push(now);
+        clockClicksRef.current = recent;
+        if (recent.length >= 3) {
+            clockClicksRef.current = [];
+            startTimeTravel();
+        }
+    };
 
     useEffect(() => {
         const id = setInterval(() => setTime(dayjs()), 1000);
@@ -337,7 +352,12 @@ const TopBar = () => {
                     </div>
                 </TrayControl>
 
-                <span className="topbar-clock">{time.format("ddd MMM D  HH:mm")}</span>
+                <span className="topbar-clock-wrap">
+                    <span className="topbar-clock" onClick={handleClockClick}>
+                        {time.format("ddd MMM D  HH:mm")}
+                    </span>
+                    <span className="topbar-clock-hint" role="tooltip">click 3 times 👀</span>
+                </span>
                 <PowerMenu />
             </div>
         </header>

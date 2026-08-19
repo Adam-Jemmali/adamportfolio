@@ -118,8 +118,29 @@ body {
         background: rgb(255 255 255 / 0.1);
     }
 
+    .topbar-clock-wrap {
+        @apply relative flex items-center;
+    }
+
     .topbar-clock {
-        @apply tabular-nums;
+        @apply tabular-nums cursor-pointer;
+    }
+
+    .topbar-clock-hint {
+        @apply absolute whitespace-nowrap rounded-md px-2.5 py-1 text-[11px] font-semibold text-white opacity-0 pointer-events-none;
+        top: calc(100% + 0.6rem);
+        left: 50%;
+        transform: translateX(-50%) translateY(0.25rem) scale(0.96);
+        background: rgb(20 20 24 / 0.92);
+        border: 1px solid rgb(255 255 255 / 0.14);
+        box-shadow: 0 8px 22px rgb(0 0 0 / 0.28);
+        transition: opacity 80ms ease, transform 80ms ease;
+    }
+
+    .topbar-clock-wrap:hover .topbar-clock-hint,
+    .topbar-clock:focus-visible ~ .topbar-clock-hint {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0) scale(1);
     }
 
     .topbar-action {
@@ -351,23 +372,38 @@ body {
         perspective: 1000px;
         transform-style: preserve-3d;
         will-change: transform;
+    }
 
-        img,
-        svg {
-            @apply object-cover object-center w-full h-full;
-            transform: translateZ(0);
-            backface-visibility: hidden;
-        }
+    /* Each app gets its own colored, gently animated gradient tile — no more
+       flat gray dock. */
+    .dock-icon-badge {
+        @apply relative flex items-center justify-center rounded-2xl w-full h-full overflow-hidden;
+        background-size: 200% 200%;
+        animation: dock-gradient-shift 6s ease-in-out infinite;
+        box-shadow: 0 2px 8px rgb(0 0 0 / 0.3), inset 0 1px 0 rgb(255 255 255 / 0.3);
+        transition: box-shadow 0.2s ease;
+    }
 
-        svg {
-            @apply size-8 3xl:size-14 text-zinc-800;
-            stroke-width: 2.4;
-        }
+    .dock-item:nth-child(2n) .dock-icon-badge { animation-delay: -2s; }
+    .dock-item:nth-child(3n) .dock-icon-badge { animation-delay: -4s; }
 
-        /* Custom image icons (e.g. Journey) render dark like the lucide icons */
-        img {
-            filter: invert(1);
-        }
+    .dock-item:hover .dock-icon-badge,
+    .dock-icon:focus-visible .dock-icon-badge {
+        box-shadow: 0 4px 20px var(--glow, transparent), inset 0 1px 0 rgb(255 255 255 / 0.4);
+    }
+
+    .dock-icon-badge img,
+    .dock-icon-badge svg {
+        @apply object-cover object-center size-6 3xl:size-11 text-white;
+        stroke-width: 2.2;
+        transform: translateZ(0);
+        backface-visibility: hidden;
+        filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.35));
+    }
+
+    @keyframes dock-gradient-shift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
     }
 
     .dock-dot {
@@ -700,48 +736,171 @@ body {
         text-shadow: none;
     }
 
-    .suspend-wake {
-        @apply flex flex-col items-center gap-5;
+    .screensaver-canvas {
+        @apply absolute inset-0 z-0;
+        width: 100%;
+        height: 100%;
+        display: block;
     }
 
-    .suspend-icon {
-        @apply size-16 rounded-full flex items-center justify-center text-[#06283a];
-        background: var(--pfp-grad);
-        animation: suspend-ring 2.4s ease-in-out infinite;
+    /* Warp-speed module's drifting brand mark. */
+    .screensaver-brand {
+        @apply absolute z-10 flex items-center gap-2 text-sm text-blue-300 pointer-events-none;
+        top: 58%;
+        left: 8%;
+        font-family: var(--font-pixel);
+        text-shadow: 0 0 6px #3b82f6, 0 0 18px #3b82f6, 0 0 36px #1d4ed8;
+        animation: screensaver-brand-drift 16s ease-in-out infinite;
     }
 
-    @keyframes suspend-ring {
-        0%, 100% {
-            box-shadow: 0 0 0 6px rgb(255 255 255 / 0.08), 0 0 40px rgb(75 213 234 / 0.5);
-        }
-        50% {
-            box-shadow: 0 0 0 12px rgb(255 255 255 / 0.04), 0 0 64px rgb(75 213 234 / 0.85);
-        }
+    .screensaver-brand-spark {
+        display: inline-block;
+        animation: screensaver-brand-twinkle 2.4s ease-in-out infinite;
     }
 
-    .neon-text {
-        @apply text-sm uppercase;
-        color: #eafcff;
-        letter-spacing: 0.35em;
-        animation: neon-flicker 4.5s ease-in-out infinite;
+    .backgrounds-swatch .screensaver-brand {
+        @apply text-[8px] gap-1;
+        text-shadow: 0 0 3px #3b82f6, 0 0 8px #3b82f6;
     }
 
-    @keyframes neon-flicker {
-        0%, 18%, 22%, 26%, 53%, 57%, 100% {
-            text-shadow:
-                0 0 4px #fff,
-                0 0 11px #fff,
-                0 0 22px #4bd5ea,
-                0 0 42px #4bd5ea,
-                0 0 82px #4bd5ea,
-                0 0 120px #4bd5ea;
-        }
-        20%, 24%, 55% {
-            text-shadow:
-                0 0 3px #fff,
-                0 0 9px #4bd5ea,
-                0 0 22px #4bd5ea;
-        }
+    @keyframes screensaver-brand-drift {
+        0%, 100% { left: 6%; top: 55%; }
+        50% { left: 62%; top: 62%; }
+    }
+
+    @keyframes screensaver-brand-twinkle {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .suspend-clock-wrap,
+    .suspend-hint {
+        @apply relative z-10;
+    }
+
+    .suspend-hint {
+        @apply text-xs text-white/50 font-roboto;
+        letter-spacing: 0.02em;
+    }
+
+    /* ============ Crash screen (terminal easter egg) ============ */
+    .crash-screen {
+        @apply fixed inset-0 z-9999 flex flex-col justify-center gap-6 px-16 py-16 select-none cursor-default overflow-hidden;
+        background: #0000aa;
+        color: #fff;
+        font-family: var(--font-roboto);
+    }
+
+    .crash-badge {
+        @apply absolute top-8 right-10 rounded px-3 py-1.5 text-sm font-bold;
+        background: #a6a6a6;
+        color: #0000aa;
+        font-family: var(--font-pixel);
+    }
+
+    .crash-body {
+        @apply flex flex-col gap-6 max-w-3xl text-lg leading-relaxed;
+    }
+
+    .crash-hint {
+        @apply text-base;
+    }
+
+    .crash-cursor {
+        @apply absolute bottom-10 left-16 text-lg;
+        animation: crash-blink 1s steps(1) infinite;
+    }
+
+    @keyframes crash-blink {
+        0%, 50% { opacity: 1; }
+        50.01%, 100% { opacity: 0; }
+    }
+
+    /* ============ Time Travel ============ */
+    .time-travel-overlay {
+        @apply fixed inset-0 z-9999 flex items-center justify-center overflow-hidden select-none cursor-default;
+        background: #05070c;
+    }
+
+    .time-travel-overlay::after {
+        content: "";
+        @apply absolute inset-0 pointer-events-none;
+        background: #fff;
+        opacity: 0;
+        transition: opacity 0.5s ease-in;
+    }
+
+    .time-travel-overlay.is-flashing::after {
+        opacity: 1;
+    }
+
+    .time-travel-content {
+        @apply relative z-10 flex flex-col items-center gap-3 px-6 text-center;
+    }
+
+    .time-travel-ring {
+        @apply size-44 md:size-56;
+    }
+
+    .time-travel-ring-track,
+    .time-travel-ring-fill {
+        fill: none;
+        stroke-width: 3;
+    }
+
+    .time-travel-ring-track {
+        stroke: rgb(103 232 249 / 0.15);
+    }
+
+    .time-travel-ring-fill {
+        stroke: #67e8f9;
+        stroke-linecap: round;
+        stroke-dasharray: 540;
+        stroke-dashoffset: 540;
+        filter: drop-shadow(0 0 10px #67e8f9);
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: time-travel-sweep 2.3s ease-in-out forwards, time-travel-spin 2.8s linear infinite;
+    }
+
+    @keyframes time-travel-sweep {
+        to { stroke-dashoffset: 40; }
+    }
+
+    @keyframes time-travel-spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .time-travel-title {
+        @apply mt-4 text-2xl md:text-4xl font-bold text-white;
+        text-shadow: 0 0 12px rgb(103 232 249 / 0.7), 0 0 32px rgb(103 232 249 / 0.4);
+    }
+
+    .time-travel-sub {
+        @apply text-xs md:text-sm text-cyan-200/70 font-roboto;
+    }
+
+    .time-travel-gauges {
+        @apply mt-4 flex items-center gap-3;
+    }
+
+    .time-travel-gauge {
+        @apply flex flex-col items-center gap-1 rounded-lg border border-white/10 px-4 py-2;
+        background: rgb(0 0 0 / 0.5);
+        font-family: var(--font-roboto);
+    }
+
+    .time-travel-gauge-label {
+        @apply text-[10px] uppercase tracking-widest text-gray-500;
+    }
+
+    .time-travel-gauge-value {
+        @apply text-lg font-bold text-amber-300;
+        text-shadow: 0 0 8px rgb(251 191 36 / 0.6);
+    }
+
+    .time-travel-gauge-value small {
+        @apply text-[10px] font-normal text-amber-300/70;
     }
 
     /* ============ Welcome / desktop hero ============ */
@@ -1869,7 +2028,7 @@ body {
         }
 
         .finder-item p {
-            @apply text-xs font-medium text-zinc-200 break-words w-full;
+            @apply text-xs font-medium text-zinc-200 wrap-break-word w-full;
         }
     }
 
@@ -2010,11 +2169,33 @@ body {
         .snake-start {
             @apply px-4 py-2 rounded-lg text-sm font-semibold text-black bg-green-400 transition-transform active:scale-95;
         }
+
+        .snake-crash-scene {
+            @apply w-28 shrink-0;
+        }
+
+        .snake-crash-body {
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: h-victory-bob 1.4s ease-in-out infinite;
+        }
+
+        .snake-ready-body {
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: h-victory-bob 1.8s ease-in-out infinite;
+        }
+
+        .snake-tongue {
+            transform-box: fill-box;
+            transform-origin: left center;
+            animation: snake-tongue-flick 2.2s ease-in-out infinite;
+        }
     }
 
     /* ============ Games ============ */
     #games {
-        @apply w-136 h-105 bg-[#14171c] text-gray-200;
+        @apply w-136 h-130 bg-[#14171c] text-gray-200;
 
         #window-header {
             @apply bg-[#1a1e24] border-white/10 text-zinc-300;
@@ -2025,7 +2206,7 @@ body {
         }
 
         .games-body {
-            @apply flex-1 grid grid-cols-2 gap-4 p-6;
+            @apply flex-1 grid grid-cols-2 gap-4 p-6 overflow-y-auto;
         }
 
         .game-card {
@@ -2037,6 +2218,16 @@ body {
             background: var(--pfp-grad);
         }
 
+        .game-card .game-icon .title-mascot {
+            width: 30px;
+            height: 26px;
+        }
+
+        .game-card .game-emoji {
+            font-size: 26px;
+            line-height: 1;
+        }
+
         .game-card h3 {
             @apply text-base font-semibold text-white;
         }
@@ -2044,11 +2235,571 @@ body {
         .game-card p {
             @apply text-xs text-gray-400 text-center;
         }
+
+        .highscore-card {
+            grid-column: span 2;
+        }
+    }
+
+    /* ============ Imposter MAFIA ============ */
+    #mafia {
+        @apply w-140 h-160 bg-[#14171c] text-gray-200;
+
+        #window-header {
+            @apply bg-[#1a1e24] border-white/10 text-zinc-300;
+        }
+
+        #window-header h2 {
+            @apply text-gray-300;
+        }
+
+        .mafia-body {
+            @apply flex-1 flex flex-col gap-4 p-6 overflow-y-auto;
+        }
+
+        .mafia-badge {
+            @apply inline-flex items-center gap-1.5 self-start rounded-full border border-purple-400/20 bg-purple-400/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-purple-300;
+        }
+
+        .mafia-prompt {
+            @apply text-xl font-bold text-white;
+        }
+
+        .mafia-setup-sub {
+            @apply text-xs leading-relaxed text-gray-400;
+        }
+
+        .mafia-setup-stats {
+            @apply flex flex-wrap items-center justify-center gap-2;
+        }
+
+        .mafia-ready-scene {
+            @apply w-44 shrink-0;
+        }
+
+        .mafia-ready-glass {
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: mafia-scan 3.2s ease-in-out infinite;
+        }
+
+        .mafia-difficulty {
+            @apply grid grid-cols-3 gap-2;
+        }
+
+        .mafia-icon {
+            @apply size-4.5 shrink-0;
+        }
+
+        .mafia-diff {
+            @apply flex flex-col items-start gap-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-left transition-colors;
+        }
+
+        .mafia-diff .game-icon {
+            @apply size-5;
+        }
+
+        .mafia-diff.active {
+            @apply border-purple-400/40 bg-purple-400/10;
+        }
+
+        .mafia-diff b {
+            @apply text-sm font-semibold text-white;
+        }
+
+        .mafia-diff small {
+            @apply text-[10px] leading-tight text-gray-400;
+        }
+
+        .mafia-lang {
+            @apply flex flex-col gap-2;
+        }
+
+        .mafia-lang-label {
+            @apply text-[11px] uppercase tracking-widest text-gray-500;
+        }
+
+        .mafia-lang-options {
+            @apply flex flex-wrap gap-1.5;
+        }
+
+        .mafia-lang-btn {
+            @apply inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300 transition-colors hover:bg-white/10;
+        }
+
+        .mafia-lang-btn.active {
+            @apply border-purple-400/40 bg-purple-400/15 text-purple-200;
+        }
+
+        .mafia-rules {
+            @apply flex flex-col gap-1.5 text-xs text-gray-300;
+            list-style: none;
+        }
+
+        .mafia-rules li::before {
+            content: "▸ ";
+            color: #c084fc;
+        }
+
+        .mafia-stats {
+            @apply flex items-center gap-4 text-[12px] text-zinc-400;
+        }
+
+        .mafia-stats b {
+            @apply ml-1 font-semibold text-white;
+        }
+
+        .mafia-stats .mafia-streak {
+            color: #fbbf24;
+        }
+
+        .mafia-time {
+            @apply ml-auto inline-flex items-center gap-1 text-cyan-300;
+        }
+
+        .mafia-time.low {
+            @apply text-red-300;
+        }
+
+        .mafia-card {
+            @apply flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-5;
+        }
+
+        .mafia-code {
+            @apply overflow-hidden rounded-xl border border-white/10 bg-black/30;
+        }
+
+        .mafia-line {
+            @apply flex w-full items-center gap-3 border-0 px-3 py-2 text-left font-roboto text-sm text-gray-200 transition-colors hover:bg-white/5 disabled:hover:bg-transparent;
+        }
+
+        .mafia-line:not(:last-child) {
+            border-bottom: 1px solid rgb(255 255 255 / 0.06);
+        }
+
+        .mafia-line-no {
+            @apply w-5 shrink-0 select-none text-right text-[11px] text-gray-600;
+        }
+
+        .mafia-line code {
+            @apply whitespace-pre-wrap wrap-break-word font-roboto text-[13px] leading-relaxed;
+        }
+
+        .mafia-line.is-imposter {
+            background: rgb(74 222 128 / 0.12);
+        }
+
+        .mafia-line.is-imposter .mafia-line-no {
+            color: #4ade80;
+        }
+
+        .mafia-line.is-wrong {
+            background: rgb(248 113 113 / 0.12);
+        }
+
+        .mafia-line.is-wrong .mafia-line-no {
+            color: #f87171;
+        }
+
+        .mafia-tag {
+            @apply ml-auto shrink-0 rounded-md bg-green-400/15 px-2 py-0.5 text-[10px] font-bold tracking-wider text-green-300;
+        }
+
+        .mafia-tag.wrong {
+            @apply bg-red-400/15 text-red-300;
+        }
+
+        .mafia-feedback {
+            @apply flex flex-col gap-1 rounded-xl border p-4;
+        }
+
+        .mafia-feedback.is-correct {
+            @apply border-green-400/20 bg-green-400/10;
+        }
+
+        .mafia-feedback.is-wrong {
+            @apply border-red-400/20 bg-red-400/10;
+        }
+
+        .mafia-feedback b {
+            @apply text-sm text-white;
+        }
+
+        .mafia-feedback.is-correct b {
+            @apply text-green-300;
+        }
+
+        .mafia-feedback.is-wrong b {
+            @apply text-red-300;
+        }
+
+        .mafia-feedback p {
+            @apply text-xs leading-relaxed text-gray-300;
+        }
+
+        .mafia-fix {
+            @apply rounded-lg border border-white/10 bg-black/30 px-3 py-2 font-roboto text-[12px] text-green-300;
+        }
+
+        .mafia-fix span {
+            @apply mr-2 text-[10px] uppercase tracking-widest text-gray-500;
+        }
+
+        .mafia-actions {
+            @apply flex items-center justify-end gap-3;
+        }
+
+        .mafia-hint {
+            @apply text-xs text-gray-500;
+        }
+
+        .mafia-next {
+            @apply inline-flex items-center gap-2 rounded-lg bg-purple-300 px-4 py-2 text-sm font-semibold text-black transition-transform active:scale-95;
+        }
+
+        .mafia-next:disabled {
+            @apply cursor-not-allowed opacity-40;
+        }
+
+        .mafia-next.ghost {
+            @apply bg-white/10 text-gray-200;
+        }
+
+        .mafia-best {
+            @apply text-xs text-gray-500;
+        }
+
+        .mafia-results {
+            @apply items-center justify-center text-center;
+        }
+
+        .mafia-results-icon {
+            @apply flex size-14 items-center justify-center rounded-2xl border border-purple-400/20 bg-purple-400/10 text-purple-300;
+        }
+
+        .mafia-results-score b {
+            @apply text-purple-300;
+        }
+
+        .mafia-results-sub {
+            @apply text-xs text-gray-400;
+        }
+
+        .mafia-results-sub b {
+            @apply text-white;
+        }
+
+        .mafia-results-sub .mafia-streak {
+            @apply text-amber-300;
+        }
+
+        .mafia-new-best {
+            @apply text-green-300;
+        }
+
+        .mafia-results-actions {
+            @apply flex items-center gap-3;
+        }
+
+        .bust-scene {
+            @apply w-52 shrink-0;
+            filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.35));
+        }
+
+        .bust-arm {
+            transform-box: fill-box;
+            transform-origin: right center;
+            animation: bust-swing 1.8s ease-in-out infinite;
+        }
+
+        .bust-cat {
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: bust-recoil 1.8s ease-in-out infinite;
+        }
+
+        .mafia-results-line {
+            @apply font-roboto text-lg;
+        }
+
+        .mafia-results-stats {
+            @apply flex flex-wrap items-center justify-center gap-2;
+        }
+
+        .mafia-stat-chip {
+            @apply inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-gray-300;
+        }
+
+        /* Code Racer visual language — same classes, no icon imports. */
+        .code-body {
+            @apply flex flex-1 flex-col gap-4 overflow-y-auto p-5;
+        }
+
+        .code-hud {
+            @apply flex items-center gap-4 font-roboto text-xs text-gray-400;
+        }
+
+        .code-hud b {
+            @apply text-sm text-cyan-300;
+        }
+
+        .code-hud .code-mult {
+            color: #fbbf24;
+        }
+
+        .mafia-time-low {
+            color: #f87171 !important;
+        }
+
+        .code-snippet {
+            @apply rounded-xl border border-white/10 bg-white/5 px-4 py-3 font-roboto text-base leading-relaxed tracking-wide;
+        }
+
+        .code-snippet.mafia-code {
+            @apply overflow-hidden p-0;
+            background: rgb(255 255 255 / 0.05);
+        }
+
+        .code-snippet .c-lang {
+            @apply text-[11px] uppercase tracking-widest text-gray-500;
+        }
+
+        .mafia-snippet-head {
+            @apply flex items-center gap-2 border-b border-white/10 px-4 py-2;
+        }
+
+        .mafia-snippet-head .mafia-icon {
+            @apply size-4;
+        }
+
+        .mafia-diff-tag {
+            @apply text-[10px] font-semibold uppercase tracking-widest text-cyan-300;
+        }
+
+        .code-start {
+            @apply inline-flex items-center justify-center gap-1.5 rounded-xl bg-cyan-300 px-5 py-2.5 text-sm font-semibold text-black transition-transform active:scale-95;
+        }
+
+        .code-start:disabled {
+            @apply cursor-not-allowed opacity-40;
+        }
+
+        .code-overlay {
+            @apply flex flex-col items-center justify-center gap-3 text-center;
+        }
+
+        .code-overlay h3 {
+            @apply inline-flex items-center gap-2 text-xl font-bold text-cyan-300;
+        }
+
+        .code-overlay h3 .mafia-icon {
+            @apply size-5;
+        }
+
+        .code-overlay p {
+            @apply max-w-72 font-roboto text-xs text-gray-400;
+        }
+
+        .code-overlay .c-stat {
+            @apply font-bold text-cyan-300;
+        }
+
+        .code-tip {
+            @apply rounded-xl border border-cyan-400/20 bg-cyan-400/10 px-4 py-2.5 text-xs text-cyan-200;
+        }
+
+        .code-tip.is-correct {
+            @apply border-green-400/30 bg-green-400/10 text-green-200;
+        }
+
+        .code-tip.is-wrong {
+            @apply border-red-400/30 bg-red-400/10 text-red-200;
+        }
+
+        .code-tip p {
+            @apply mt-1 leading-relaxed text-gray-300;
+        }
+
+        .code-tip .mafia-fix {
+            @apply mt-2 rounded-lg border border-white/10 bg-black/30 px-3 py-2 font-roboto text-[12px] text-green-300;
+        }
+
+        .code-tip .mafia-fix span {
+            @apply mr-2 text-[10px] uppercase tracking-widest text-gray-500;
+        }
+
+        .c-tip-lang {
+            @apply font-bold text-amber-300;
+        }
+
+        .mafia-text-btn {
+            @apply text-xs text-gray-400 underline underline-offset-4 transition-colors hover:text-gray-200;
+        }
+
+        .mafia-actions {
+            @apply flex items-center justify-end gap-3;
+        }
+
+        .mafia-hint {
+            @apply text-xs text-gray-500;
+        }
+
+        .mafia-best {
+            @apply text-xs text-gray-500;
+        }
+
+        .mafia-setup {
+            @apply flex w-full flex-col gap-4;
+        }
+
+        /* Cyan accents to match Code Racer. */
+        .mafia-diff.active {
+            @apply border-cyan-400/40 bg-cyan-400/10;
+        }
+
+        .mafia-lang-btn.active {
+            @apply border-cyan-400/40 bg-cyan-400/15 text-cyan-200;
+        }
+    }
+
+    /* ============ High Scores ============ */
+    #highscores {
+        @apply w-105 h-140 bg-[#14171c] text-gray-200;
+
+        #window-header {
+            @apply bg-[#1a1e24] border-white/10 text-zinc-300;
+        }
+
+        #window-header h2 {
+            @apply text-gray-300;
+        }
+
+        .highscores-body {
+            @apply flex flex-1 flex-col gap-4 overflow-y-auto p-6;
+        }
+
+        .highscores-hero {
+            @apply flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4;
+        }
+
+        .highscores-crown {
+            @apply flex size-10 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-400/10 text-amber-300;
+            font-size: 16px;
+        }
+
+        .highscores-hero h3 {
+            @apply text-base font-bold text-white;
+        }
+
+        .highscores-hero p {
+            @apply text-xs text-gray-400;
+        }
+
+        .highscores-list {
+            @apply flex flex-col gap-2.5;
+            list-style: none;
+        }
+
+        .highscore-row {
+            @apply flex flex-col rounded-xl border border-white/10 bg-white/5;
+        }
+
+        .highscore-row.is-open {
+            @apply border-white/20;
+        }
+
+        .highscore-row.is-empty {
+            opacity: 0.55;
+        }
+
+        .highscore-main {
+            @apply flex w-full items-center gap-3 border-0 px-4 py-3 text-left transition-colors hover:bg-white/5;
+        }
+
+        .highscore-rank {
+            @apply w-7 text-center text-lg;
+        }
+
+        .highscore-game {
+            @apply flex flex-1 items-center gap-2.5 text-sm font-semibold text-gray-200;
+        }
+
+        .highscore-dot {
+            @apply size-2.5 rounded-full;
+        }
+
+        .highscore-value {
+            @apply flex items-baseline gap-1.5 text-right;
+        }
+
+        .highscore-value b {
+            @apply text-base font-bold text-white;
+        }
+
+        .highscore-value small {
+            @apply text-[11px] text-gray-500;
+        }
+
+        .highscore-none {
+            @apply text-xs text-gray-500;
+        }
+
+        .highscore-chevron {
+            @apply inline-block text-gray-500 transition-transform;
+        }
+
+        .highscore-chevron.is-open {
+            transform: rotate(180deg);
+        }
+
+        .highscore-detail {
+            @apply flex flex-col gap-3 border-t border-white/10 px-4 pb-4 pt-3;
+        }
+
+        .highscore-metrics {
+            @apply flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-gray-400;
+        }
+
+        .highscore-metrics b {
+            @apply ml-1 font-semibold text-white;
+        }
+
+        .highscore-streak-stat {
+            @apply inline-flex items-center gap-1 text-amber-300;
+        }
+
+        .highscore-streak-stat b {
+            @apply text-amber-300;
+        }
+
+        .highscore-history {
+            @apply flex flex-wrap items-center gap-1.5;
+        }
+
+        .history-chip {
+            @apply rounded-lg border border-white/10 bg-white/5 px-2 py-1 font-roboto text-[11px] font-semibold text-gray-300;
+        }
+
+        .history-chip.is-best {
+            @apply border-amber-400/40 bg-amber-400/10 text-amber-300;
+        }
+
+        .history-chip.is-zero {
+            @apply text-gray-500;
+        }
+
+        .history-none {
+            @apply text-xs text-gray-500;
+        }
+
+        .highscores-foot {
+            @apply flex items-center justify-center gap-1.5 text-[11px] text-gray-500;
+        }
     }
 
     /* ============ Pop Quiz ============ */
     #popquiz {
-        @apply w-[560px] h-[620px] bg-[#14171c] text-gray-200;
+        @apply w-140 h-155 bg-[#14171c] text-gray-200;
 
         #window-header {
             @apply bg-[#1a1e24] border-white/10 text-zinc-300;
@@ -2194,6 +2945,11 @@ body {
             @apply flex flex-col items-center gap-0.5 rounded-xl border border-white/10 bg-white/5 py-2 px-2 text-[12px] font-semibold text-zinc-300 transition-colors hover:bg-white/10;
         }
 
+        .popquiz-diff .game-icon,
+        .popquiz-category .game-icon {
+            @apply size-5;
+        }
+
         .popquiz-diff b {
             @apply text-[13px] text-zinc-200;
         }
@@ -2305,9 +3061,30 @@ body {
             @apply items-center justify-center text-center;
         }
 
-        .popquiz-results-icon {
-            @apply flex items-center justify-center size-16 rounded-2xl mb-1 text-[#06283a];
-            background: var(--pfp-grad);
+        .popquiz-victory {
+            @apply relative flex justify-center mb-1;
+        }
+
+        .popquiz-victory-owl {
+            display: block;
+            width: 84px;
+            height: 74px;
+            margin: 0;
+            vertical-align: 0;
+        }
+
+        .popquiz-victory .spark-glyph:nth-child(2) { top: -4px; right: 10px; animation-delay: 0s; }
+        .popquiz-victory .spark-glyph:nth-child(3) { top: 34px; left: 4px; animation-delay: 0.25s; }
+        .popquiz-victory .spark-glyph:nth-child(4) { bottom: -2px; right: 26px; animation-delay: 0.5s; }
+
+        .quiz-think-mark {
+            position: absolute;
+            top: -6px;
+            right: 4px;
+            font-family: var(--font-pixel);
+            font-size: 15px;
+            color: #fbbf24;
+            animation: h-victory-bob 1.6s ease-in-out infinite;
         }
 
         .popquiz-results-score {
@@ -2712,7 +3489,7 @@ body {
         }
 
         .review-annotation svg {
-            @apply size-3 mt-[5px] shrink-0;
+            @apply size-3 mt-1.25 shrink-0;
         }
 
         .review-squiggle {
@@ -2739,7 +3516,7 @@ body {
 
     /* ============ Backgrounds ============ */
     #backgrounds {
-        @apply w-[520px] h-[480px] bg-[#14171c] text-gray-200;
+        @apply w-130 h-120 bg-[#14171c] text-gray-200;
 
         #window-header {
             @apply bg-[#1a1e24] border-white/10 text-zinc-300;
@@ -2795,7 +3572,12 @@ body {
         }
 
         .backgrounds-swatch {
-            @apply block w-full h-24 rounded-lg;
+            @apply block w-full h-24 rounded-lg overflow-hidden;
+            position: relative;
+        }
+
+        .backgrounds-swatch-live {
+            background: #000;
         }
 
         .backgrounds-name {
@@ -2817,9 +3599,166 @@ body {
         }
     }
 
-    /* ============ Kid Pix ============ */
-    #kidpix {
-        @apply w-[640px] h-[560px] bg-[#eceef1] text-zinc-800;
+    /* ============ Guestbook ============ */
+    #guestbook {
+        @apply w-125 h-145 bg-[#14171c] text-gray-200;
+
+        #window-header {
+            @apply bg-[#1a1e24] border-white/10 text-zinc-300;
+        }
+
+        #window-header h2 {
+            @apply text-gray-300;
+        }
+
+        .guestbook-body {
+            @apply flex-1 flex flex-col gap-4 p-5 overflow-y-auto;
+        }
+
+        .guestbook-counter {
+            @apply flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3 cursor-default transition-colors hover:border-amber-300/30;
+        }
+
+        .guestbook-empty {
+            @apply text-center text-[13px] text-gray-500 py-6;
+        }
+
+        .guestbook-counter-label {
+            @apply text-[11px] uppercase tracking-widest text-gray-500;
+        }
+
+        .guestbook-counter-digits {
+            @apply flex gap-1;
+        }
+
+        .guestbook-digit {
+            @apply flex items-center justify-center w-6 h-8 rounded-md text-sm font-bold;
+            background: #0b0f14;
+            color: #fbbf24;
+            font-family: var(--font-roboto);
+            box-shadow: inset 0 0 0 1px rgb(251 191 36 / 0.25), inset 0 2px 4px rgb(0 0 0 / 0.6);
+            text-shadow: 0 0 6px rgb(251 191 36 / 0.65);
+        }
+
+        .guestbook-form {
+            @apply flex flex-col gap-2 rounded-xl border border-white/10 bg-white/5 p-4;
+        }
+
+        .guestbook-form input,
+        .guestbook-form textarea {
+            @apply rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-zinc-100 outline-none placeholder:text-zinc-500 focus:border-amber-300/40;
+            font-family: var(--font-roboto);
+            resize: none;
+        }
+
+        .guestbook-sign {
+            @apply self-end inline-flex items-center gap-2 rounded-lg bg-amber-300 px-4 py-2 text-sm font-semibold text-black transition-transform active:scale-95;
+        }
+
+        .guestbook-sign:disabled {
+            @apply cursor-not-allowed opacity-40;
+        }
+
+        .guestbook-form.is-signed .guestbook-sign {
+            @apply bg-green-400;
+        }
+
+        .guestbook-entries {
+            @apply flex flex-col gap-3;
+            list-style: none;
+        }
+
+        .guestbook-entry {
+            @apply rounded-xl border border-white/10 bg-white/5 p-3.5;
+            animation: guestbook-entry-in 0.3s ease-out;
+        }
+
+        .guestbook-entry-head {
+            @apply flex items-center justify-between gap-2 mb-1;
+        }
+
+        .guestbook-entry-name {
+            @apply text-sm font-bold;
+        }
+
+        .guestbook-entry-date {
+            @apply text-[11px] text-gray-500 shrink-0;
+            font-family: var(--font-roboto);
+        }
+
+        .guestbook-entry-msg {
+            @apply text-[13px] leading-relaxed text-gray-300;
+        }
+    }
+
+    /* ============ About Me ============ */
+    #aboutme {
+        @apply w-105 h-135 bg-[#14171c] text-gray-200;
+
+        #window-header {
+            @apply bg-[#1a1e24] border-white/10 text-zinc-300;
+        }
+
+        #window-header h2 {
+            @apply text-gray-300;
+        }
+
+        .aboutme-body {
+            @apply flex-1 flex flex-col items-center gap-3 p-6 overflow-y-auto text-center;
+        }
+
+        .aboutme-photo {
+            @apply size-24 rounded-full object-cover;
+            border: 2px solid rgb(255 255 255 / 0.15);
+            box-shadow: 0 8px 24px rgb(0 0 0 / 0.4);
+        }
+
+        .aboutme-name {
+            @apply text-lg font-bold text-white;
+        }
+
+        .aboutme-title {
+            @apply text-xs text-cyan-300;
+        }
+
+        .aboutme-what {
+            @apply mt-2 text-[13px] leading-relaxed text-gray-300 text-left;
+        }
+
+        .aboutme-what b {
+            @apply text-white;
+        }
+
+        .aboutme-focus {
+            @apply flex flex-col gap-1.5 text-left text-[13px] text-gray-300 w-full;
+            list-style: none;
+        }
+
+        .aboutme-focus li {
+            @apply flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2;
+        }
+
+        .aboutme-focus li::before {
+            content: "";
+            @apply size-1.5 rounded-full bg-cyan-300 shrink-0;
+        }
+
+        .aboutme-actions {
+            @apply mt-2 flex items-center gap-3;
+        }
+
+        .aboutme-btn {
+            @apply rounded-xl bg-cyan-300 px-4 py-2.5 text-sm font-semibold text-black transition-transform active:scale-95;
+        }
+
+        .aboutme-btn.ghost {
+            @apply bg-white/10 text-gray-200;
+        }
+    }
+
+    /* ============ Draw Pix ============ */
+    #drawpix {
+        @apply w-160 h-140 bg-[#eceef1] text-zinc-800;
         top: 2.5rem;
         bottom: auto;
         max-height: calc(100dvh - 8rem);
@@ -2832,86 +3771,86 @@ body {
             @apply text-white;
         }
 
-        .kidpix-body {
+        .drawpix-body {
             @apply flex-1 flex flex-col min-h-0;
         }
 
-        .kidpix-canvas-wrap {
+        .drawpix-canvas-wrap {
             @apply flex-1 flex items-center justify-center p-4 min-h-0;
             background: #dfe3e8;
         }
 
-        .kidpix-canvas-wrap canvas {
+        .drawpix-canvas-wrap canvas {
             @apply rounded-md bg-white max-w-full max-h-full;
             border: 1px solid rgb(0 0 0 / 0.15);
             box-shadow: 0 10px 24px rgb(0 0 0 / 0.15);
             touch-action: none;
         }
 
-        .kidpix-toolbar {
+        .drawpix-toolbar {
             @apply flex flex-col gap-2 p-3;
             background: #d7d5d2;
             border-top: 1px solid rgb(0 0 0 / 0.15);
         }
 
-        .kidpix-row {
+        .drawpix-row {
             @apply flex items-center gap-1.5 flex-wrap;
         }
 
-        .kidpix-tool {
+        .drawpix-tool {
             @apply size-10 rounded-md border flex items-center justify-center text-zinc-700 cursor-pointer;
             background: #c9c7c4;
             border-color: #9ca3af;
             border-bottom-width: 3px;
         }
 
-        .kidpix-tool:hover { background: #e2e0dd; }
-        .kidpix-tool.active { background: #facc15; }
+        .drawpix-tool:hover { background: #e2e0dd; }
+        .drawpix-tool.active { background: #facc15; }
 
-        .kidpix-stamp {
+        .drawpix-stamp {
             @apply size-10 rounded-md border flex items-center justify-center text-xl cursor-pointer;
             background: #c9c7c4;
             border-color: #9ca3af;
             border-bottom-width: 3px;
         }
 
-        .kidpix-stamp:hover { background: #e2e0dd; }
-        .kidpix-stamp.active { background: #facc15; }
+        .drawpix-stamp:hover { background: #e2e0dd; }
+        .drawpix-stamp.active { background: #facc15; }
 
-        .kidpix-swatch {
+        .drawpix-swatch {
             @apply size-6 rounded-sm cursor-pointer;
             border: 1px solid #6b7280;
         }
 
-        .kidpix-swatch.active {
+        .drawpix-swatch.active {
             outline: 2px solid #4f46e5;
             outline-offset: 1px;
         }
 
-        .kidpix-size {
+        .drawpix-size {
             @apply size-10 rounded-md border flex items-center justify-center cursor-pointer;
             background: #c9c7c4;
             border-color: #9ca3af;
         }
 
-        .kidpix-size.active { background: #fde68a; }
+        .drawpix-size.active { background: #fde68a; }
 
-        .kidpix-size-dot {
+        .drawpix-size-dot {
             @apply rounded-full bg-zinc-700 inline-block;
         }
 
-        .kidpix-spacer {
+        .drawpix-spacer {
             @apply flex-1;
         }
 
-        .kidpix-action {
+        .drawpix-action {
             @apply h-10 px-3 rounded-md border flex items-center gap-1.5 text-[13px] font-semibold text-zinc-700 cursor-pointer;
             background: #c9c7c4;
             border-color: #9ca3af;
             border-bottom-width: 3px;
         }
 
-        .kidpix-action:hover { background: #e2e0dd; }
+        .drawpix-action:hover { background: #e2e0dd; }
     }
 
     /* ============ Code Racer game ============ */
@@ -3215,6 +4154,33 @@ body {
         .code-overlay .c-stat {
             @apply font-bold text-cyan-300;
         }
+
+        /* Big hamster portrait, reused for both the ready and results screens. */
+        .hamster-victory {
+            @apply relative flex justify-center;
+        }
+
+        .hamster-victory .hamster-anim {
+            @apply relative;
+            width: 72px;
+        }
+
+        .hamster-victory .hamster-svg {
+            width: 72px;
+            height: 66px;
+        }
+
+        .hamster-anim.is-victory .hamster-svg {
+            animation: h-victory-bob 1.1s ease-in-out infinite;
+        }
+
+        .hamster-victory .h-sparkle {
+            font-size: 16px;
+        }
+
+        .victory-sparkle-a { top: -4px; right: -4px; animation-delay: 0s; }
+        .victory-sparkle-b { top: 14px; left: -12px; right: auto; animation-delay: 0.25s; }
+        .victory-sparkle-c { top: auto; bottom: -2px; right: 10px; animation-delay: 0.5s; }
     }
 
     /* Hoisted to top level: Lightning CSS drops @keyframes nested two levels
@@ -3292,6 +4258,72 @@ body {
     @keyframes h-seed-bob {
         0%, 100% { transform: translateY(0) scale(1); }
         50% { transform: translateY(1.5px) scale(0.85); }
+    }
+
+    @keyframes bust-swing {
+        0%, 40% { transform: rotate(-20deg); }
+        55% { transform: rotate(38deg); }
+        66% { transform: rotate(22deg); }
+        100% { transform: rotate(-20deg); }
+    }
+
+    @keyframes bust-recoil {
+        0%, 53% { transform: translate(0, 0) rotate(0deg); }
+        58% { transform: translate(-9px, 1px) rotate(-9deg); }
+        68% { transform: translate(-4px, 0) rotate(-4deg); }
+        100% { transform: translate(0, 0) rotate(0deg); }
+    }
+
+    @keyframes bust-star-pop {
+        0%, 54% { opacity: 0; transform: scale(0.2); }
+        58% { opacity: 1; transform: scale(1.15); }
+        68% { opacity: 0; transform: scale(1.4); }
+        100% { opacity: 0; transform: scale(0.2); }
+    }
+
+    @keyframes h-victory-bob {
+        0%, 100% { transform: translateY(0) rotate(-3deg); }
+        50% { transform: translateY(-6px) rotate(3deg); }
+    }
+
+    @keyframes mafia-scan {
+        0%, 8% { transform: translate(0, 0); }
+        42%, 50% { transform: translate(110px, -3px); }
+        84%, 100% { transform: translate(0, 0); }
+    }
+
+    @keyframes guestbook-entry-in {
+        0% { opacity: 0; transform: translateY(-6px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes snake-tongue-flick {
+        0%, 60%, 100% { transform: scaleX(0.3); opacity: 0.6; }
+        70%, 85% { transform: scaleX(1); opacity: 1; }
+    }
+
+    /* Shared twinkling star, used on any game's results screen. */
+    .bust-star {
+        transform-box: fill-box;
+        transform-origin: center;
+        opacity: 0;
+        animation: bust-star-pop 1.8s ease-out infinite;
+    }
+
+    /* Shared game icon (difficulty bars, category marks) — used by both
+       Imposter MAFIA and Dev Quiz. */
+    .game-icon {
+        @apply size-4.5 shrink-0;
+    }
+
+    /* Same twinkle, as a plain text glyph for non-SVG mascots. */
+    .spark-glyph {
+        position: absolute;
+        color: #fbbf24;
+        font-size: 16px;
+        line-height: 1;
+        opacity: 0;
+        animation: bust-star-pop 1.8s ease-out infinite;
     }
 
     #home {
@@ -3773,7 +4805,7 @@ body {
 
     /* ============ Mobile (small screens) ============ */
     @media (max-width: 640px) {
-        #topbar .topbar-clock {
+        #topbar .topbar-clock-wrap {
             display: none;
         }
 

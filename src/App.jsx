@@ -11,7 +11,10 @@ import TourGuide from "#components/TourGuide.jsx";
 import LoadingScreen from "#components/LoadingScreen.jsx";
 import LockScreen from "#components/LockScreen.jsx";
 import SuspendScreen from "#components/SuspendScreen.jsx";
-import { Terminal, Finder, Text, Image, Safari, Resume, Contact, Gallery, Snake, Games, Code, Journey, KidPix, PopQuiz, Backgrounds } from "#window/index.js";
+import CrashScreen from "#components/CrashScreen.jsx";
+import Screensaver from "#components/Screensaver.jsx";
+import TimeTravelOverlay from "#components/TimeTravelOverlay.jsx";
+import { Terminal, Finder, Text, Image, Safari, Resume, Contact, Gallery, Snake, Games, Code, Journey, DrawPix, PopQuiz, Mafia, HighScores, Backgrounds, Guestbook, AboutMe } from "#window/index.js";
 import { wallpapers } from "#constants/index.js";
 import useSystemStore from "#store/system.js";
 import useWindowStore from "#store/window.js";
@@ -28,6 +31,7 @@ const App = () => {
     const brightness = useSystemStore((s) => s.brightness);
     const wallpaper = useSystemStore((s) => s.wallpaper);
     const customWallpapers = useSystemStore((s) => s.customWallpapers);
+    const timeTraveling = useSystemStore((s) => s.timeTraveling);
     const desktopRef = useRef(null);
     const windows = useWindowStore((s) => s.windows);
     const focusedWindow = useWindowStore((s) => s.focusedWindow);
@@ -58,12 +62,18 @@ const App = () => {
         return () => clearTimeout(timer);
     }, [screen, startTour]);
 
-    // Apply the selected wallpaper to the body background.
+    const activeWallpaper = [...wallpapers, ...customWallpapers].find((w) => w.id === wallpaper) || wallpapers[0];
+
+    // Apply the selected wallpaper to the body background. A "live" wallpaper
+    // is rendered as a canvas layer instead, so the body image is cleared.
     useEffect(() => {
-        const all = [...wallpapers, ...customWallpapers];
-        const wp = all.find((w) => w.id === wallpaper) || all[0];
-        document.body.style.backgroundImage = wp.type === "gradient" ? wp.value : `url("${wp.value}")`;
-    }, [wallpaper, customWallpapers]);
+        document.body.style.backgroundImage =
+            activeWallpaper.type === "live"
+                ? "none"
+                : activeWallpaper.type === "gradient"
+                    ? activeWallpaper.value
+                    : `url("${activeWallpaper.value}")`;
+    }, [activeWallpaper]);
 
     // On phones, swipe across a window's content to move through open apps.
     // Headers remain dedicated to dragging and controls/inputs remain untouched.
@@ -140,9 +150,14 @@ const App = () => {
     }
     if (screen === "suspend") return <SuspendScreen />;
     if (screen === "lock") return <LockScreen />;
+    if (screen === "crashed") return <CrashScreen />;
 
     return (
         <main ref={desktopRef}>
+            {activeWallpaper.type === "live" && (
+                <Screensaver key={activeWallpaper.id} module={activeWallpaper.value} />
+            )}
+
             {/* Brightness dim overlay (lives above the desktop but below the topbar/dock) */}
             <div
                 className="brightness-overlay"
@@ -164,12 +179,17 @@ const App = () => {
             <Games />
             <Code />
             <Journey />
-            <KidPix />
+            <DrawPix />
             <PopQuiz />
+            <Mafia />
+            <HighScores />
             <Backgrounds />
+            <Guestbook />
+            <AboutMe />
             <Spotlight />
             <Dock />
             <TourGuide />
+            {timeTraveling && <TimeTravelOverlay />}
         </main>
     );
 };

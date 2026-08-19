@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import WindowsControls from "#components/WindowsControls.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
+import { recordGameResult } from "#game/highscores.js";
 
 const GAME_TIME = 60;
 
@@ -221,6 +222,29 @@ const Hamster = ({ progress, scared, scareKey, done, celebrate, streak, frantic,
     );
 };
 
+// A little victory portrait for the results screen — the same hamster,
+// bobbing happily with sparkles, instead of parked mid-track.
+const HamsterVictory = () => (
+    <div className="hamster-victory">
+        <div className="hamster-anim is-victory">
+            <HamsterSvg done />
+            <span className="h-sparkle victory-sparkle-a">✦</span>
+            <span className="h-sparkle victory-sparkle-b">✦</span>
+            <span className="h-sparkle victory-sparkle-c">✦</span>
+        </div>
+    </div>
+);
+
+// Opening portrait — the hamster waiting at the start line, nibbling a
+// seed until you start typing.
+const HamsterIdle = () => (
+    <div className="hamster-victory">
+        <div className="hamster-anim is-idle">
+            <HamsterSvg idle />
+        </div>
+    </div>
+);
+
 const CodeGame = () => {
     const [phase, setPhase] = useState("ready"); // ready | playing | over
     const [deck, setDeck] = useState(() => shuffle(SNIPPETS));
@@ -290,6 +314,18 @@ const CodeGame = () => {
         return () => clearInterval(id);
     }, [phase]);
 
+    // The rival hamster runs on its own clock at a steady, medium-fast pace —
+    // it doesn't wait for you to type before it starts moving, so a slow
+    // start actually costs you ground.
+    useEffect(() => {
+        if (phase !== "playing" || done) return;
+        const RIVAL_SNIPPET_SECONDS = 4.5;
+        const id = setInterval(() => {
+            setRival((r) => Math.min(1, r + (100 / (RIVAL_SNIPPET_SECONDS * 1000))));
+        }, 100);
+        return () => clearInterval(id);
+    }, [phase, done]);
+
     // Persist high score at game over.
     useEffect(() => {
         if (phase === "over") {
@@ -298,6 +334,7 @@ const CodeGame = () => {
                 localStorage.setItem("mj-code-high", String(best));
                 return best;
             });
+            recordGameResult("code", score);
         }
     }, [phase, score]);
 
@@ -349,11 +386,6 @@ const CodeGame = () => {
             const now = Date.now();
             keyTimesRef.current = [...keyTimesRef.current.filter((t) => now - t < 2000), now];
             setSpeed(keyTimesRef.current.length / 2);
-
-            // The rival advances on every keystroke, even wrong ones, and faster
-            // typing makes it tougher, so mistakes let it catch up and pass you.
-            const rivalFactor = Math.min(0.95, 0.55 + speed * 0.12);
-            setRival((r) => Math.min(1, r + ((val.length - typed.length) / code.length) * rivalFactor));
         }
 
         setTyped(val);
@@ -470,12 +502,14 @@ const CodeGame = () => {
                 ) : (
                     <div className="code-overlay" style={{ flex: 1 }}>
                         <h3>{phase === "over" ? "Time's up!" : "Code Racer"}</h3>
+                        {phase === "over" && <HamsterVictory />}
+                        {phase === "ready" && <HamsterIdle />}
                         <p>
                             {phase === "over"
                                 ? <>You completed <b className="c-stat">{completed}</b> snippet{completed === 1 ? "" : "s"}, <b className="c-stat">{wpm}</b> wpm, <b className="c-stat">{accuracy}%</b> accuracy.</>
-                                : "Type real dev tasks exactly as shown for 60 seconds. Every race deals a fresh shuffle."}
+                                : "Type most used  dev tasks exactly as shown for 60 seconds. "}
                         </p>
-                        {phase === "over" && <p className="!text-cyan-300">high score: {high}</p>}
+                        {phase === "over" && <p className="text-cyan-300!">high score: {high}</p>}
                         <button type="button" className="code-start" onClick={start}>
                             {phase === "over" ? "Race again" : "Start"}
                         </button>

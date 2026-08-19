@@ -72,7 +72,7 @@ const Dock = () => {
     return (
         <div id="dock">
             <div ref={bariconsRef} className="dock-container">
-                {dockApps.map(({ id, name, icon, canOpen }) => (
+                {dockApps.map(({ id, name, icon, canOpen, tile, glow }) => (
                     <div key={id} className="dock-item">
                         <button
                             type="button"
@@ -81,10 +81,15 @@ const Dock = () => {
                             disabled={!canOpen}
                             onClick={() => toggleApp({ id, canOpen })}
                         >
-                            {typeof icon === "string"
-                                ? <img src={icon} alt={name} loading="lazy" className={canOpen ? "" : "opacity-50"} />
-                                : createElement(icon, { className: canOpen ? "" : "opacity-50" })
-                            }
+                            <span
+                                className={`dock-icon-badge ${canOpen ? "" : "opacity-50"}`}
+                                style={{ background: tile, "--glow": glow }}
+                            >
+                                {typeof icon === "string"
+                                    ? <img src={icon} alt={name} loading="lazy" />
+                                    : createElement(icon, {})
+                                }
+                            </span>
                         </button>
                         <span className="dock-label" role="tooltip">{name}</span>
                         {windows[id]?.isOpen && <span className="dock-dot" />}

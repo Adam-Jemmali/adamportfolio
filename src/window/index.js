@@ -10,10 +10,14 @@ import Snake from './Snake';
 import Games from './Games';
 import Code from './CodeGame';
 import Journey from './Journey';
-import KidPix from './KidPix';
+import DrawPix from './DrawPix';
 import PopQuiz from './PopQuiz';
+import Mafia from './Mafia';
+import HighScores from './HighScores';
 import Backgrounds from './Backgrounds';
+import Guestbook from './Guestbook';
+import AboutMe from './AboutMe';
 import Home from '#components/Home.jsx'
 
 
-export { Terminal, Finder, Text, Image, Safari, Resume ,Contact,Home, Gallery, Snake, Games, Code, Journey, KidPix, PopQuiz, Backgrounds};
+export { Terminal, Finder, Text, Image, Safari, Resume ,Contact,Home, Gallery, Snake, Games, Code, Journey, DrawPix, PopQuiz, Mafia, HighScores, Backgrounds, Guestbook, AboutMe};

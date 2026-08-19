@@ -5,8 +5,64 @@ import { SnakeMascot } from "#components/AppMascots.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import useWindowStore from "#store/window.js";
 import { SNAKE_GRID, SNAKE_SPEED, initialSnake, spawnApple, stepSnake, drawSnake } from "#game/snake.js";
+import { recordGameResult } from "#game/highscores.js";
 
 const { COLS, ROWS, CELL } = SNAKE_GRID;
+
+// Game-over portrait: the snake coiled up dizzy after a crash, with a few
+// stars circling its head. Pure inline SVG + CSS, no icon imports.
+const SnakeCrashScene = () => (
+    <svg viewBox="0 0 120 100" className="snake-crash-scene" aria-hidden="true">
+        <ellipse cx="60" cy="88" rx="34" ry="6" fill="#000" opacity="0.3" />
+        <g className="snake-crash-body">
+            <path
+                d="M18 70 Q6 46 30 34 Q54 22 66 38 Q76 52 60 58 Q46 63 46 50 Q46 40 56 40"
+                fill="none"
+                stroke="#22c55e"
+                strokeWidth="12"
+                strokeLinecap="round"
+            />
+            <circle cx="56" cy="40" r="11" fill="#86efac" stroke="#166534" strokeWidth="1.4" />
+            <path d="M50 37 L54 43 M54 37 L50 43 M58 37 L62 43 M62 37 L58 43" stroke="#14532d" strokeWidth="1.8" strokeLinecap="round" />
+        </g>
+        <g transform="translate(56 20)">
+            <g transform="translate(-18 0) scale(0.8)">
+                <path className="bust-star" style={{ animationDelay: "0s" }} d="M0,-6 L1.4,-1.4 L6,0 L1.4,1.4 L0,6 L-1.4,1.4 L-6,0 L-1.4,-1.4 Z" fill="#fde047" />
+            </g>
+            <g transform="translate(6 8) scale(0.6)">
+                <path className="bust-star" style={{ animationDelay: "0.25s" }} d="M0,-6 L1.4,-1.4 L6,0 L1.4,1.4 L0,6 L-1.4,1.4 L-6,0 L-1.4,-1.4 Z" fill="#fde047" />
+            </g>
+            <g transform="translate(-4 -12) scale(0.65)">
+                <path className="bust-star" style={{ animationDelay: "0.5s" }} d="M0,-6 L1.4,-1.4 L6,0 L1.4,1.4 L0,6 L-1.4,1.4 L-6,0 L-1.4,-1.4 Z" fill="#fde047" />
+            </g>
+        </g>
+    </svg>
+);
+
+// Opening portrait: the snake coiled up, looking around and flicking its
+// tongue while it waits for you to move. Pure inline SVG + CSS, no icons.
+const SnakeReadyScene = () => (
+    <svg viewBox="0 0 120 100" className="snake-crash-scene" aria-hidden="true">
+        <ellipse cx="60" cy="88" rx="34" ry="6" fill="#000" opacity="0.3" />
+        <g className="snake-ready-body">
+            <path
+                d="M18 70 Q6 46 30 34 Q54 22 66 38 Q76 52 60 58 Q46 63 46 50 Q46 40 56 40"
+                fill="none"
+                stroke="#22c55e"
+                strokeWidth="12"
+                strokeLinecap="round"
+            />
+            <circle cx="56" cy="40" r="11" fill="#86efac" stroke="#166534" strokeWidth="1.4" />
+            <circle cx="52" cy="36" r="2" fill="#14532d" />
+            <circle cx="60" cy="36" r="2" fill="#14532d" />
+            <circle cx="52.6" cy="35.4" r="0.6" fill="#fff" />
+            <circle cx="60.6" cy="35.4" r="0.6" fill="#fff" />
+            <g transform="translate(65 44)">
+                <path className="snake-tongue" d="M0 0 L9 -2 M9 -2 L12.5 -4.5 M9 -2 L12.5 0.5" fill="none" stroke="#ef4444" strokeWidth="1.4" strokeLinecap="round" />
+            </g>
+        </g>
+    </svg>
+);
 
 const KEYS = {
     ArrowUp: { x: 0, y: -1 },
@@ -55,6 +111,7 @@ const Snake = () => {
             localStorage.setItem("mj-snake-high", String(best));
             return best;
         });
+        recordGameResult("snake", score);
     }, [score]);
 
     const stepGame = useCallback(() => {
@@ -162,11 +219,12 @@ const Snake = () => {
                     {phase === "ready" && (
                         <div className="snake-overlay">
                             <h3>Snake</h3>
+                            <SnakeReadyScene />
                             <p>Eat the red dot, don't hit the walls or yourself.</p>
                             <button type="button" className="snake-start" onClick={start}>
                                 Start
                             </button>
-                            <p className="!mt-0 opacity-60">arrows / WASD — space to start</p>
+                            <p className="mt-0! opacity-60">arrows / WASD — space to start</p>
                         </div>
                     )}
 
@@ -179,10 +237,11 @@ const Snake = () => {
 
                     {phase === "over" && (
                         <div className="snake-overlay">
-                            <h3>Game over</h3>
+                            <h3>Game Over</h3>
+                            <SnakeCrashScene />
                             <p>You scored {score}. Nice run!</p>
                             <button type="button" className="snake-start" onClick={start}>
-                                Play again
+                                Play Again
                             </button>
                         </div>
                     )}

@@ -4,6 +4,7 @@ import WindowsControls from "#components/WindowsControls.jsx";
 import { Sloth } from "#components/AppMascots.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import useSystemStore from "#store/system.js";
+import Screensaver from "#components/Screensaver.jsx";
 import { wallpapers } from "#constants/index.js";
 
 const deriveName = (url) => {
@@ -16,8 +17,11 @@ const deriveName = (url) => {
     }
 };
 
-const wallpaperBackground = (wp) =>
-    wp.type === "gradient" ? wp.value : `url("${wp.value}")`;
+const wallpaperBackground = (wp) => {
+    if (wp.type === "gradient") return wp.value;
+    if (wp.type === "live") return wp.preview;
+    return `url("${wp.value}")`;
+};
 
 const Backgrounds = () => {
     const wallpaper = useSystemStore((s) => s.wallpaper);
@@ -93,14 +97,20 @@ const Backgrounds = () => {
                                 className="backgrounds-card-main"
                                 onClick={() => setWallpaper(wp.id)}
                             >
-                                <span
-                                    className="backgrounds-swatch"
-                                    style={{
-                                        backgroundImage: wallpaperBackground(wp),
-                                        backgroundSize: "cover",
-                                        backgroundPosition: "center",
-                                    }}
-                                />
+                                {wp.type === "live" ? (
+                                    <span className="backgrounds-swatch backgrounds-swatch-live">
+                                        <Screensaver module={wp.value} />
+                                    </span>
+                                ) : (
+                                    <span
+                                        className="backgrounds-swatch"
+                                        style={{
+                                            backgroundImage: wallpaperBackground(wp),
+                                            backgroundSize: "cover",
+                                            backgroundPosition: "center",
+                                        }}
+                                    />
+                                )}
                                 <span className="backgrounds-name">{wp.name}</span>
                                 {wallpaper === wp.id && <Check size={14} className="backgrounds-check" />}
                             </button>

@@ -55,10 +55,10 @@ const LoadingScreen = ({ onComplete }) => {
 
             <div className="boot-content flex flex-col items-center">
                 <h1 className="boot-title">
-                    AdamJemmali <span className="boot-title-accent">OS</span>
+                    <span className="boot-title-accent">A</span>dam <span className="boot-title-accent">J</span>emmali <span className="boot-title-accent">OS</span>
                 </h1>
 
-                <p className="boot-sub">Full-Stack Engineer &middot; rebuilt for 2026</p>
+                <p className="boot-sub">AI Engineer</p>
 
                 <div className="boot-logs">
                     {BOOT_LOGS.map((log) =>

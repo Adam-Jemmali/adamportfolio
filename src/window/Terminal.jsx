@@ -5,6 +5,7 @@ import { Penguin } from "#components/AppMascots.jsx";
 import { techStack, skillMeta, locations } from "#constants/index.js";
 import useWindowStore from "#store/window.js";
 import useLocationStore from "#store/location.js";
+import useSystemStore from "#store/system.js";
 
 const HELP = [
     ["help, ls", "show this help"],
@@ -34,6 +35,7 @@ const BANNER = [
 const Terminal = () => {
     const { openWindow, focusWindow } = useWindowStore();
     const setActiveLocation = useLocationStore((s) => s.setActiveLocation);
+    const crash = useSystemStore((s) => s.crash);
 
     const [lines, setLines] = useState(BANNER);
     const [input, setInput] = useState("");
@@ -117,6 +119,11 @@ const Terminal = () => {
             push("out", new Date().toLocaleString());
         } else if (cmd === "clear" || cmd === "cls") {
             setLines([]);
+            return;
+        } else if (cmd.startsWith("sudo rm -rf") || cmd.startsWith("sudo rm -fr")) {
+            push("err", "rm: descending into /...");
+            setLines((l) => [...l, ...out]);
+            setTimeout(crash, 550);
             return;
         } else if (cmd.startsWith("sudo")) {
             push("err", "adam is not in the sudoers file. This incident will be reported. \u{1F604}");

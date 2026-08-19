@@ -23,9 +23,9 @@ const persistCustomWallpapers = (items) => {
     }
 };
 
-// Screen flow: boot -> lock -> desktop, with suspend/restarting as side states.
+// Screen flow: boot -> lock -> desktop, with suspend/restarting/crashed as side states.
 const useSystemStore = create((set, get) => ({
-    screen: "boot", // "boot" | "lock" | "desktop" | "suspend" | "restarting"
+    screen: "boot", // "boot" | "lock" | "desktop" | "suspend" | "restarting" | "crashed"
     powerMenuOpen: false,
 
     // System tray state
@@ -33,8 +33,9 @@ const useSystemStore = create((set, get) => ({
     brightness: 100, // 0 – 100
     volume: 65, // 0 – 100
     muted: false,
-    wallpaper: "aurora",
+    wallpaper: "bubbles",
     customWallpapers: loadCustomWallpapers(),
+    timeTraveling: false,
 
     toggleWifi: () => set((s) => ({ wifiOn: !s.wifiOn })),
     setBrightness: (value) => set({ brightness: Math.max(0, Math.min(100, value)) }),
@@ -57,7 +58,7 @@ const useSystemStore = create((set, get) => ({
         persistCustomWallpapers(next);
         set({
             customWallpapers: next,
-            wallpaper: get().wallpaper === id ? "aurora" : get().wallpaper,
+            wallpaper: get().wallpaper === id ? "bubbles" : get().wallpaper,
         });
     },
 
@@ -67,6 +68,9 @@ const useSystemStore = create((set, get) => ({
     suspend: () => set({ screen: "suspend", powerMenuOpen: false }),
     wake: () => set({ screen: "lock" }),
     restart: () => set({ screen: "restarting", powerMenuOpen: false }),
+    crash: () => set({ screen: "crashed", powerMenuOpen: false }),
+    recover: () => set({ screen: "desktop" }),
+    startTimeTravel: () => set({ timeTraveling: true }),
 
     togglePowerMenu: () => set((state) => ({ powerMenuOpen: !state.powerMenuOpen })),
     closePowerMenu: () => set({ powerMenuOpen: false }),
