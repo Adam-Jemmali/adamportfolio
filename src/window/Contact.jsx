@@ -3,6 +3,7 @@ import { ArrowRight, Check, ChevronLeft, ExternalLink, Rocket } from 'lucide-rea
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import WindowsControls from "#components/WindowsControls.jsx";
+import { Pigeon } from "#components/AppMascots.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import { socials } from "#constants/index.js";
 
@@ -102,7 +103,7 @@ const Contact = () => {
         <>
             <div id="window-header">
                 <WindowsControls target="contact" />
-                <h2>Contact &amp; Booking</h2>
+                <h2><Pigeon />Contact &amp; Booking</h2>
             </div>
 
             <div className="contact-layout">

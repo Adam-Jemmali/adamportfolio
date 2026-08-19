@@ -3,6 +3,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import WindowsControls from "#components/WindowsControls.jsx";
+import { Turtle } from "#components/AppMascots.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import { locations, skillMeta } from "#constants/index.js";
 import useWindowStore from "#store/window.js";
@@ -21,7 +22,7 @@ const WORK_EXPERIENCE = [
         title: "Sportlogiq",
         period: "May 2024 – Aug 2024",
         year: "2024",
-        location: "Montreal, QC · On-site",
+        location: "Montreal, QC — On-site",
         summary:
             "Built real-time soccer tracking and event detection from broadcast video.",
         bullets: [
@@ -42,7 +43,7 @@ const WORK_EXPERIENCE = [
         title: "Upwork",
         period: "May 2024 – Nov 2025",
         year: "2024",
-        location: "Remote · 7 clients across education, recruiting, and real estate",
+        location: "Remote — 7 clients across education, recruiting, and real estate",
         summary:
             "Automated lead and CRM workflows for B2B clients using AI and no-code tools.",
         bullets: [
@@ -61,7 +62,7 @@ const WORK_EXPERIENCE = [
         title: "University of Ottawa AI+ Society",
         period: "Oct 2025 – Jan 2026",
         year: "2025",
-        location: "Ottawa, ON · Event-driven backend infrastructure for a 3-person Agile team",
+        location: "Ottawa, ON — Event-driven backend infrastructure for a 3-person Agile team",
         summary:
             "Helped replace polling with event-driven backend infrastructure for a three-person team.",
         bullets: [
@@ -79,7 +80,7 @@ const WORK_EXPERIENCE = [
         title: "Mentrixa",
         period: "Feb 2026 – Aug 2026",
         year: "2026",
-        location: "Ottawa, ON · Self-employed · Remote",
+        location: "Ottawa, ON — Self-employed — Remote",
         summary:
             "Co-founded an EdTech SaaS for recording and practicing verifiable skills.",
         bullets: [
@@ -125,7 +126,7 @@ const SUPPORTING_ENTRIES = [
         title: "University of Ottawa",
         subtitle: "Honours Bachelor of Engineering, Computer Science",
         period: "Sep 2024 – Apr 2028",
-        location: "Ottawa, ON · GPA: 3.6/4.0",
+        location: "Ottawa, ON — GPA: 3.6/4.0",
         bullets: [
             "Relevant coursework: Machine Learning, Computer Vision, Algorithms and Data Structures, Operating Systems, Database Systems, Object-Oriented Software Engineering.",
             "68 verified NeetCode DSA submissions spanning arrays, graphs, dynamic programming, and trees, maintained through ongoing daily algorithmic practice.",
@@ -181,12 +182,12 @@ const SUPPORTING_ENTRIES = [
             {
                 icons: ["public/images/snowflake-logo.png", "public/images/mlh-logo.png", "public/images/hackconcordia.png"],
                 title: "Best Use of Snowflake API",
-                meta: "Invest Ottawa Hackathon 2026 · Chronos Cloud",
+                meta: "Invest Ottawa Hackathon 2026 — Chronos Cloud",
             },
             {
                 icons: ["public/images/uo.png"],
                 title: "Faculty of Science Achievement Award",
-                meta: "University of Ottawa · 2024–2025",
+                meta: "University of Ottawa — 2024–2025",
             },
         ],
     },
@@ -236,7 +237,7 @@ const SkillChips = ({ skills, label }) => {
                 const matches = matchesFor(skill);
                 const linked = matches.length > 0;
                 const tip = meta
-                    ? `${skill} · ${meta.category}${linked ? ` — view ${matches.length} project${matches.length > 1 ? "s" : ""}` : ""}`
+                    ? `${skill} — ${meta.category}${linked ? ` — view ${matches.length} project${matches.length > 1 ? "s" : ""}` : ""}`
                     : skill;
                 return (
                     <li
@@ -437,7 +438,7 @@ const Journey = () => {
         <>
             <div id="window-header">
                 <WindowsControls target="journey" />
-                <h2>My Journey</h2>
+                <h2><Turtle />My Journey</h2>
                 <nav className="journey-year-nav" aria-label="Jump to year">
                     {YEARS.map((year) => (
                         <button

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import WindowsControls from "#components/WindowsControls.jsx";
+import { Spider } from "#components/AppMascots.jsx";
 import { Search, ArrowBigRight, ArrowRight, Check } from "lucide-react";
 import { blogPosts } from "#constants/index.js";
 
@@ -50,6 +51,7 @@ const Safari = () => {
     return <>
         <div id="window-header">
             <WindowsControls target="safari"/>
+            <Spider />
 
             <div className="search">
                 <Search className=""/>

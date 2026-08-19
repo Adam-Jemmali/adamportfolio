@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState, useEffect, useCallback } from "react
 import { ArrowLeft, ArrowRight, X, Monitor, Mail, Wifi, Folder, PanelsTopLeft, PartyPopper, Volume2, VolumeX } from "lucide-react";
 import useTourStore from "#store/tour.js";
 import TrappieLogo from "#components/TrappieLogo.jsx";
+import { setSoundMuted, getStoredMute, playTick, playChirp, playWhoosh } from "#utils/sound.js";
 
 // Trappie's guided tour of the OS. Each step points at a real UI element (or
 // centers the card for the outro) and the overlay dims everything else.
@@ -65,124 +66,6 @@ const MASCOT_PEEK = 56;
 
 const CONFETTI_COLORS = ["#22d3ee", "#a3e635", "#f472b6", "#fbbf24", "#ffffff", "#4ade80"];
 const CONFETTI_COUNT = 18;
-
-// Tiny synthesized "tick" for the icon pop — no audio asset needed.
-let audioCtx = null;
-let soundMuted = false;
-const setSoundMuted = (value) => {
-    soundMuted = value;
-};
-
-const playTick = () => {
-    if (soundMuted) return;
-    try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        if (!audioCtx) audioCtx = new AudioCtx();
-        if (audioCtx.state === "suspended") audioCtx.resume();
-
-        const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(820, now);
-        osc.frequency.exponentialRampToValueAtTime(1260, now + 0.08);
-
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(0.1, now + 0.012);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + 0.22);
-    } catch {
-        // Audio unavailable — the tour still works silently.
-    }
-};
-
-const getStoredMute = () => {
-    try {
-        return localStorage.getItem("trappie-sounds-muted") === "1";
-    } catch {
-        return false;
-    }
-};
-
-// A quick rising two-note chirp for the outro, reusing the shared audio ctx.
-const playChirp = () => {
-    if (soundMuted) return;
-    try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        if (!audioCtx) audioCtx = new AudioCtx();
-        if (audioCtx.state === "suspended") audioCtx.resume();
-
-        const now = audioCtx.currentTime;
-        const note = (freq, start, dur) => {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = "sine";
-            osc.frequency.setValueAtTime(freq, now + start);
-            osc.frequency.exponentialRampToValueAtTime(freq * 1.35, now + start + dur * 0.6);
-            gain.gain.setValueAtTime(0.0001, now + start);
-            gain.gain.exponentialRampToValueAtTime(0.09, now + start + 0.012);
-            gain.gain.exponentialRampToValueAtTime(0.0001, now + start + dur);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start(now + start);
-            osc.stop(now + start + dur + 0.02);
-        };
-
-        note(660, 0, 0.12);
-        note(990, 0.09, 0.18);
-    } catch {
-        // Audio unavailable — Trappie stays quiet.
-    }
-};
-
-// A soft airy sweep for when Trappie hops between steps.
-const playWhoosh = () => {
-    if (soundMuted) return;
-    try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        if (!audioCtx) audioCtx = new AudioCtx();
-        if (audioCtx.state === "suspended") audioCtx.resume();
-
-        const now = audioCtx.currentTime;
-        const length = Math.floor(audioCtx.sampleRate * 0.26);
-        const buffer = audioCtx.createBuffer(1, length, audioCtx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < length; i += 1) {
-            data[i] = (Math.random() * 2 - 1) * (1 - i / length);
-        }
-
-        const source = audioCtx.createBufferSource();
-        source.buffer = buffer;
-
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = "bandpass";
-        filter.Q.value = 1.1;
-        filter.frequency.setValueAtTime(340, now);
-        filter.frequency.exponentialRampToValueAtTime(1500, now + 0.14);
-        filter.frequency.exponentialRampToValueAtTime(300, now + 0.26);
-
-        const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(0.07, now + 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
-
-        source.connect(filter);
-        filter.connect(gain);
-        gain.connect(audioCtx.destination);
-        source.start(now);
-        source.stop(now + 0.28);
-    } catch {
-        // Audio unavailable — Trappie stays quiet.
-    }
-};
 
 const TourGuide = () => {
     const active = useTourStore((s) => s.active);

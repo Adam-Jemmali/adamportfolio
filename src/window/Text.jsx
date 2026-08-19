@@ -2,6 +2,7 @@ import React, { useRef } from 'react'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import WindowsControls from "#components/WindowsControls.jsx";
+import { Bookworm } from "#components/AppMascots.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import useWindowStore from "#store/window.js";
 
@@ -46,6 +47,7 @@ const Text = () => {
         <>
             <div id="window-header">
                 <WindowsControls target="txtfile" />
+                <Bookworm />
                 <div className="flex-1 text-center">
                     <h1 className="text-xs font-medium text-zinc-300">{name}</h1>
                 </div>

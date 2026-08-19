@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import WindowsControls from "#components/WindowsControls.jsx";
+import { Fox } from "#components/AppMascots.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import { Search, Folder, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
 import { locations, skillMeta } from "#constants/index.js";
@@ -29,7 +30,7 @@ const ProjectStack = ({ stack }) =>
                 <span
                     key={tech}
                     className="project-card-tech"
-                    title={skillMeta[tech] ? `${tech} · ${skillMeta[tech].category}` : tech}
+                    title={skillMeta[tech] ? `${tech} — ${skillMeta[tech].category}` : tech}
                 >
                     {skillMeta[tech]?.logo && <img src={skillMeta[tech].logo} alt="" loading="lazy" />}
                     <span>{tech}</span>
@@ -175,7 +176,7 @@ const Finder = () => {
         <>
             <div id="window-header">
                 <WindowsControls target="finder" />
-                <h2>Portfolio</h2>
+                <h2><Fox />Portfolio</h2>
                 <div className="finder-search">
                     <Search size={13} />
                     <input

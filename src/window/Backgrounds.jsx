@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Check, Link2, Plus, Trash2 } from "lucide-react";
 import WindowsControls from "#components/WindowsControls.jsx";
+import { Sloth } from "#components/AppMascots.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import useSystemStore from "#store/system.js";
 import { wallpapers } from "#constants/index.js";
@@ -60,7 +61,7 @@ const Backgrounds = () => {
         <>
             <div id="window-header">
                 <WindowsControls target="backgrounds" />
-                <h2>Backgrounds</h2>
+                <h2><Sloth />Backgrounds</h2>
             </div>
 
             <div className="backgrounds-body">

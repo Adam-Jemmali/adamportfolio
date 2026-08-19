@@ -1,5 +1,6 @@
 import React from 'react'
 import WindowsControls from "#components/WindowsControls.jsx";
+import { Panda } from "#components/AppMascots.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import useWindowStore from "#store/window.js";
 
@@ -14,6 +15,7 @@ const Image = () => {
         <>
             <div id="window-header">
                 <WindowsControls target="imgfile" />
+                <Panda />
                 <div className="flex-1 text-center">
                     <span className="text-xs font-medium text-zinc-300">{name}</span>
                 </div>

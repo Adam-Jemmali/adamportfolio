@@ -82,18 +82,8 @@ const dockApps = [
         icon: Gamepad2,
         canOpen: true,
     },
-    {
-        id: "kidpix",
-        name: "Kid Pix",
-        icon: Palette,
-        canOpen: true,
-    },
-    {
-        id: "backgrounds",
-        name: "Backgrounds",
-        icon: Wallpaper,
-        canOpen: true,
-    },
+    // Kid Pix and Backgrounds stay on the desktop so the dock stays focused
+    // on the essentials.
 ];
 
 const desktopApps = [

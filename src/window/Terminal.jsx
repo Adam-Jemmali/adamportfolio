@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import WindowsControls from "#components/WindowsControls.jsx";
+import { Penguin } from "#components/AppMascots.jsx";
 import { techStack, skillMeta, locations } from "#constants/index.js";
 import useWindowStore from "#store/window.js";
 import useLocationStore from "#store/location.js";
@@ -160,7 +161,7 @@ const Terminal = () => {
         <>
             <div id="window-header">
                 <WindowsControls target="terminal" />
-                <h2> Terminal </h2>
+                <h2><Penguin />Terminal</h2>
             </div>
 
             <div
@@ -179,7 +180,7 @@ const Terminal = () => {
                                             <span
                                                 key={item}
                                                 className="terminal-stack-chip"
-                                                title={skillMeta[item] ? `${item} · ${skillMeta[item].category}` : item}
+                                                title={skillMeta[item] ? `${item} — ${skillMeta[item].category}` : item}
                                             >
                                                 {skillMeta[item]?.logo && (
                                                     <img src={skillMeta[item].logo} alt="" loading="lazy" />

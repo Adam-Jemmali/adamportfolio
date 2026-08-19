@@ -21,6 +21,7 @@ export default defineConfig({
       "#hoc": resolve(dirname(fileURLToPath(import.meta.url)), "src/hoc"),
       "#window": resolve(dirname(fileURLToPath(import.meta.url)), "src/window"),
       "#game": resolve(dirname(fileURLToPath(import.meta.url)), "src/game"),
+      "#utils": resolve(dirname(fileURLToPath(import.meta.url)), "src/utils"),
 
     }
   }

@@ -16,6 +16,7 @@ import {
     Download,
 } from "lucide-react";
 import WindowsControls from "#components/WindowsControls.jsx";
+import { Chameleon } from "#components/AppMascots.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 
 const W = 800;
@@ -404,7 +405,7 @@ const KidPix = () => {
         <>
             <div id="window-header">
                 <WindowsControls target="kidpix" />
-                <h2>Kid Pix</h2>
+                <h2><Chameleon />Kid Pix</h2>
             </div>
 
             <div className="kidpix-body">

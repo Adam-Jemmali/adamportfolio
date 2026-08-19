@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from "lucide-react";
 import WindowsControls from "#components/WindowsControls.jsx";
+import { SnakeMascot } from "#components/AppMascots.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import useWindowStore from "#store/window.js";
 import { SNAKE_GRID, SNAKE_SPEED, initialSnake, spawnApple, stepSnake, drawSnake } from "#game/snake.js";
@@ -147,7 +148,7 @@ const Snake = () => {
         <>
             <div id="window-header">
                 <WindowsControls target="snake" />
-                <h2>Snake</h2>
+                <h2><SnakeMascot />Snake</h2>
             </div>
 
             <div className="snake-body">
@@ -165,7 +166,7 @@ const Snake = () => {
                             <button type="button" className="snake-start" onClick={start}>
                                 Start
                             </button>
-                            <p className="!mt-0 opacity-60">arrows / WASD · space to start</p>
+                            <p className="!mt-0 opacity-60">arrows / WASD — space to start</p>
                         </div>
                     )}
 

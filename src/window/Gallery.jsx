@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import WindowsControls from "#components/WindowsControls.jsx";
+import { Panda } from "#components/AppMascots.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import { GALLERY_DATA } from "#constants/index.js";
 import useWindowStore from "#store/window.js";
@@ -18,6 +19,7 @@ const Gallery = () => {
         <div className="flex flex-col h-full">
             <div id="window-header">
                 <WindowsControls target="photos" />
+                <Panda />
                 <span className="flex-1 text-center font-bold text-zinc-200">Photos</span>
             </div>
 
@@ -54,7 +56,7 @@ const Gallery = () => {
                                         <img src={image.imageUrl} alt={image.name} loading="lazy" />
                                         <span className="listing-tile-overlay" aria-hidden="true">
                                             <span className="listing-tile-title">{image.name}</span>
-                                            <span className="listing-tile-sub">{activeCategory.name} · 2026</span>
+                                            <span className="listing-tile-sub">{activeCategory.name} — 2026</span>
                                         </span>
                                     </span>
                                 </button>

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react'
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import WindowsControls from "#components/WindowsControls.jsx";
+import { Bookworm } from "#components/AppMascots.jsx";
 import {DownloadIcon, ChevronUp, ChevronDown} from "lucide-react";
 import useWindowStore from "#store/window.js";
 
@@ -68,7 +69,7 @@ const Resume = () => {
     return <>
         <div id="window-header">
             <WindowsControls target="resume"/>
-            <h2>{fileName}</h2>
+            <h2><Bookworm />{fileName}</h2>
 
             <div className="flex items-center gap-2">
                 <button
