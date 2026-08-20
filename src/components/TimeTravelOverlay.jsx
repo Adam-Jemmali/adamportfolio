@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import Screensaver from "#components/Screensaver.jsx";
 
-// Same domain, different build — this jumps out to a static page at
-// /content/madajbuilds/ (see public/content/madajbuilds/index.html).
-// The explicit "index.html" avoids relying on the host's directory-index
-// fallback, which Vite's own dev server doesn't do for SPA routes either.
-const REDIRECT_URL = "/content/madajbuilds/index.html";
+// Same domain, different build — this jumps out to the standalone
+// madajbuilds React app (see /madajbuilds/index.html + src/madajbuilds/).
+const REDIRECT_URL = "/madajbuilds/";
 const DURATION_MS = 2800;
 const FLASH_AT_MS = DURATION_MS - 500;
 
