@@ -65,13 +65,13 @@ function pathToShapes(path) {
         if (cmd.type === "M") {
             if (current) shapes.push(current);
             current = new THREE.Shape();
-            current.moveTo(-cmd.x, cmd.y);
+            current.moveTo(cmd.x, -cmd.y);
         } else if (cmd.type === "L") {
-            current.lineTo(-cmd.x, cmd.y);
+            current.lineTo(cmd.x, -cmd.y);
         } else if (cmd.type === "Q") {
-            current.quadraticCurveTo(-cmd.x1, cmd.y1, -cmd.x, cmd.y);
+            current.quadraticCurveTo(cmd.x1, -cmd.y1, cmd.x, -cmd.y);
         } else if (cmd.type === "C") {
-            current.bezierCurveTo(-cmd.x1, cmd.y1, -cmd.x2, cmd.y2, -cmd.x, cmd.y);
+            current.bezierCurveTo(cmd.x1, -cmd.y1, cmd.x2, -cmd.y2, cmd.x, -cmd.y);
         } else if (cmd.type === "Z" || cmd.type === "z") {
             // closePath is implicit in Shape
         }
@@ -123,8 +123,62 @@ function computeLayout(font, word) {
         l.x -= totalWidth / 2;
     }
 
-    // Reverse array: font renders mirrored, so reverse gives correct LTR reading
+    // Center and return — letters are now in correct LTR order with proper Y-up orientation
     return letters;
+}
+/**
+ * Compute each letter's on-screen rect from the deterministic layout and the
+ * camera setup, independent of the WebGL render loop. Used so falling icons
+ * can fade as they pass behind the wordmark even when the render loop stalls.
+ */
+function computeWordmarkRects(letters, canvas) {
+    const rect = canvas.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+    if (!w || !h) return [];
+
+    const cam = new THREE.PerspectiveCamera(42, w / h, 0.1, 100);
+    cam.position.set(0, 2.5, 14);
+    cam.lookAt(0, 0, 0);
+    cam.updateMatrixWorld(true);
+
+    const v = new THREE.Vector3();
+    const rects = [];
+
+    for (const letter of letters) {
+        if (!letter.shapes || letter.shapes.length === 0) continue;
+
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
+        for (const shape of letter.shapes) {
+            const pts = shape.getPoints(20);
+            for (const p of pts) {
+                if (p.x < minX) minX = p.x;
+                if (p.x > maxX) maxX = p.x;
+                if (p.y < minY) minY = p.y;
+                if (p.y > maxY) maxY = p.y;
+            }
+        }
+        if (!isFinite(minX)) continue;
+
+        const x0 = (letter.x + minX) * SCALE;
+        const x1 = (letter.x + maxX) * SCALE;
+        const y0 = minY * SCALE;
+        const y1 = maxY * SCALE;
+
+        let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
+        for (const [cx, cy] of [[x0, y0], [x0, y1], [x1, y0], [x1, y1]]) {
+            v.set(cx, cy, 0).project(cam);
+            const px = rect.left + (v.x * 0.5 + 0.5) * w;
+            const py = rect.top + (1 - (v.y * 0.5 + 0.5)) * h;
+            if (px < left) left = px;
+            if (px > right) right = px;
+            if (py < top) top = py;
+            if (py > bottom) bottom = py;
+        }
+        rects.push({ left, right, top, bottom });
+    }
+    return rects;
 }
 
 /* ── 3D COMPONENTS ────────────────────────────────────────────────── */
@@ -208,13 +262,18 @@ function ScriptWord({ layoutData, scrollProgress, themeKey = "A" }) {
         const g = groupRef.current;
         if (!g) return;
 
-        // Mouse parallax
+        // Smooth mouse parallax + scroll tilt
+        const sp = scrollProgress;
         const mx = mouseRef.current.x * 0.15;
         const my = mouseRef.current.y * 0.08;
-        g.rotation.y = mx;
-        g.rotation.x = my;
+        const tiltX = my + sp * 1.2;
+        const groupEase = 1 - Math.pow(0.02, delta);
+        g.rotation.y += (mx - g.rotation.y) * groupEase;
+        g.rotation.x += (tiltX - g.rotation.x) * groupEase;
+        g.position.z = -sp * 5;
+        g.scale.setScalar(1 - sp * 0.35);
 
-        // Per-letter gravity animation (throttled: recompute world coords only when mouse moves)
+        // Per-letter gravity animation
         const mouseNDC = mouseRef.current;
         const aspect = window.innerWidth / window.innerHeight;
         const vFov = (42 * Math.PI) / 180;
@@ -222,6 +281,7 @@ function ScriptWord({ layoutData, scrollProgress, themeKey = "A" }) {
         const worldWidth = worldHeight * aspect;
         const mouseWorldX = mouseNDC.x * worldWidth / 2;
         const mouseWorldY = mouseNDC.y * worldHeight / 2;
+        const t = state.clock.elapsedTime;
 
         letterRefs.current.forEach((ref, i) => {
             if (!ref) return;
@@ -240,7 +300,9 @@ function ScriptWord({ layoutData, scrollProgress, themeKey = "A" }) {
 
             const targetY = ease * 0.6;
             const targetRotZ = ease * dx * -0.15;
-            const targetScale = 1 + ease * 0.12;
+            // Gentle breathing pulse when the cursor is idle/away (ease ≈ 0)
+            const breathe = (1 - ease) * Math.sin(t * 0.9 + i * 0.55) * 0.035;
+            const targetScale = 1 + ease * 0.12 + breathe;
 
             // Store targets for spring interpolation
             if (!letterTargets.current[i]) {
@@ -251,29 +313,21 @@ function ScriptWord({ layoutData, scrollProgress, themeKey = "A" }) {
             target.rotZ = targetRotZ;
             target.scale = targetScale;
 
-            // Spring lerp toward target
-            const spring = 1 - Math.pow(0.001, delta);
+            // Gentle spring lerp toward target (slow & smooth)
+            const spring = 1 - Math.pow(0.05, delta);
             ref.position.y += (target.y - ref.position.y) * spring;
             ref.rotation.z += (target.rotZ - ref.rotation.z) * spring;
             const currentScale = ref.scale.x;
             const newScale = currentScale + (target.scale - currentScale) * spring;
             ref.scale.setScalar(newScale);
         });
-
-        // Scroll-away: rotate on X, push back on Z, shrink
-        const sp = scrollProgress;
-        if (sp > 0) {
-            g.rotation.x += sp * 1.2;
-            g.position.z = -sp * 5;
-            g.scale.setScalar(1 - sp * 0.35);
-        }
     });
 
     return (
         <group ref={groupRef}>
             {layoutData.map((letter, i) => {
                 if (letter.shapes.length === 0) return null;
-                const worldX = -letter.x * SCALE;
+                const worldX = letter.x * SCALE;
                 return (
                     <group
                         key={`${letter.ch}-${i}`}
@@ -343,11 +397,11 @@ function Cursor3D({ layoutData, themeKey = "A" }) {
         const targetX = x1 + (x2 - x1) * smoothFrac;
         const bob = Math.sin(t * 4) * 0.05;
 
-        g.position.set(targetX, 0.85 + bob, 1.2);
+        g.position.set(targetX, -0.9 + bob, 1.2);
     });
 
     return (
-        <mesh ref={ref} geometry={geometry} scale={0.35} frustumCulled={false}>
+        <mesh ref={ref} geometry={geometry} scale={0.42} frustumCulled={false}>
             <meshPhysicalMaterial
                 color={colors.cursor}
                 emissive={colors.cursor}
@@ -398,12 +452,12 @@ function CursorTrail({ layoutData, themeKey = "A" }) {
         const trailIdx = Math.max(0, safeIdx - 1);
         const trailX = layoutData[trailIdx].x * SCALE;
 
-        g.position.set(trailX, 0.85, 1.0);
+        g.position.set(trailX, -0.9, 1.0);
         g.material.opacity = 0.25;
     });
 
     return (
-        <mesh ref={ref} geometry={geometry} scale={0.3} frustumCulled={false}>
+        <mesh ref={ref} geometry={geometry} scale={0.36} frustumCulled={false}>
             <meshPhysicalMaterial
                 color={colors.cursor}
                 emissive={colors.cursor}
@@ -531,8 +585,10 @@ function Scene({ layoutData, scrollProgress, themeKey }) {
 
 /* ── MAIN COMPONENT ───────────────────────────────────────────────── */
 
-export default function Hero3D({ scrollProgress = 0, themeKey = "A" }) {
+export default function Hero3D({ scrollProgress = 0, themeKey = "A", wordmarkRectRef = null }) {
     const [layoutData, setLayoutData] = useState(null);
+    const stateRef = useRef(null);
+    const startRef = useRef(0);
 
     useEffect(() => {
         loadFont().then((font) => {
@@ -542,14 +598,47 @@ export default function Hero3D({ scrollProgress = 0, themeKey = "A" }) {
         });
     }, []);
 
+    // Expose per-letter viewport rects (computed from layout + camera, not the
+    // render loop) so falling icons can fade behind the glyphs even when the
+    // WebGL render loop is throttled or stalled.
+    useEffect(() => {
+        if (!layoutData || !wordmarkRectRef) return;
+        const tick = () => {
+            const canvas = document.querySelector(".hero-canvas-wrap canvas");
+            if (canvas) {
+                wordmarkRectRef.current = computeWordmarkRects(layoutData, canvas);
+            }
+        };
+        tick();
+        const id = setInterval(tick, 16);
+        return () => clearInterval(id);
+    }, [layoutData, wordmarkRectRef]);
+
+    // Drive the render loop on a wall-clock timer so the scene keeps
+    // animating even when the Preview tab throttles requestAnimationFrame.
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const state = stateRef.current;
+            if (state && startRef.current) {
+                state.advance((performance.now() - startRef.current) / 1000);
+            }
+        }, 16);
+        return () => clearInterval(interval);
+    }, []);
+
     if (!layoutData) return <div className="hero-canvas" style={{ width: "100%", height: "400px" }} />;
 
     return (
         <Canvas
             className="hero-canvas"
             dpr={[1, 2]}
-            camera={{ position: [0, -2.5, 14], fov: 42 }}
+            frameloop="never"
+            camera={{ position: [0, 2.5, 14], fov: 42 }}
             gl={{ antialias: true, alpha: true, preserveDrawingBuffer: false }}
+            onCreated={(state) => {
+                stateRef.current = state;
+                startRef.current = performance.now();
+            }}
             style={{ width: "100%", height: "100%" }}
         >
             <Scene layoutData={layoutData} scrollProgress={scrollProgress} themeKey={themeKey} />

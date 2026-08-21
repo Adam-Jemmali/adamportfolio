@@ -49,7 +49,7 @@ export default function OceanWave({ scrollProgress = 0 }) {
             const mx = mouseRef.current.x * w;
 
             for (let i = 0; i < WAVE_COUNT; i++) {
-                const yBase = h * (0.15 + i * 0.18);
+                const yBase = h * (0.45 + i * 0.11);
                 const amplitude = 12 + i * 6;
                 const freq = 0.002 + i * 0.0004;
                 const speed = 0.3 + i * 0.15;

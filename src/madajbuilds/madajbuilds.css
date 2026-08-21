@@ -369,8 +369,9 @@ body {
     display: grid;
     grid-template-columns: 1.4fr 1fr 1.2fr;
     gap: 2rem;
+    align-items: start;
     width: 100%;
-    padding: 0 3rem;
+    padding: 0 2.25rem;
     will-change: transform, opacity;
 }
 
@@ -384,22 +385,49 @@ body {
 
 .hero-info-right {
     text-align: right;
-    padding-right: 0.5rem;
 }
 
 .hero-title {
+    position: relative;
+    z-index: 1;
     font-family: "Georama", sans-serif;
     font-weight: 800;
-    font-size: min(3.2vw, 2.8rem);
+    font-size: min(2.6vw, 2.1rem);
     line-height: 1.15;
     letter-spacing: -0.01em;
     margin: 0;
 }
 
+.title-on-cloud {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 50px;
+    cursor: pointer;
+}
+
+.cloud-seat {
+    position: absolute;
+    left: -10%;
+    bottom: 0;
+    width: 120%;
+    height: 58px;
+    color: #22d3ee;
+    z-index: 0;
+    opacity: 0.9;
+    filter: drop-shadow(0 10px 18px rgba(34, 211, 238, 0.28));
+    pointer-events: none;
+    transform-origin: 50% 100%;
+    will-change: transform;
+}
+
+.cloud-seat .cloud-puff {
+    transform-box: fill-box;
+}
+
 .hero-tagline {
     font-family: "Roboto Mono", monospace;
     font-weight: 700;
-    font-size: min(1.8vw, 1.2rem);
+    font-size: min(1.55vw, 1.05rem);
     line-height: 1.5;
     margin: 0;
     color: var(--fg);
@@ -408,7 +436,7 @@ body {
 .hero-bio {
     font-family: "Roboto Mono", monospace;
     font-weight: 700;
-    font-size: min(1.6vw, 1rem);
+    font-size: min(1.4vw, 0.95rem);
     line-height: 1.5;
     margin: 0;
     color: var(--dim);
@@ -417,7 +445,7 @@ body {
 /* ── Hero canvas ──────────────────────────────────────────────── */
 .hero-canvas-wrap {
     position: absolute;
-    top: 35%;
+    top: 41%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 100vw;
@@ -434,16 +462,16 @@ body {
 /* ── Hero headline ────────────────────────────────────────────── */
 .hero-headline {
     position: absolute;
-    bottom: 2.5rem;
-    left: 3rem;
+    bottom: 3.5rem;
+    left: 2.25rem;
     z-index: 6;
     transform-origin: left bottom;
     will-change: transform, opacity;
 }
 
-.hero-headline-text {
+.hero-headline .hero-headline-text {
     font-weight: 900;
-    font-size: clamp(2rem, min(4.2vw, 4.5vh), 4.2rem);
+    font-size: clamp(1.6rem, 4.2vw, 3.4rem);
     line-height: 1.08;
     letter-spacing: -0.01em;
     text-align: left;
@@ -455,35 +483,24 @@ body {
 .falling-icons-layer {
     position: absolute;
     inset: 0;
-    z-index: 3;
+    z-index: 0;
     pointer-events: none;
     overflow: hidden;
+    perspective: 900px;
     will-change: transform, opacity;
 }
 
 .falling-icon {
     position: absolute;
-    top: -60px;
-    animation: icon-fall linear infinite;
+    top: 0;
+    left: 0;
     opacity: 0.6;
+    transform-origin: 50% 50%;
+    will-change: transform, opacity, filter;
+    backface-visibility: visible;
 }
 
-@keyframes icon-fall {
-    0% {
-        transform: translateY(-60px) rotate(0deg);
-        opacity: 0;
-    }
-    10% {
-        opacity: 0.6;
-    }
-    90% {
-        opacity: 0.4;
-    }
-    100% {
-        transform: translateY(calc(100vh + 60px)) rotate(360deg);
-        opacity: 0;
-    }
-}
+
 
 /* ── Headline ─────────────────────────────────────────────────── */
 .headline {
@@ -520,7 +537,6 @@ body {
     opacity: 0.85;
 }
 
-.blob.tl { top: 6%; left: 4%; }
 .blob.br { bottom: 8%; right: 6%; transform: scaleX(-1); }
 
 .star {
@@ -687,6 +703,14 @@ body {
     .hero-info-center,
     .hero-info-right {
         text-align: center;
+    }
+
+    .title-on-cloud {
+        padding-bottom: 40px;
+    }
+
+    .cloud-seat {
+        height: 46px;
     }
 
     .hero-headline-text {

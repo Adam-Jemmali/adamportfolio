@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import { getCapsule } from "@wenhaoqi/wasm_design_utils/squircle";
 import { ReactLenis } from "lenis/react";
 import Hero3D from "./Hero3D.jsx";
@@ -6,6 +8,10 @@ import OceanWave from "./OceanWave.jsx";
 import WaterDrop from "./WaterDrop.jsx";
 import ProfilePanel from "./ProfilePanel.jsx";
 import { useScrollProgress } from "../utils/useScrollProgress.js";
+
+// Keep GSAP advancing on wall-clock time when rAF is throttled (the Preview
+// tab throttles requestAnimationFrame), so the intro can't stall.
+gsap.ticker.lagSmoothing(0);
 
 const THEMES = [
     { key: "A", accent: "#5b6cff", accent2: "#22d3ee" },
@@ -38,16 +44,30 @@ const ICON_PATHS = [
 
 const ICON_COLORS = ["#5b9fff", "#22d3ee", "#34d399", "#facc15", "#f87171", "#a78bfa", "#fb923c", "#f472b6"];
 
-// Generate falling icons deterministically at module scope
-const FALLING_ICONS = Array.from({ length: 16 }, (_, i) => ({
+// Generate falling icons deterministically at module scope.
+// Each icon gets its own tumble speed, starting angle, drift, and depth
+// (depth drives the parallax scale/blur/speed).
+const FALLING_ICONS = Array.from({ length: 34 }, (_, i) => ({
     path: ICON_PATHS[i % ICON_PATHS.length],
     color: ICON_COLORS[i % ICON_COLORS.length],
-    size: 28 + (((i * 7 + 3) % 45)),
-    x: ((i * 137 + 42) % 100),
-    delay: ((i * 1.3) % 12),
-    duration: 8 + ((i * 2.7) % 8),
-    rotate: ((i * 60) % 360),
+    size: 16 + (((i * 7 + 3) % 60)),
+    x: ((i * 137 + 42) % 96),
+    delay: ((i * 1.1 + 0.3) % 7),
+    drift: (((i * 29 + 11) % 26) - 13),
+    startAngle: ((i * 61 + 17) % 360),
+    spin: (((i * 53 + 7) % 220) - 110),
+    tumble: 0.6 + (((i * 41 + 3) % 100) / 100),
+    // Wider depth bands: far (~0.05, small/blurry/slow) -> near (~1.05+, big/sharp/fast)
+    depth: 0.05 + (((i * 37 + 11) % 105) / 100),
 }));
+
+/* ── Cloud seat puffs ─────────────────────────────────────────────── */
+const CLOUD_PUFFS = [
+    { cx: 100, cy: 50, rx: 90, ry: 20, squash: 0.14 }, // wide base — barely dents
+    { cx: 45, cy: 34, rx: 38, ry: 24, squash: 0.4 },
+    { cx: 100, cy: 24, rx: 42, ry: 28, squash: 0.4 },
+    { cx: 150, cy: 36, rx: 34, ry: 22, squash: 0.4 },
+];
 
 /* ── Rolling digit coordinates ────────────────────────────────────── */
 function RollingDigit({ value, className = "" }) {
@@ -152,11 +172,173 @@ const Pill = ({ path, children, ...rest }) => (
     </button>
 );
 
+/* ── Falling 3D icons with parallax depth ─────────────────────────── */
+function FallingIcons({ scrollProgress, wordmarkRectRef }) {
+    const layerRef = useRef(null);
+    const iconElsRef = useRef([]);
+
+    useEffect(() => {
+        const els = iconElsRef.current;
+        if (!els.length) return;
+
+        // Per-icon runtime state. Depth drives parallax: near icons fall
+        // faster, render larger and sharper; far icons fall slower, smaller, blurrier.
+        const items = FALLING_ICONS.map((icon, i) => {
+            const speed = 20 + icon.depth * 60;
+            const scale = 0.55 + icon.depth * 0.75;
+            const blur = Math.max(0, 1 - icon.depth) * 3;
+            return {
+                el: els[i],
+                x: icon.x,
+                y: -80 - speed * icon.delay,
+                vx: icon.drift,
+                vy: speed,
+                rot: icon.startAngle,
+                rotV: icon.spin,
+                tumble: icon.tumble,
+                scale,
+                blur,
+                depth: icon.depth,
+                size: icon.size,
+                // gentle horizontal sway while falling
+                swayAmp: 6 + ((i * 37 + 5) % 22),
+                swayFreq: 0.4 + ((i * 23 + 7) % 90) / 100,
+                swayPhase: ((i * 17 + 3) % 63) / 10,
+                sway: 0,
+            };
+        });
+
+        let last = performance.now();
+
+        const tick = () => {
+            const now = performance.now();
+            const dt = Math.min((now - last) / 1000, 2);
+            last = now;
+            const H = window.innerHeight;
+            const layer = layerRef.current;
+            const lr = layer ? layer.getBoundingClientRect() : { left: 0, top: 0, width: H };
+
+            // Headline text lines ("I BRING / DEPTH & DISCIPLINE / TO ENGINEERING WORK")
+            const headlineTargets = [];
+            const headline = document.querySelector(".hero-headline-text");
+            if (headline) {
+                const range = document.createRange();
+                range.selectNodeContents(headline);
+                for (const r of Array.from(range.getClientRects())) {
+                    if (r.width > 4 && r.height > 4) headlineTargets.push(r);
+                }
+            }
+
+            for (const it of items) {
+                // Gentle horizontal sway
+                it.swayPhase += it.swayFreq * dt;
+                it.sway = Math.sin(it.swayPhase) * it.swayAmp;
+
+                it.rot += it.rotV * dt;
+                it.y += it.vy * dt;
+                it.x += it.vx * dt;
+
+                // Respawn above once it clears the bottom
+                if (it.y > H + 80) {
+                    it.y = -80;
+                    it.x = 4 + Math.random() * 92;
+                }
+                if (it.x < 2) { it.x = 2; it.vx = Math.abs(it.vx); }
+                else if (it.x > 98) { it.x = 98; it.vx = -Math.abs(it.vx); }
+
+                const half = (it.size * it.scale) / 2;
+                const rx = (it.x / 100) * lr.width + it.sway;
+                const ry = it.y;
+                const z = it.scale * 90;
+                const vpx = rx + lr.left;
+                const vpy = ry + lr.top;
+
+                // Soft fade in/out at the screen edges
+                let opacity = 0.4;
+                if (it.y < 0) opacity = Math.max(0, 0.4 * (1 + it.y / 90));
+                else if (it.y > H - 90) opacity = Math.max(0, 0.4 * ((H - it.y) / 90));
+
+                // Fade slightly while passing behind the 3D wordmark letters.
+                // Nearer icons dim less, farther icons dim more (layered depth).
+                const wmRects = wordmarkRectRef ? wordmarkRectRef.current : null;
+                if (wmRects && wmRects.length) {
+                    const margin = 22;
+                    const dim = 0.6 - it.depth * 0.4;
+                    let wmFade = 1;
+                    for (const r of wmRects) {
+                        const insideX = Math.min(vpx - (r.left - margin), (r.right + margin) - vpx);
+                        const insideY = Math.min(vpy - (r.top - margin), (r.bottom + margin) - vpy);
+                        const inside = Math.min(insideX, insideY);
+                        if (inside > 0) {
+                            const t = Math.min(1, inside / margin);
+                            wmFade = Math.min(wmFade, 1 - dim * t);
+                        }
+                    }
+                    opacity *= wmFade;
+                }
+
+                // Same soft fade behind the "I BRING…" headline text lines.
+                if (headlineTargets.length) {
+                    const margin = 22;
+                    let hFade = 1;
+                    for (const r of headlineTargets) {
+                        const insideX = Math.min(vpx - (r.left - margin), (r.right + margin) - vpx);
+                        const insideY = Math.min(vpy - (r.top - margin), (r.bottom + margin) - vpy);
+                        const inside = Math.min(insideX, insideY);
+                        if (inside > 0) {
+                            const t = Math.min(1, inside / margin);
+                            hFade = Math.min(hFade, 1 - 0.5 * t);
+                        }
+                    }
+                    opacity *= hFade;
+                }
+
+                it.el.style.transform =
+                    `translate3d(${(rx - half).toFixed(1)}px, ${(ry - half).toFixed(1)}px, ${z.toFixed(1)}px) ` +
+                    `rotateX(${(it.rot * it.tumble).toFixed(2)}deg) ` +
+                    `rotateY(${(it.rot * it.tumble * 0.7).toFixed(2)}deg) ` +
+                    `rotateZ(${it.rot.toFixed(2)}deg) scale(${it.scale.toFixed(3)})`;
+                it.el.style.opacity = opacity.toFixed(3);
+                it.el.style.filter = it.blur > 0.02 ? `blur(${it.blur.toFixed(2)}px)` : "none";
+            }
+        };
+
+        const interval = setInterval(tick, 16);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div ref={layerRef} className="falling-icons-layer" aria-hidden="true" style={{
+            opacity: Math.max(0, 1 - scrollProgress * 2),
+            transform: `translateY(${-scrollProgress * 100}%)`,
+        }}>
+            {FALLING_ICONS.map((icon, i) => (
+                <svg
+                    key={i}
+                    ref={(el) => { iconElsRef.current[i] = el; }}
+                    className="falling-icon"
+                    viewBox="0 0 24 24"
+                    width={icon.size}
+                    height={icon.size}
+                    style={{ color: icon.color }}
+                >
+                    <path fill="currentColor" d={icon.path} />
+                </svg>
+            ))}
+        </div>
+    );
+}
+
 /* ════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
    ════════════════════════════════════════════════════════════════════ */
 const MadajBuilds = () => {
     const heroRef = useRef(null);
+    const wordmarkRectRef = useRef(null);
+    const titleCloudRef = useRef(null);
+    const titleRef = useRef(null);
+    const cloudRef = useRef(null);
+    const puffRefs = useRef([]);
     const { scrollProgress, heroInView } = useScrollProgress(heroRef);
 
     // Theme persistence
@@ -225,6 +407,146 @@ const MadajBuilds = () => {
         if (el) el.textContent = new Date().getFullYear();
     }, []);
 
+    // Title-sits-on-cloud animation: gravity drop → squash → rebound → settle,
+    // plus a jelly cloud that dents under the pointer and a click-to-bounce.
+    useGSAP(() => {
+        const title = titleRef.current;
+        const cloud = cloudRef.current;
+        const wrapper = titleCloudRef.current;
+        const puffs = puffRefs.current;
+        if (!title || !cloud || !wrapper || puffs.length !== CLOUD_PUFFS.length) return;
+
+        gsap.set(title, { transformOrigin: "50% 50%" });
+        gsap.set(cloud, { transformOrigin: "50% 100%" });
+
+        let settled = false;
+        let hovering = false;
+        let bouncing = false;
+        let idle = null;
+
+        const startIdle = () => {
+            if (hovering || bouncing) return; // jelly/bounce active — resume on leave/complete
+            if (idle) idle.kill();
+            idle = gsap.to(cloud, {
+                scaleY: 1.05,
+                scaleX: 0.95,
+                duration: 1.6,
+                ease: "sine.inOut",
+                yoyo: true,
+                repeat: -1,
+            });
+        };
+
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            gsap.set(title, { y: 0, autoAlpha: 1 });
+            gsap.set(cloud, { scaleX: 1, scaleY: 1 });
+            settled = true;
+            return;
+        }
+
+        // Gravity drop → impact squash → rebound → settle
+        gsap
+            .timeline()
+            .fromTo(
+                title,
+                { y: -46, autoAlpha: 0 },
+                { y: 0, autoAlpha: 1, duration: 0.55, ease: "power2.in" }
+            )
+            .to(cloud, { scaleY: 0.7, scaleX: 1.32, duration: 0.13, ease: "power2.in" }, ">")
+            .to(title, { y: 5, duration: 0.13, ease: "power2.in" }, "<")
+            .to(cloud, { scaleY: 1.09, scaleX: 0.92, duration: 0.34, ease: "power2.out" }, ">")
+            .to(title, { y: -8, duration: 0.34, ease: "power2.out" }, "<")
+            .to(cloud, { scaleY: 1, scaleX: 1, duration: 0.45, ease: "elastic.out(1, 0.4)" }, ">")
+            .to(title, { y: 0, duration: 0.45, ease: "elastic.out(1, 0.4)" }, "<")
+            .add(() => {
+                settled = true;
+                startIdle();
+            });
+
+        const dentPuffs = (clientX) => {
+            const rect = cloud.getBoundingClientRect();
+            if (!rect.width) return;
+            // Pointer x mapped into the 0–200 viewBox coordinate space.
+            const vx = ((clientX - rect.left) / rect.width) * 200;
+            CLOUD_PUFFS.forEach((p, i) => {
+                const d = Math.abs(vx - p.cx);
+                let w = Math.max(0, 1 - d / 62);
+                w = w * w * (3 - 2 * w); // smoothstep falloff
+                // Squash the puff's vertical radius while planting its bottom
+                // edge (cy + ry stays fixed) so it dents downward like jelly.
+                const ry = p.ry * (1 - p.squash * w);
+                const cy = p.cy + (p.ry - ry);
+                const rx = p.rx * (1 + p.squash * 0.4 * w);
+                gsap.to(puffs[i], {
+                    attr: { ry, cy, rx },
+                    duration: 0.15,
+                    ease: "power2.out",
+                    overwrite: "auto",
+                });
+            });
+        };
+
+        const resetPuffs = () => {
+            CLOUD_PUFFS.forEach((p, i) => {
+                gsap.to(puffs[i], {
+                    attr: { ry: p.ry, cy: p.cy, rx: p.rx },
+                    duration: 0.3,
+                    ease: "power2.out",
+                    overwrite: "auto",
+                });
+            });
+        };
+
+        const onEnter = () => {
+            if (!settled) return;
+            hovering = true;
+            if (idle) idle.kill();
+        };
+
+        const onMove = (e) => {
+            if (!settled || bouncing) return;
+            dentPuffs(e.clientX);
+        };
+
+        const onLeave = () => {
+            if (!settled) return;
+            hovering = false;
+            resetPuffs();
+            startIdle();
+        };
+
+        const onBounce = () => {
+            if (!settled || bouncing) return;
+            bouncing = true;
+            if (idle) idle.kill();
+            resetPuffs();
+
+            gsap
+                .timeline({ onComplete: () => { bouncing = false; startIdle(); } })
+                .to(title, { y: -52, duration: 0.42, ease: "power2.out" })
+                .to(title, { y: 0, duration: 0.42, ease: "power2.in" })
+                .to(cloud, { scaleY: 0.62, scaleX: 1.38, duration: 0.14, ease: "power2.in" }, ">")
+                .to(title, { y: 8, duration: 0.14, ease: "power2.in" }, "<")
+                .to(cloud, { scaleY: 1.1, scaleX: 0.9, duration: 0.4, ease: "power2.out" }, ">")
+                .to(title, { y: -12, duration: 0.4, ease: "power2.out" }, "<")
+                .to(cloud, { scaleY: 1, scaleX: 1, duration: 0.5, ease: "elastic.out(1, 0.4)" }, ">")
+                .to(title, { y: 0, duration: 0.5, ease: "elastic.out(1, 0.4)" }, "<");
+        };
+
+        wrapper.addEventListener("pointerenter", onEnter);
+        wrapper.addEventListener("pointermove", onMove);
+        wrapper.addEventListener("pointerleave", onLeave);
+        wrapper.addEventListener("click", onBounce);
+
+        return () => {
+            if (idle) idle.kill();
+            wrapper.removeEventListener("pointerenter", onEnter);
+            wrapper.removeEventListener("pointermove", onMove);
+            wrapper.removeEventListener("pointerleave", onLeave);
+            wrapper.removeEventListener("click", onBounce);
+        };
+    }, []);
+
     return (
         <ReactLenis root options={{ duration: 1.2, smoothWheel: true }}>
             {/* Background effects */}
@@ -262,19 +584,32 @@ const MadajBuilds = () => {
             <main>
                 {/* ── HERO ──────────────────────────────────────────── */}
                 <section className="panel panel-hero" ref={heroRef}>
-                    <svg className="blob tl" viewBox="0 0 120 90" style={{ color: "#22d3ee" }} aria-hidden="true">
-                        <path fill="currentColor" d="M8 46 Q2 24 22 16 Q30 4 48 10 Q66 2 76 18 Q96 20 92 42 Q100 60 80 66 Q70 82 50 76 Q30 88 16 70 Q-2 66 8 46 Z" />
-                    </svg>
-
                     {/* Hero info row: title + tagline + bio */}
                     <div className="hero-info" style={{
                         opacity: Math.max(0, 1 - scrollProgress * 1.2),
                         transform: `translateY(${-scrollProgress * 60}%) translateZ(${-scrollProgress * 80}px)`,
                     }}>
                         <div className="hero-info-col">
-                            <h1 className="hero-title">
-                                AI Engineering<br />&amp; AI automation
-                            </h1>
+                            <div className="title-on-cloud" ref={titleCloudRef}>
+                                <h1 className="hero-title" ref={titleRef}>
+                                    AI Engineering<br />&amp; AI automation
+                                </h1>
+                                <svg className="cloud-seat" viewBox="0 0 200 70" preserveAspectRatio="none" ref={cloudRef} aria-hidden="true">
+                                    <g fill="currentColor">
+                                        {CLOUD_PUFFS.map((p, i) => (
+                                            <ellipse
+                                                key={i}
+                                                className="cloud-puff"
+                                                cx={p.cx}
+                                                cy={p.cy}
+                                                rx={p.rx}
+                                                ry={p.ry}
+                                                ref={(el) => { puffRefs.current[i] = el; }}
+                                            />
+                                        ))}
+                                    </g>
+                                </svg>
+                            </div>
                         </div>
                         <div className="hero-info-col hero-info-center">
                             <p className="hero-tagline">
@@ -292,19 +627,13 @@ const MadajBuilds = () => {
 
                     {/* 3D Canvas — absolutely positioned, behind headline */}
                     <div className="hero-canvas-wrap">
-                        <Hero3D scrollProgress={scrollProgress} themeKey={theme.key} />
+                        <Hero3D scrollProgress={scrollProgress} themeKey={theme.key} wordmarkRectRef={wordmarkRectRef} />
                     </div>
 
                     {/* Headline overlay */}
                     <div className="hero-headline" style={{
-                        perspective: "900px",
-                        opacity: 1 - scrollProgress * 1.5,
-                        transform: `
-                            perspective(900px)
-                            rotateX(${scrollProgress * 35}deg)
-                            translateZ(${-scrollProgress * 120}px)
-                            translateY(${scrollProgress * 40}px)
-                        `,
+                        opacity: Math.max(0, 1 - scrollProgress * 1.3),
+                        transform: `translateY(${-scrollProgress * 70}px) rotateX(${scrollProgress * 25}deg)`,
                     }}>
                         <h2 className="headline hero-headline-text">
                             I BRING<br />
@@ -314,29 +643,7 @@ const MadajBuilds = () => {
                     </div>
 
                     {/* Falling icons layer */}
-                    <div className="falling-icons-layer" style={{
-                        opacity: Math.max(0, 1 - scrollProgress * 2),
-                        transform: `translateY(${-scrollProgress * 100}%)`,
-                    }} aria-hidden="true">
-                        {FALLING_ICONS.map((icon, i) => (
-                            <svg
-                                key={i}
-                                className="falling-icon"
-                                viewBox="0 0 24 24"
-                                width={icon.size}
-                                height={icon.size}
-                                style={{
-                                    left: `${icon.x}%`,
-                                    animationDelay: `${icon.delay}s`,
-                                    animationDuration: `${icon.duration}s`,
-                                    color: icon.color,
-                                    transform: `rotate(${icon.rotate}deg)`,
-                                }}
-                            >
-                                <path fill="currentColor" d={icon.path} />
-                            </svg>
-                        ))}
-                    </div>
+                    <FallingIcons scrollProgress={scrollProgress} wordmarkRectRef={wordmarkRectRef} />
 
                     {/* Hero-meta row at bottom of hero */}
                     <div className="hero-meta">
