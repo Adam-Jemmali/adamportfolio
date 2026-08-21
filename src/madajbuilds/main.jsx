@@ -4,7 +4,5 @@ import MadajBuilds from "./MadajBuilds.jsx";
 import "./madajbuilds.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-    <React.StrictMode>
-        <MadajBuilds />
-    </React.StrictMode>
+    <MadajBuilds />
 );
