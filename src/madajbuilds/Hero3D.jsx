@@ -262,13 +262,15 @@ function ScriptWord({ layoutData, scrollProgress, themeKey = "A" }) {
         const g = groupRef.current;
         if (!g) return;
 
-        // Smooth mouse parallax + scroll tilt
+        // Smooth mouse parallax + scroll tilt. As the wordmark recedes,
+        // turn its face to the right so the backward motion reads in 3D.
         const sp = scrollProgress;
         const mx = mouseRef.current.x * 0.15;
         const my = mouseRef.current.y * 0.08;
         const tiltX = my + sp * 1.2;
+        const turnRight = sp * 0.62;
         const groupEase = 1 - Math.pow(0.02, delta);
-        g.rotation.y += (mx - g.rotation.y) * groupEase;
+        g.rotation.y += (mx + turnRight - g.rotation.y) * groupEase;
         g.rotation.x += (tiltX - g.rotation.x) * groupEase;
         g.position.z = -sp * 5;
         g.scale.setScalar(1 - sp * 0.35);

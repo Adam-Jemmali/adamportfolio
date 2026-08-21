@@ -62,11 +62,13 @@ const FALLING_ICONS = Array.from({ length: 34 }, (_, i) => ({
 }));
 
 /* ── Cloud seat puffs ─────────────────────────────────────────────── */
+// Keep the cloud as separate puffs so pressure can be applied at the exact
+// horizontal pointer position instead of squashing the whole cloud uniformly.
 const CLOUD_PUFFS = [
-    { cx: 100, cy: 50, rx: 90, ry: 20, squash: 0.14 }, // wide base — barely dents
-    { cx: 45, cy: 34, rx: 38, ry: 24, squash: 0.4 },
-    { cx: 100, cy: 24, rx: 42, ry: 28, squash: 0.4 },
-    { cx: 150, cy: 36, rx: 34, ry: 22, squash: 0.4 },
+    { cx: 100, cy: 50, rx: 90, ry: 20, squash: 0.14 },
+    { cx: 45, cy: 34, rx: 38, ry: 24, squash: 0.42 },
+    { cx: 100, cy: 24, rx: 42, ry: 28, squash: 0.46 },
+    { cx: 150, cy: 36, rx: 34, ry: 22, squash: 0.42 },
 ];
 
 /* ── Rolling digit coordinates ────────────────────────────────────── */
@@ -92,6 +94,34 @@ function RollingCoords({ coords }) {
                 <RollingDigit key={`y${i}-${ch}`} value={ch} />
             ))}
             <span className="coords-sep">Y</span>
+        </span>
+    );
+}
+
+/* ── Bent hero title ──────────────────────────────────────────────── */
+function BentTitleLine({ text, curve = 9 }) {
+    const chars = Array.from(text);
+    const denominator = Math.max(chars.length - 1, 1);
+
+    return (
+        <span className="hero-title-line" aria-hidden="true">
+            {chars.map((char, i) => {
+                const position = (i / denominator) * 2 - 1;
+                const y = curve * position * position - curve * 0.35;
+                const rotation = position * 7;
+                return (
+                    <span
+                        className="hero-title-char"
+                        key={`${char}-${i}`}
+                        style={{
+                            "--bend-y": `${y.toFixed(2)}px`,
+                            "--bend-rotation": `${rotation.toFixed(2)}deg`,
+                        }}
+                    >
+                        {char === " " ? "\u00a0" : char}
+                    </span>
+                );
+            })}
         </span>
     );
 }
@@ -407,8 +437,8 @@ const MadajBuilds = () => {
         if (el) el.textContent = new Date().getFullYear();
     }, []);
 
-    // Title-sits-on-cloud animation: gravity drop → squash → rebound → settle,
-    // plus a jelly cloud that dents under the pointer and a click-to-bounce.
+    // Title-on-cloud animation: pointer pressure dents the nearest puff, while
+    // clicking launches the title into a taller jelly bounce.
     useGSAP(() => {
         const title = titleRef.current;
         const cloud = cloudRef.current;
@@ -416,132 +446,162 @@ const MadajBuilds = () => {
         const puffs = puffRefs.current;
         if (!title || !cloud || !wrapper || puffs.length !== CLOUD_PUFFS.length) return;
 
-        gsap.set(title, { transformOrigin: "50% 50%" });
+        gsap.set(title, { transformOrigin: "50% 100%" });
         gsap.set(cloud, { transformOrigin: "50% 100%" });
 
         let settled = false;
-        let hovering = false;
         let bouncing = false;
         let idle = null;
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        const resetPuffs = (duration = 0.3) => {
+            CLOUD_PUFFS.forEach((p, i) => {
+                gsap.to(puffs[i], {
+                    attr: { cx: p.cx, cy: p.cy, rx: p.rx, ry: p.ry },
+                    duration,
+                    ease: "power2.out",
+                    overwrite: "auto",
+                });
+            });
+        };
+
+        const dentPuffs = (clientX, strength = 0.78) => {
+            const rect = cloud.getBoundingClientRect();
+            if (!rect.width) return;
+
+            // Map the viewport pointer to the cloud's 0–200 SVG coordinate.
+            // The smooth falloff keeps the pressed spot soft while preserving
+            // a clearly local dent rather than flattening the whole cloud.
+            const pointerX = Math.max(0, Math.min(200, ((clientX - rect.left) / rect.width) * 200));
+            CLOUD_PUFFS.forEach((p, i) => {
+                const distance = Math.abs(pointerX - p.cx);
+                const influence = Math.max(0, 1 - distance / 62);
+                const weight = influence * influence * (3 - 2 * influence);
+                const amount = p.squash * strength * weight;
+                const ry = p.ry * (1 - amount);
+                const cy = p.cy + (p.ry - ry);
+                const rx = p.rx * (1 + amount * 0.5);
+
+                gsap.to(puffs[i], {
+                    attr: { cy, ry, rx },
+                    duration: strength > 0.9 ? 0.1 : 0.16,
+                    ease: "power2.out",
+                    overwrite: "auto",
+                });
+            });
+        };
 
         const startIdle = () => {
-            if (hovering || bouncing) return; // jelly/bounce active — resume on leave/complete
             if (idle) idle.kill();
+            if (bouncing) return;
             idle = gsap.to(cloud, {
-                scaleY: 1.05,
-                scaleX: 0.95,
-                duration: 1.6,
+                scaleY: 1.04,
+                scaleX: 0.96,
+                duration: 1.7,
                 ease: "sine.inOut",
                 yoyo: true,
                 repeat: -1,
             });
         };
 
-        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-            gsap.set(title, { y: 0, autoAlpha: 1 });
-            gsap.set(cloud, { scaleX: 1, scaleY: 1 });
-            settled = true;
-            return;
-        }
-
-        // Gravity drop → impact squash → rebound → settle
-        gsap
-            .timeline()
-            .fromTo(
-                title,
-                { y: -46, autoAlpha: 0 },
-                { y: 0, autoAlpha: 1, duration: 0.55, ease: "power2.in" }
-            )
-            .to(cloud, { scaleY: 0.7, scaleX: 1.32, duration: 0.13, ease: "power2.in" }, ">")
-            .to(title, { y: 5, duration: 0.13, ease: "power2.in" }, "<")
-            .to(cloud, { scaleY: 1.09, scaleX: 0.92, duration: 0.34, ease: "power2.out" }, ">")
-            .to(title, { y: -8, duration: 0.34, ease: "power2.out" }, "<")
-            .to(cloud, { scaleY: 1, scaleX: 1, duration: 0.45, ease: "elastic.out(1, 0.4)" }, ">")
-            .to(title, { y: 0, duration: 0.45, ease: "elastic.out(1, 0.4)" }, "<")
-            .add(() => {
-                settled = true;
-                startIdle();
-            });
-
-        const dentPuffs = (clientX) => {
-            const rect = cloud.getBoundingClientRect();
-            if (!rect.width) return;
-            // Pointer x mapped into the 0–200 viewBox coordinate space.
-            const vx = ((clientX - rect.left) / rect.width) * 200;
-            CLOUD_PUFFS.forEach((p, i) => {
-                const d = Math.abs(vx - p.cx);
-                let w = Math.max(0, 1 - d / 62);
-                w = w * w * (3 - 2 * w); // smoothstep falloff
-                // Squash the puff's vertical radius while planting its bottom
-                // edge (cy + ry stays fixed) so it dents downward like jelly.
-                const ry = p.ry * (1 - p.squash * w);
-                const cy = p.cy + (p.ry - ry);
-                const rx = p.rx * (1 + p.squash * 0.4 * w);
-                gsap.to(puffs[i], {
-                    attr: { ry, cy, rx },
-                    duration: 0.15,
-                    ease: "power2.out",
-                    overwrite: "auto",
-                });
-            });
-        };
-
-        const resetPuffs = () => {
-            CLOUD_PUFFS.forEach((p, i) => {
-                gsap.to(puffs[i], {
-                    attr: { ry: p.ry, cy: p.cy, rx: p.rx },
-                    duration: 0.3,
-                    ease: "power2.out",
-                    overwrite: "auto",
-                });
-            });
-        };
-
-        const onEnter = () => {
-            if (!settled) return;
-            hovering = true;
-            if (idle) idle.kill();
-        };
-
-        const onMove = (e) => {
-            if (!settled || bouncing) return;
-            dentPuffs(e.clientX);
-        };
-
-        const onLeave = () => {
-            if (!settled) return;
-            hovering = false;
-            resetPuffs();
+        const settleAfterBounce = () => {
+            bouncing = false;
+            resetPuffs(0.28);
             startIdle();
         };
 
-        const onBounce = () => {
-            if (!settled || bouncing) return;
-            bouncing = true;
-            if (idle) idle.kill();
-            resetPuffs();
-
+        if (reducedMotion) {
+            gsap.set(title, { y: 0, autoAlpha: 1 });
+            gsap.set(cloud, { scaleX: 1, scaleY: 1 });
+            settled = true;
+        } else {
+            // Gravity drop → impact squash → rebound → settle.
             gsap
-                .timeline({ onComplete: () => { bouncing = false; startIdle(); } })
-                .to(title, { y: -52, duration: 0.42, ease: "power2.out" })
-                .to(title, { y: 0, duration: 0.42, ease: "power2.in" })
-                .to(cloud, { scaleY: 0.62, scaleX: 1.38, duration: 0.14, ease: "power2.in" }, ">")
-                .to(title, { y: 8, duration: 0.14, ease: "power2.in" }, "<")
-                .to(cloud, { scaleY: 1.1, scaleX: 0.9, duration: 0.4, ease: "power2.out" }, ">")
-                .to(title, { y: -12, duration: 0.4, ease: "power2.out" }, "<")
-                .to(cloud, { scaleY: 1, scaleX: 1, duration: 0.5, ease: "elastic.out(1, 0.4)" }, ">")
-                .to(title, { y: 0, duration: 0.5, ease: "elastic.out(1, 0.4)" }, "<");
+                .timeline()
+                .fromTo(
+                    title,
+                    { y: -46, autoAlpha: 0 },
+                    { y: 0, autoAlpha: 1, duration: 0.55, ease: "power2.in" }
+                )
+                .to(cloud, { scaleY: 0.7, scaleX: 1.32, duration: 0.13, ease: "power2.in" }, ">")
+                .to(title, { y: 5, duration: 0.13, ease: "power2.in" }, "<")
+                .to(cloud, { scaleY: 1.09, scaleX: 0.92, duration: 0.34, ease: "power2.out" }, ">")
+                .to(title, { y: -8, duration: 0.34, ease: "power2.out" }, "<")
+                .to(cloud, { scaleY: 1, scaleX: 1, duration: 0.45, ease: "elastic.out(1, 0.4)" }, ">")
+                .to(title, { y: 0, duration: 0.45, ease: "elastic.out(1, 0.4)" }, "<")
+                .add(() => {
+                    settled = true;
+                    startIdle();
+                });
+        }
+
+        const onMove = (event) => {
+            if (!settled || bouncing || event.pointerType === "touch") return;
+            if (idle) idle.kill();
+            dentPuffs(event.clientX);
         };
 
-        wrapper.addEventListener("pointerenter", onEnter);
+        const onPointerDown = (event) => {
+            if (!settled || bouncing) return;
+            if (idle) idle.kill();
+            dentPuffs(event.clientX, 1);
+        };
+
+        const onLeave = () => {
+            if (!settled || bouncing) return;
+            resetPuffs();
+            gsap.to(cloud, {
+                scaleX: 1,
+                scaleY: 1,
+                duration: 0.35,
+                ease: "elastic.out(1, 0.35)",
+                onComplete: startIdle,
+            });
+        };
+
+        const onBounce = (event) => {
+            if (!settled || reducedMotion) return;
+            if (idle) idle.kill();
+            bouncing = true;
+            dentPuffs(event.clientX, 1);
+            gsap.killTweensOf([title, cloud]);
+
+            gsap
+                .timeline({ onComplete: settleAfterBounce })
+                // A click is a local impact, followed by a much higher launch.
+                .to(cloud, {
+                    scaleY: 0.62,
+                    scaleX: 1.36,
+                    duration: 0.13,
+                    ease: "power2.in",
+                })
+                .to(title, { y: -112, duration: 0.42, ease: "power2.out" }, "<")
+                .to(cloud, {
+                    scaleY: 1.12,
+                    scaleX: 0.9,
+                    duration: 0.3,
+                    ease: "power2.out",
+                }, ">-0.04")
+                .to(title, { y: 7, duration: 0.42, ease: "bounce.out" }, ">")
+                .to(cloud, {
+                    scaleY: 1,
+                    scaleX: 1,
+                    duration: 0.5,
+                    ease: "elastic.out(1, 0.4)",
+                }, "<")
+                .to(title, { y: 0, duration: 0.18, ease: "power2.out" }, ">-0.08");
+        };
+
         wrapper.addEventListener("pointermove", onMove);
+        wrapper.addEventListener("pointerdown", onPointerDown);
         wrapper.addEventListener("pointerleave", onLeave);
         wrapper.addEventListener("click", onBounce);
 
         return () => {
             if (idle) idle.kill();
-            wrapper.removeEventListener("pointerenter", onEnter);
+            gsap.killTweensOf([...puffs, title, cloud]);
             wrapper.removeEventListener("pointermove", onMove);
+            wrapper.removeEventListener("pointerdown", onPointerDown);
             wrapper.removeEventListener("pointerleave", onLeave);
             wrapper.removeEventListener("click", onBounce);
         };
@@ -591,20 +651,24 @@ const MadajBuilds = () => {
                     }}>
                         <div className="hero-info-col">
                             <div className="title-on-cloud" ref={titleCloudRef}>
-                                <h1 className="hero-title" ref={titleRef}>
-                                    AI Engineering<br />&amp; AI automation
+                                <h1
+                                    className="hero-title"
+                                    ref={titleRef}
+                                    aria-label="AI Engineering and AI automation"
+                                >
+                                    <BentTitleLine text="AI Engineering" curve={10} />
+                                    <BentTitleLine text="& AI automation" curve={8} />
                                 </h1>
                                 <svg className="cloud-seat" viewBox="0 0 200 70" preserveAspectRatio="none" ref={cloudRef} aria-hidden="true">
                                     <g fill="currentColor">
-                                        {CLOUD_PUFFS.map((p, i) => (
+                                        {CLOUD_PUFFS.map((puff, i) => (
                                             <ellipse
                                                 key={i}
-                                                className="cloud-puff"
-                                                cx={p.cx}
-                                                cy={p.cy}
-                                                rx={p.rx}
-                                                ry={p.ry}
-                                                ref={(el) => { puffRefs.current[i] = el; }}
+                                                cx={puff.cx}
+                                                cy={puff.cy}
+                                                rx={puff.rx}
+                                                ry={puff.ry}
+                                                ref={(element) => { puffRefs.current[i] = element; }}
                                             />
                                         ))}
                                     </g>
