@@ -333,7 +333,13 @@ body {
 }
 
 .panel-hero {
-    background: var(--bg);
+    background: linear-gradient(
+        180deg,
+        var(--bg) 0%,
+        var(--bg) 62%,
+        #0b1323 84%,
+        #0a1119 100%
+    );
 }
 
 .panel-two {
@@ -713,7 +719,15 @@ body {
     align-items: stretch;
     justify-content: flex-start;
     padding: 0;
-    background: #090c0d;
+    background: linear-gradient(
+        180deg,
+        #0a1119 0%,
+        #0a1118 12%,
+        #091014 32%,
+        #090c0d 62%,
+        #090c0d 100%
+    );
+    filter: none;
     text-align: left;
 }
 
@@ -762,6 +776,10 @@ body {
     aspect-ratio: 1;
     overflow: hidden;
     isolation: isolate;
+    opacity: 0;
+    transform: translateY(26px) scale(0.965);
+    will-change: opacity, transform;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
     background:
         radial-gradient(ellipse at 52% 43%, #70c8c2 0%, #117986 25%, #064151 57%, #02151d 100%);
 }
@@ -804,6 +822,16 @@ body {
 
 .profile-template-visible .profile-template-signature {
     animation: profile-typewriter 0.52s steps(16, end) 0.05s forwards;
+}
+
+.profile-template-visible .profile-template-photo-wrap {
+    animation: profile-card-fade-in 0.86s cubic-bezier(0.22, 0.8, 0.24, 1) 0.08s forwards;
+}
+
+@keyframes profile-card-fade-in {
+    0% { opacity: 0; transform: translateY(26px) scale(0.965); }
+    65% { opacity: 1; transform: translateY(-3px) scale(1.006); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes profile-typewriter {
@@ -1002,6 +1030,11 @@ body {
     .profile-template-signature {
         clip-path: inset(0 0 0 0);
         opacity: 1;
+    }
+
+    .profile-template-photo-wrap {
+        opacity: 1;
+        transform: none;
     }
 
 }
