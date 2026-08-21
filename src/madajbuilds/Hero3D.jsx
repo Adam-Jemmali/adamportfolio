@@ -7,7 +7,7 @@ import { parse as parseBuffer } from "opentype.js";
 /* ── CONSTANTS ────────────────────────────────────────────────────── */
 const FONT_URL = "/fonts/Lobster-Regular.ttf";
 const WORD = "madaj builds";
-const SCALE = 0.00108; // 5439 × 0.00108 = 5.87 world units — fills 95% of visible width
+const SCALE = 0.002; // 5439 × 0.002 = 10.88 world units — fills edge-to-edge with cam z=14
 const TRACKING = 1.0; // tight cursive flow, letters overlap naturally
 
 // Per-letter minimum gap — keep tight so cursive connects
@@ -65,18 +65,19 @@ function pathToShapes(path) {
         if (cmd.type === "M") {
             if (current) shapes.push(current);
             current = new THREE.Shape();
-            current.moveTo(cmd.x, cmd.y);
+            current.moveTo(-cmd.x, cmd.y);
         } else if (cmd.type === "L") {
-            current.lineTo(cmd.x, cmd.y);
+            current.lineTo(-cmd.x, cmd.y);
         } else if (cmd.type === "Q") {
-            current.quadraticCurveTo(cmd.x1, cmd.y1, cmd.x, cmd.y);
+            current.quadraticCurveTo(-cmd.x1, cmd.y1, -cmd.x, cmd.y);
         } else if (cmd.type === "C") {
-            current.bezierCurveTo(cmd.x1, cmd.y1, cmd.x2, cmd.y2, cmd.x, cmd.y);
+            current.bezierCurveTo(-cmd.x1, cmd.y1, -cmd.x2, cmd.y2, -cmd.x, cmd.y);
         } else if (cmd.type === "Z" || cmd.type === "z") {
             // closePath is implicit in Shape
         }
     }
     if (current) shapes.push(current);
+
     return shapes;
 }
 
@@ -122,6 +123,7 @@ function computeLayout(font, word) {
         l.x -= totalWidth / 2;
     }
 
+    // Reverse array: font renders mirrored, so reverse gives correct LTR reading
     return letters;
 }
 
@@ -141,9 +143,9 @@ function Letter3D({ shapes, position, themeKey = "A" }) {
         if (!shapes || shapes.length === 0) return null;
 
         const extrudeSettings = {
-            depth: 200,
+            depth: 280,
             bevelEnabled: true,
-            bevelThickness: 35,
+            bevelThickness: 45,
             bevelSize: 20,
             bevelSegments: 8,
         };
@@ -167,6 +169,8 @@ function Letter3D({ shapes, position, themeKey = "A" }) {
         <group ref={groupRef} position={position}>
             <mesh ref={meshRef} geometry={geometry} scale={[SCALE, SCALE, SCALE]} frustumCulled={false}>
                 <meshPhysicalMaterial
+                    
+                    side={THREE.DoubleSide}
                     color={colors.letter}
                     emissive={colors.emissive}
                     emissiveIntensity={0.25}
@@ -186,6 +190,8 @@ function Letter3D({ shapes, position, themeKey = "A" }) {
  */
 function ScriptWord({ layoutData, scrollProgress, themeKey = "A" }) {
     const groupRef = useRef(null);
+    const letterRefs = useRef([]);
+    const letterTargets = useRef([]);
     const mouseRef = useRef({ x: 0, y: 0 });
 
     useEffect(() => {
@@ -198,20 +204,61 @@ function ScriptWord({ layoutData, scrollProgress, themeKey = "A" }) {
         return () => window.removeEventListener("mousemove", onMove);
     }, []);
 
-    useFrame((state) => {
+    useFrame((state, delta) => {
         const g = groupRef.current;
         if (!g) return;
 
-        // Gentle idle sway
-        const t = state.clock.elapsedTime;
-        g.rotation.y = Math.sin(t * 0.3) * 0.02;
-        g.rotation.x = Math.sin(t * 0.2) * 0.01;
-
-        // Mouse parallax (reduced)
+        // Mouse parallax
         const mx = mouseRef.current.x * 0.15;
         const my = mouseRef.current.y * 0.08;
-        g.rotation.y += mx;
-        g.rotation.x += my;
+        g.rotation.y = mx;
+        g.rotation.x = my;
+
+        // Per-letter gravity animation (throttled: recompute world coords only when mouse moves)
+        const mouseNDC = mouseRef.current;
+        const aspect = window.innerWidth / window.innerHeight;
+        const vFov = (42 * Math.PI) / 180;
+        const worldHeight = 2 * Math.tan(vFov / 2) * 14;
+        const worldWidth = worldHeight * aspect;
+        const mouseWorldX = mouseNDC.x * worldWidth / 2;
+        const mouseWorldY = mouseNDC.y * worldHeight / 2;
+
+        letterRefs.current.forEach((ref, i) => {
+            if (!ref) return;
+            const letter = layoutData[i];
+            if (!letter || letter.shapes.length === 0) return;
+
+            const letterWorldX = letter.x * SCALE;
+            const dx = mouseWorldX - letterWorldX;
+            const dy = mouseWorldY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // Gravity pull effect: letters lift toward the mouse with spring
+            const radius = 2.5;
+            const strength = Math.max(0, 1 - dist / radius);
+            const ease = strength * strength * (3 - 2 * strength); // smoothstep
+
+            const targetY = ease * 0.6;
+            const targetRotZ = ease * dx * -0.15;
+            const targetScale = 1 + ease * 0.12;
+
+            // Store targets for spring interpolation
+            if (!letterTargets.current[i]) {
+                letterTargets.current[i] = { y: 0, rotZ: 0, scale: 1 };
+            }
+            const target = letterTargets.current[i];
+            target.y = targetY;
+            target.rotZ = targetRotZ;
+            target.scale = targetScale;
+
+            // Spring lerp toward target
+            const spring = 1 - Math.pow(0.001, delta);
+            ref.position.y += (target.y - ref.position.y) * spring;
+            ref.rotation.z += (target.rotZ - ref.rotation.z) * spring;
+            const currentScale = ref.scale.x;
+            const newScale = currentScale + (target.scale - currentScale) * spring;
+            ref.scale.setScalar(newScale);
+        });
 
         // Scroll-away: rotate on X, push back on Z, shrink
         const sp = scrollProgress;
@@ -226,14 +273,19 @@ function ScriptWord({ layoutData, scrollProgress, themeKey = "A" }) {
         <group ref={groupRef}>
             {layoutData.map((letter, i) => {
                 if (letter.shapes.length === 0) return null;
-                const worldX = letter.x * SCALE;
+                const worldX = -letter.x * SCALE;
                 return (
-                    <Letter3D
+                    <group
                         key={`${letter.ch}-${i}`}
-                        shapes={letter.shapes}
+                        ref={(el) => { letterRefs.current[i] = el; }}
                         position={[worldX, 0, 0]}
-                        themeKey={themeKey}
-                    />
+                    >
+                        <Letter3D
+                            shapes={letter.shapes}
+                            position={[0, 0, 0]}
+                            themeKey={themeKey}
+                        />
+                    </group>
                 );
             })}
         </group>
@@ -460,10 +512,11 @@ function ShimmerSweep() {
 function Scene({ layoutData, scrollProgress, themeKey }) {
     return (
         <>
-            <ambientLight intensity={0.4} />
-            <directionalLight position={[3, 5, 6]} intensity={2.2} />
-            <directionalLight position={[-5, 2, 4]} intensity={1.0} color="#8ec5ff" />
-            <pointLight position={[0, -3, 5]} intensity={1.2} color="#6ab0ff" />
+            <ambientLight intensity={0.35} />
+            <directionalLight position={[3, 5, 6]} intensity={2.5} />
+            <directionalLight position={[-6, 3, 5]} intensity={1.8} color="#8ec5ff" />
+            <pointLight position={[0, -4, 6]} intensity={1.5} color="#6ab0ff" />
+            <pointLight position={[6, 2, 3]} intensity={0.8} color="#ffffff" />
             <Suspense fallback={null}>
                 <ScriptWord layoutData={layoutData} scrollProgress={scrollProgress} themeKey={themeKey} />
                 <Cursor3D layoutData={layoutData} themeKey={themeKey} />
@@ -495,7 +548,7 @@ export default function Hero3D({ scrollProgress = 0, themeKey = "A" }) {
         <Canvas
             className="hero-canvas"
             dpr={[1, 2]}
-            camera={{ position: [0, 0, 8], fov: 42 }}
+            camera={{ position: [0, -2.5, 14], fov: 42 }}
             gl={{ antialias: true, alpha: true, preserveDrawingBuffer: false }}
             style={{ width: "100%", height: "100%" }}
         >

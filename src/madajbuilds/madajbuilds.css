@@ -417,11 +417,11 @@ body {
 /* ── Hero canvas ──────────────────────────────────────────────── */
 .hero-canvas-wrap {
     position: absolute;
-    top: 44%;
+    top: 35%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 100vw;
-    height: min(55vw, 500px);
+    height: min(60vw, 560px);
     z-index: 1;
     pointer-events: none;
 }
@@ -434,7 +434,7 @@ body {
 /* ── Hero headline ────────────────────────────────────────────── */
 .hero-headline {
     position: absolute;
-    bottom: 4rem;
+    bottom: 2.5rem;
     left: 3rem;
     z-index: 6;
     transform-origin: left bottom;
