@@ -22,35 +22,25 @@ const THEMES = [
 const PILL_W = 108;
 const PILL_H = 34;
 
-/* ── Falling SVG icons ────────────────────────────────────────────── */
-const ICON_PATHS = [
-    // sparkle
-    "M12 2l2 7h7l-5.5 4.5 2 7L12 16l-5.5 4.5 2-7L3 9h7z",
-    // bolt
-    "M13 2L3 14h9l-1 8 10-12h-9l1-8z",
-    // hexagon
-    "M12 2l8.5 5v10L12 22 3.5 17V7z",
-    // target
-    "M12 2a10 10 0 100 20 10 10 0 000-20zm0 4a6 6 0 110 12 6 6 0 010-12zm0 3a3 3 0 100 6 3 3 0 000-6z",
-    // triangle
-    "M12 3L22 21H2z",
-    // plus
-    "M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7V4z",
-    // diamond
-    "M12 2l8 10-8 10-8-10z",
-    // star-4
-    "M12 2l3 9h9l-7.5 5.5 3 9L12 20l-7.5 5.5 3-9L0 11h9z",
+/* ── Textured badge icons ─────────────────────────────────────────── */
+// CSS-rendered badges replace the old line-art SVGs. Each has a colored,
+// grainy circular face, a pale rim, and a dark hand-drawn-style symbol.
+const BADGE_ICONS = [
+    { kind: "orbit", color: "#ffad38", ink: "#172333" },
+    { kind: "leaf", color: "#9bd85c", ink: "#1d3020" },
+    { kind: "spark", color: "#f66c8a", ink: "#321a28" },
+    { kind: "wave", color: "#5dbde4", ink: "#102b3b" },
+    { kind: "flower", color: "#b78ee7", ink: "#281a3c" },
+    { kind: "eye", color: "#f3c84b", ink: "#332b14" },
+    { kind: "mountain", color: "#ef8862", ink: "#392019" },
+    { kind: "planet", color: "#65c7b4", ink: "#11302d" },
+    { kind: "bolt", color: "#e86e5c", ink: "#321d1a" },
+    { kind: "smile", color: "#f0a7c8", ink: "#3a1d2c" },
 ];
 
-const ICON_COLORS = ["#5b9fff", "#22d3ee", "#34d399", "#facc15", "#f87171", "#a78bfa", "#fb923c", "#f472b6"];
-
-// Generate falling icons deterministically at module scope.
-// Each icon gets its own tumble speed, starting angle, drift, and depth
-// (depth drives the parallax scale/blur/speed).
 const FALLING_ICONS = Array.from({ length: 34 }, (_, i) => ({
-    path: ICON_PATHS[i % ICON_PATHS.length],
-    color: ICON_COLORS[i % ICON_COLORS.length],
-    size: 16 + (((i * 7 + 3) % 60)),
+    badge: BADGE_ICONS[i % BADGE_ICONS.length],
+    size: 30 + (((i * 7 + 3) % 38)),
     x: ((i * 137 + 42) % 96),
     delay: ((i * 1.1 + 0.3) % 7),
     drift: (((i * 29 + 11) % 26) - 13),
@@ -206,6 +196,11 @@ const Pill = ({ path, children, ...rest }) => (
 function FallingIcons({ scrollProgress, wordmarkRectRef }) {
     const layerRef = useRef(null);
     const iconElsRef = useRef([]);
+    const scrollProgressRef = useRef(scrollProgress);
+
+    useEffect(() => {
+        scrollProgressRef.current = scrollProgress;
+    }, [scrollProgress]);
 
     useEffect(() => {
         const els = iconElsRef.current;
@@ -268,6 +263,17 @@ function FallingIcons({ scrollProgress, wordmarkRectRef }) {
                 it.y += it.vy * dt;
                 it.x += it.vx * dt;
 
+                // As the hero leaves, pull badges into the side vacuum instead
+                // of simply hiding them. The curved pull gives the transition
+                // a physical, sucked-away feeling while remaining reversible.
+                const vacuumProgress = Math.max(0, Math.min(1, (scrollProgressRef.current - 0.18) / 0.68));
+                if (vacuumProgress > 0) {
+                    const pull = vacuumProgress * vacuumProgress;
+                    it.x += (101 - it.x) * pull * dt * 1.65;
+                    it.y += (H * 0.5 - it.y) * pull * dt * 0.85;
+                    it.rot += pull * 180 * dt;
+                }
+
                 // Respawn above once it clears the bottom
                 if (it.y > H + 80) {
                     it.y = -80;
@@ -287,6 +293,7 @@ function FallingIcons({ scrollProgress, wordmarkRectRef }) {
                 let opacity = 0.4;
                 if (it.y < 0) opacity = Math.max(0, 0.4 * (1 + it.y / 90));
                 else if (it.y > H - 90) opacity = Math.max(0, 0.4 * ((H - it.y) / 90));
+                opacity *= 1 - Math.min(0.86, vacuumProgress * 0.86);
 
                 // Fade slightly while passing behind the 3D wordmark letters.
                 // Nearer icons dim less, farther icons dim more (layered depth).
@@ -343,18 +350,66 @@ function FallingIcons({ scrollProgress, wordmarkRectRef }) {
             transform: `translateY(${-scrollProgress * 100}%)`,
         }}>
             {FALLING_ICONS.map((icon, i) => (
-                <svg
+                <div
                     key={i}
                     ref={(el) => { iconElsRef.current[i] = el; }}
-                    className="falling-icon"
-                    viewBox="0 0 24 24"
-                    width={icon.size}
-                    height={icon.size}
-                    style={{ color: icon.color }}
+                    className={`falling-icon falling-badge falling-badge-${icon.badge.kind}`}
+                    style={{
+                        width: icon.size,
+                        height: icon.size,
+                        "--badge-color": icon.badge.color,
+                        "--badge-ink": icon.badge.ink,
+                    }}
+                    aria-hidden="true"
                 >
-                    <path fill="currentColor" d={icon.path} />
-                </svg>
+                    <span className="falling-badge-symbol" />
+                </div>
             ))}
+        </div>
+    );
+}
+
+/* ── Side vacuum transition ─────────────────────────────────────── */
+const VACUUM_STREAMS = Array.from({ length: 9 }, (_, i) => ({
+    angle: -34 + i * 8,
+    delay: `${(i * 0.11).toFixed(2)}s`,
+    width: `${72 + ((i * 17) % 64)}px`,
+}));
+
+function VacuumTransition({ scrollProgress }) {
+    const progress = Math.max(0, Math.min(1, (scrollProgress - 0.16) / 0.76));
+    const visibility = Math.sin(progress * Math.PI);
+
+    return (
+        <div
+            className="vacuum-transition"
+            aria-hidden="true"
+            style={{
+                opacity: visibility,
+                "--vacuum-progress": progress,
+            }}
+        >
+            <div className="vacuum-streams">
+                {VACUUM_STREAMS.map((stream, i) => (
+                    <span
+                        className="vacuum-stream"
+                        key={i}
+                        style={{
+                            "--stream-angle": `${stream.angle}deg`,
+                            "--stream-delay": stream.delay,
+                            "--stream-width": stream.width,
+                        }}
+                    />
+                ))}
+            </div>
+            <div className="vacuum-mouth">
+                <span className="vacuum-ring vacuum-ring-outer" />
+                <span className="vacuum-ring vacuum-ring-inner" />
+                <span className="vacuum-core" />
+            </div>
+            <span className="vacuum-particle vacuum-particle-a" />
+            <span className="vacuum-particle vacuum-particle-b" />
+            <span className="vacuum-particle vacuum-particle-c" />
         </div>
     );
 }
@@ -369,6 +424,7 @@ const MadajBuilds = () => {
     const titleRef = useRef(null);
     const cloudRef = useRef(null);
     const puffRefs = useRef([]);
+    const cloudLadderRef = useRef(null);
     const { scrollProgress, heroInView } = useScrollProgress(heroRef);
 
     // Theme persistence
@@ -607,11 +663,122 @@ const MadajBuilds = () => {
         };
     }, []);
 
+    /* ── Cloud + ladder climbing animation ───────────────────────── */
+    useGSAP(() => {
+        const scene = cloudLadderRef.current;
+        if (!scene) return;
+
+        const ladder = scene.querySelector(".scene-ladder");
+        const climbText = scene.querySelector(".scene-climb-text");
+        const cloudWrap = scene.querySelector(".scene-cloud-wrap");
+        const cloudLabel = scene.querySelector(".scene-cloud-label");
+        if (!ladder || !climbText || !cloudWrap) return;
+
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reducedMotion) {
+            gsap.set(ladder, { opacity: 1, rotate: -30 });
+            gsap.set(climbText, { opacity: 1, y: -80 });
+            return;
+        }
+
+        const tl = gsap.timeline({ delay: 1.6, repeat: -1, repeatDelay: 3 });
+
+        // Reset cloud and label at start
+        tl.set(cloudWrap, { scaleX: 1, scaleY: 1 });
+        if (cloudLabel) tl.set(cloudLabel, { textContent: "FOLLOW" });
+
+        // Ladder slides in from the right
+        tl.fromTo(ladder,
+            { opacity: 0, x: 60, rotate: 0 },
+            { opacity: 1, x: 0, rotate: -30, duration: 0.6, ease: "power2.out" }
+        );
+
+        // @madajbuilds appears at bottom of ladder and climbs up
+        tl.fromTo(climbText,
+            { opacity: 0, y: 0, x: 0, rotation: 30, transformOrigin: "left center" },
+            { opacity: 1, duration: 0.15, ease: "none" },
+            "-=0.1"
+        );
+        // Climb to top of ladder
+        tl.to(climbText, {
+            y: -88,
+            x: 40,
+            duration: 1.2,
+            ease: "power1.inOut",
+        });
+
+        // Pre-calculate offset from climbText position to cloud center
+        const textEnd = climbText.getBoundingClientRect();
+        const cloudEnd = cloudWrap.getBoundingClientRect();
+        const deltaX = (cloudEnd.left + cloudEnd.width / 2) - (textEnd.left + textEnd.width / 2);
+        const deltaY = (cloudEnd.top + cloudEnd.height / 2) - (textEnd.top + textEnd.height / 2);
+
+        // Fly from ladder top into the cloud
+        tl.to(climbText, {
+            x: "+=" + deltaX,
+            y: "+=" + deltaY,
+            rotation: 0,
+            duration: 0.8,
+            ease: "power2.inOut",
+        });
+
+        // Cloud bounces on arrival
+        tl.to(cloudWrap, {
+            scaleX: 1.3,
+            scaleY: 0.75,
+            duration: 0.12,
+            ease: "power2.in",
+        }, "-=0.15");
+        tl.to(cloudWrap, {
+            scaleX: 0.9,
+            scaleY: 1.15,
+            duration: 0.25,
+            ease: "power2.out",
+        });
+        tl.to(cloudWrap, {
+            scaleX: 1.05,
+            scaleY: 0.95,
+            duration: 0.18,
+            ease: "power2.out",
+        });
+        tl.to(cloudWrap, {
+            scaleX: 1,
+            scaleY: 1,
+            duration: 0.3,
+            ease: "elastic.out(1, 0.4)",
+        });
+
+        // Update label to include @madajbuilds
+        if (cloudLabel) {
+            tl.call(() => { cloudLabel.textContent = "FOLLOW @madajbuilds"; }, null, "-=0.6");
+        }
+
+        // Fade text as it merges into cloud
+        tl.to(climbText, {
+            opacity: 0,
+            scale: 0.3,
+            duration: 0.25,
+            ease: "power1.in",
+        }, "-=0.8");
+
+        // Ladder retreats
+        tl.to(ladder, {
+            opacity: 0,
+            x: 60,
+            rotate: 0,
+            duration: 0.4,
+            ease: "power2.in",
+        }, ">+0.15");
+
+        return () => { tl.kill(); };
+    }, []);
+
     return (
         <ReactLenis root options={{ duration: 1.2, smoothWheel: true }}>
             {/* Background effects */}
             <OceanWave scrollProgress={scrollProgress} />
             <WaterDrop scrollProgress={scrollProgress} />
+            <VacuumTransition scrollProgress={scrollProgress} />
 
             {/* Grid overlay */}
             <div className="grid-overlay" aria-hidden="true" />
@@ -677,15 +844,42 @@ const MadajBuilds = () => {
                         </div>
                         <div className="hero-info-col hero-info-center">
                             <p className="hero-tagline">
-                                Building AI systems<br />Learning in public.
+                                Building AI systems<br />Learning in public
                             </p>
                         </div>
-                        <div className="hero-info-col hero-info-right">
+                        <div className="hero-info-col hero-info-right flex justify-center text-center">
                             <p className="hero-bio">
-                                I&apos;m Haoqi Wen, leading Design Engineering and AI
-                                exploration — engineering and AI at scale. Outside work, I
-                                build design tools for team efficiency.
+                                Exploring AI, sports tech &amp; edtech, <br />building systems that ship.
+                                
                             </p>
+
+                            {/* ── Cloud + ladder scene ───────────────────── */}
+                            <div className="cloud-ladder-scene" ref={cloudLadderRef}>
+                                {/* Cloud with FOLLOW text */}
+                                <div className="scene-cloud-wrap">
+                                    <svg className="scene-cloud" viewBox="0 0 200 70" preserveAspectRatio="none">
+                                        <g fill="currentColor">
+                                            <ellipse cx="100" cy="50" rx="90" ry="20" />
+                                            <ellipse cx="45" cy="34" rx="38" ry="24" />
+                                            <ellipse cx="100" cy="24" rx="42" ry="28" />
+                                            <ellipse cx="150" cy="36" rx="34" ry="22" />
+                                        </g>
+                                    </svg>
+                                    <span className="scene-cloud-label">FOLLOW</span>
+                                </div>
+                                {/* Inclined ladder from right */}
+                                <div className="scene-ladder">
+                                    <span className="s-rail s-rail-l" />
+                                    <span className="s-rail s-rail-r" />
+                                    <span className="s-rung" />
+                                    <span className="s-rung" />
+                                    <span className="s-rung" />
+                                    <span className="s-rung" />
+                                    <span className="s-rung" />
+                                </div>
+                                {/* Climbing text */}
+                                <span className="scene-climb-text">@madajbuilds</span>
+                            </div>
                         </div>
                     </div>
 
@@ -699,11 +893,7 @@ const MadajBuilds = () => {
                         opacity: Math.max(0, 1 - scrollProgress * 1.3),
                         transform: `translateY(${-scrollProgress * 70}px) rotateX(${scrollProgress * 25}deg)`,
                     }}>
-                        <h2 className="headline hero-headline-text">
-                            I BRING<br />
-                            DEPTH &amp; DISCIPLINE<br />
-                            TO ENGINEERING WORK
-                        </h2>
+                        
                     </div>
 
                     {/* Falling icons layer */}

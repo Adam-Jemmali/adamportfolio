@@ -120,16 +120,18 @@ export default function ProfilePanel() {
                 </div>
                 <div className="profile-template-copy">
                     <p className="profile-template-lede">
-                        I explore how to shape AI-era<br />
-                        workflows — building tools that sit at the<br />
-                        intersection of code, craft, and systems<br />
-                        thinking.
-                    </p>
-                    <p className="profile-template-secondary">
-                        Currently building at{" "}
-                        <a href="https://madaj.builds" target="_blank" rel="noopener noreferrer">
-                            madaj.builds
-                        </a>
+                        I&apos;m{" "}
+                        <span className="profile-template-brand">madajbuilds</span>{" "}
+                        building at the intersection of AI, sports tech, and gamified edtech. Through{" "}
+                        <a
+                            className="profile-template-handle"
+                            href="https://www.instagram.com/madajbuilds/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            @madajbuilds
+                        </a>{" "}
+                        I share the code, systems, and free resources behind everything I create.
                     </p>
                 </div>
             </div>
