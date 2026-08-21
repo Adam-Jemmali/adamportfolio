@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const PROFILE_SNAKE_BLOCKS = Array.from({ length: 13 }, (_, i) => ({
     size: 12 + ((i * 7) % 12),
@@ -86,8 +86,27 @@ function ProfileSnakeBlocks() {
 }
 
 export default function ProfilePanel() {
+    const templateRef = useRef(null);
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+        const template = templateRef.current;
+        if (!template) return;
+        if (!("IntersectionObserver" in window)) {
+            const timer = window.setTimeout(() => setIsVisible(true), 0);
+            return () => window.clearTimeout(timer);
+        }
+
+        const observer = new IntersectionObserver(
+            ([entry]) => setIsVisible(entry.isIntersecting),
+            { threshold: 0.25 }
+        );
+        observer.observe(template);
+        return () => observer.disconnect();
+    }, []);
+
     return (
-        <div className="profile-template">
+        <div ref={templateRef} className={`profile-template ${isVisible ? "profile-template-visible" : ""}`}>
             <div className="profile-template-content">
                 <div className="profile-template-identity">
                     <span className="profile-template-signature">madaj.builds</span>

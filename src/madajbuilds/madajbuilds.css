@@ -749,6 +749,7 @@ body {
 }
 
 .profile-template-identity {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -759,29 +760,56 @@ body {
     position: relative;
     width: 100%;
     aspect-ratio: 1;
-    overflow: visible;
+    overflow: hidden;
+    isolation: isolate;
+    background:
+        radial-gradient(ellipse at 52% 43%, #70c8c2 0%, #117986 25%, #064151 57%, #02151d 100%);
 }
 
 .profile-template-photo {
+    position: relative;
+    z-index: 0;
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    filter: grayscale(1) contrast(1.08);
+    filter: grayscale(1) contrast(1.48) brightness(0.92);
+    mix-blend-mode: multiply;
 }
 
 .profile-template-signature {
-    position: relative;
-    z-index: 2;
-    margin: 0 0 0.6rem 0.25rem;
+    position: absolute;
+    z-index: 3;
+    top: -9%;
+    left: -9%;
+    display: block;
+    width: max-content;
+    max-width: none;
+    overflow: visible;
+    white-space: nowrap;
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
     color: #c4ff00;
-    font-family: "Lobster", cursive;
-    font-size: clamp(3.2rem, 5.6vw, 6.8rem);
+    font-family: "Lobster", "Brush Script MT", cursive;
+    font-size: clamp(3rem, 5.2vw, 6.2rem);
+    font-weight: 400;
+    font-style: italic;
+    letter-spacing: -0.06em;
     line-height: 0.9;
     transform: rotate(-12deg);
     transform-origin: left bottom;
     text-shadow: 0 0 16px rgba(196, 255, 0, 0.18);
     pointer-events: none;
+}
+
+.profile-template-visible .profile-template-signature {
+    animation: profile-typewriter 0.52s steps(16, end) 0.05s forwards;
+}
+
+@keyframes profile-typewriter {
+    0% { clip-path: inset(0 100% 0 0); opacity: 0; }
+    12% { opacity: 1; }
+    100% { clip-path: inset(0 0 0 0); opacity: 1; }
 }
 
 .profile-template-copy {
@@ -940,6 +968,12 @@ body {
         margin-left: 0.4rem;
     }
 
+    .profile-template-signature {
+        top: -10%;
+        left: -7%;
+        font-size: clamp(2.6rem, 8vw, 4.8rem);
+    }
+
     .profile-template-copy {
         margin-top: 1.8rem;
     }
@@ -961,4 +995,13 @@ body {
         width: 100%;
         opacity: 0.72;
     }
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+    .profile-template-signature {
+        clip-path: inset(0 0 0 0);
+        opacity: 1;
+    }
+
 }
