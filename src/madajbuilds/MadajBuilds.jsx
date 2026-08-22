@@ -1245,12 +1245,52 @@ const MadajBuilds = () => {
                     <ProfilePanel />
                 </section>
 
-                {/* ── PANEL THREE: BURST ────────────────────────────── */}
-                <section className="panel panel-burst">
-                    <BurstLines color={theme.accent2} />
-                    <p className="eyebrow mono" style={{ color: "rgba(255,255,255,0.8)", position: "relative", zIndex: 2 }}>003 — velocity</p>
-                    <h2 className="headline">BUILD FIRST,<br />POLISH LATER</h2>
-                </section>
+                {/* ── PANEL CURSOR ──────────────────────────────── */}
+                <div className="cursor-wrap" aria-hidden="true">
+                    <svg className="cursor-icon" viewBox="0 0 100 130" fill="none">
+                        <defs>
+                            <linearGradient id="curGrad" x1="10%" y1="0%" x2="80%" y2="100%">
+                                <stop offset="0%" stopColor="#5577dd" />
+                                <stop offset="45%" stopColor="#3b5cc9" />
+                                <stop offset="100%" stopColor="#2d4aad" />
+                            </linearGradient>
+                            <linearGradient id="curEdge" x1="0%" y1="0%" x2="50%" y2="100%">
+                                <stop offset="0%" stopColor="#7799ee" />
+                                <stop offset="100%" stopColor="#3355aa" />
+                            </linearGradient>
+                            <linearGradient id="curHL" x1="5%" y1="0%" x2="35%" y2="50%">
+                                <stop offset="0%" stopColor="white" stopOpacity="0.25" />
+                                <stop offset="100%" stopColor="white" stopOpacity="0" />
+                            </linearGradient>
+                            <filter id="curShadow">
+                                <feDropShadow dx="2" dy="3" stdDeviation="3" floodColor="#000" floodOpacity="0.4" />
+                            </filter>
+                        </defs>
+
+                        {/* Outer border / edge stroke */}
+                        <path
+                            d="M 14.5 4 L 7.5 97 C 7.5 99.5 9 101 11 100.5 L 36 77.5 L 87 102 C 89.5 103 92 101.5 91 99 L 41.5 29.5 C 40 27 37.5 25 35 24 L 14.5 4 Z"
+                            fill="none"
+                            stroke="url(#curEdge)"
+                            stroke-width="3"
+                            stroke-linejoin="round"
+                            stroke-linecap="round"
+                            filter="url(#curShadow)"
+                        />
+
+                        {/* Main filled cursor body */}
+                        <path
+                            d="M 15 5 L 8 96 C 8 98.5 9.5 100 11.5 99.5 L 36.5 77 L 86.5 101 C 89 102 91 100.5 90 98 L 41 30 C 39.5 27.5 37 25.5 34.5 24.5 L 15 5 Z"
+                            fill="url(#curGrad)"
+                        />
+
+                        {/* White highlight on left edge */}
+                        <path
+                            d="M 15 5 L 8 96 C 8 98.5 9.5 100 11.5 99.5 L 22 87 L 34.5 24.5 L 15 5 Z"
+                            fill="url(#curHL)"
+                        />
+                    </svg>
+                </div>
 
                 {/* ── PANEL CTA ─────────────────────────────────────── */}
                 <section className="panel panel-cta" id="contact">

@@ -347,11 +347,6 @@ body {
     filter: brightness(0.88) contrast(1.06);
 }
 
-.panel-burst {
-    background: var(--accent);
-    transition: background 0.6s ease;
-}
-
 .panel-cta {
     background: var(--bg);
     filter: brightness(0.82) contrast(1.08);
@@ -1174,6 +1169,84 @@ body {
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
     background:
         radial-gradient(ellipse at 52% 43%, #70c8c2 0%, #117986 25%, #064151 57%, #02151d 100%);
+}
+
+/* Diagonal sunlight shadow — soft natural window light, not a hard split */
+.profile-template-photo-wrap::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    background: linear-gradient(
+        to bottom right,
+        transparent 50%,
+        rgba(0, 0, 0, 0.12) 60%,
+        rgba(0, 0, 0, 0.35) 75%,
+        rgba(0, 0, 0, 0.55) 90%,
+        rgba(0, 0, 0, 0.65) 100%
+    );
+}
+
+/* Warm sunlight colour grade on the lit portion */
+.profile-template-photo-wrap::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    background: linear-gradient(
+        to bottom right,
+        rgba(255, 183, 77, 0.18) 0%,
+        rgba(255, 152, 0, 0.08) 30%,
+        transparent 45%
+    );
+    mix-blend-mode: screen;
+}
+
+/* Cursor — free-floating, full viewport, no container */
+.cursor-wrap {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    overflow: hidden;
+}
+
+.cursor-icon {
+    width: clamp(200px, 32vw, 400px);
+    height: auto;
+    animation: cursor-breathe 4.5s ease-in-out infinite;
+}
+
+@keyframes cursor-breathe {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+/* Breathing shimmer along the sunlit edge */
+.profile-photo-shimmer {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    background: linear-gradient(
+        to bottom right,
+        rgba(255, 213, 79, 0.08) 40%,
+        rgba(255, 183, 77, 0.14) 48%,
+        rgba(255, 152, 0, 0.08) 54%,
+        transparent 65%
+    );
+    mix-blend-mode: screen;
+    animation: mb-sunlight-breathe 5s ease-in-out infinite;
+}
+
+@keyframes mb-sunlight-breathe {
+    0%, 100% { opacity: 0.5; transform: translateX(0) translateY(0); }
+    50% { opacity: 1; transform: translateX(2px) translateY(1px); }
 }
 
 .profile-template-photo {

@@ -631,6 +631,39 @@ body {
         filter: drop-shadow(0 4px 10px rgb(0 0 0 / 0.45));
     }
 
+    /* Lock screen portrait with sunlight shadow */
+    .lock-portrait-wrap {
+        @apply relative size-28 overflow-hidden rounded-full shadow-2xl;
+    }
+
+    .lock-portrait-wrap::after {
+        content: "";
+        @apply absolute inset-0 pointer-events-none;
+        background: linear-gradient(
+            to bottom right,
+            transparent 38%,
+            rgba(0, 0, 0, 0.15) 40%,
+            rgba(0, 0, 0, 0.85) 42%,
+            rgba(0, 0, 0, 0.92) 100%
+        );
+    }
+
+    .lock-portrait-wrap::before {
+        content: "";
+        @apply absolute inset-0 pointer-events-none;
+        background: linear-gradient(
+            to bottom right,
+            rgba(255, 183, 77, 0.15) 0%,
+            rgba(255, 152, 0, 0.06) 30%,
+            transparent 45%
+        );
+        mix-blend-mode: screen;
+    }
+
+    .lock-portrait {
+        @apply w-full h-full object-cover;
+    }
+
     @keyframes lock-monogram-float {
         0%, 100% { transform: translateY(0) rotate(0deg); }
         50% { transform: translateY(-4px) rotate(-5deg); }
@@ -935,6 +968,54 @@ body {
     #welcome .hero-brand {
         @apply pointer-events-auto mt-6 flex justify-center;
         width: 100%;
+    }
+
+    /* Welcome hero portrait with sunlight shadow */
+    .hero-portrait-wrap {
+        @apply relative w-[180px] h-[240px] overflow-hidden mx-auto;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgb(0 0 0 / 0.45);
+    }
+
+    .hero-portrait-wrap::after {
+        content: "";
+        @apply absolute inset-0 pointer-events-none z-10;
+        background: linear-gradient(
+            to bottom right,
+            transparent 38%,
+            rgba(0, 0, 0, 0.15) 40%,
+            rgba(0, 0, 0, 0.92) 42%,
+            rgba(0, 0, 0, 0.97) 100%
+        );
+    }
+
+    .hero-portrait-wrap::before {
+        content: "";
+        @apply absolute inset-0 pointer-events-none z-10;
+        background: linear-gradient(
+            to bottom right,
+            rgba(255, 183, 77, 0.18) 0%,
+            rgba(255, 152, 0, 0.08) 30%,
+            transparent 45%
+        );
+        mix-blend-mode: screen;
+    }
+
+    .hero-portrait-shimmer {
+        @apply absolute inset-0 pointer-events-none z-10;
+        background: linear-gradient(
+            to bottom right,
+            rgba(255, 213, 79, 0.12) 36%,
+            rgba(255, 183, 77, 0.22) 40%,
+            rgba(255, 152, 0, 0.15) 42%,
+            transparent 50%
+        );
+        mix-blend-mode: screen;
+        animation: sunlight-breathe 4s ease-in-out infinite;
+    }
+
+    .hero-portrait {
+        @apply w-full h-full object-cover;
     }
 
     #welcome .brand-name {
@@ -3707,10 +3788,60 @@ body {
             @apply flex-1 flex flex-col items-center gap-3 p-6 overflow-y-auto text-center;
         }
 
+        .aboutme-photo-wrap {
+            @apply relative w-full max-w-[260px] overflow-hidden;
+            aspect-ratio: 3 / 4;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgb(0 0 0 / 0.5);
+        }
+
+        /* Diagonal shadow: sharp at the edge, deep in the shadow zone */
+        .aboutme-photo-wrap::after {
+            content: "";
+            @apply absolute inset-0 pointer-events-none z-10;
+            background: linear-gradient(
+                to bottom right,
+                transparent 38%,
+                rgba(0, 0, 0, 0.15) 40%,
+                rgba(0, 0, 0, 0.92) 42%,
+                rgba(0, 0, 0, 0.97) 100%
+            );
+        }
+
+        /* Warm sunlight colour grade on the lit portion */
+        .aboutme-photo-wrap::before {
+            content: "";
+            @apply absolute inset-0 pointer-events-none z-10;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 183, 77, 0.18) 0%,
+                rgba(255, 152, 0, 0.08) 30%,
+                transparent 45%
+            );
+            mix-blend-mode: screen;
+        }
+
+        /* Subtle breathing glow on the sunlit edge */
+        .aboutme-photo-shimmer {
+            @apply absolute inset-0 pointer-events-none z-10;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 213, 79, 0.12) 36%,
+                rgba(255, 183, 77, 0.22) 40%,
+                rgba(255, 152, 0, 0.15) 42%,
+                transparent 50%
+            );
+            mix-blend-mode: screen;
+            animation: sunlight-breathe 4s ease-in-out infinite;
+        }
+
+        @keyframes sunlight-breathe {
+            0%, 100% { opacity: 0.5; transform: translateX(0) translateY(0); }
+            50% { opacity: 1; transform: translateX(2px) translateY(1px); }
+        }
+
         .aboutme-photo {
-            @apply size-24 rounded-full object-cover;
-            border: 2px solid rgb(255 255 255 / 0.15);
-            box-shadow: 0 8px 24px rgb(0 0 0 / 0.4);
+            @apply w-full h-full object-cover;
         }
 
         .aboutme-name {

@@ -116,6 +116,7 @@ export default function ProfilePanel() {
                             src="/madaj-profile.png"
                             alt="Madaj Builds"
                         />
+                        <div className="profile-photo-shimmer" aria-hidden="true" />
                     </div>
                 </div>
                 <div className="profile-template-copy">

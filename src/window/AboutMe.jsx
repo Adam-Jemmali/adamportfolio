@@ -24,7 +24,10 @@ const AboutMe = () => {
             </div>
 
             <div className="aboutme-body">
-                <img src="/public/images/adam_Me.png" alt="Adam Jemmali" className="aboutme-photo" />
+                <div className="aboutme-photo-wrap">
+                    <img src="/public/images/adam_Me.png" alt="Adam Jemmali" className="aboutme-photo" />
+                    <div className="aboutme-photo-shimmer" aria-hidden="true" />
+                </div>
                 <h3 className="aboutme-name">Adam Jemmali</h3>
                 <p className="aboutme-title">Computer Vision &amp; AI Systems Engineer</p>
 

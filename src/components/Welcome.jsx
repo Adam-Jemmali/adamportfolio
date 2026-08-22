@@ -67,6 +67,11 @@ const Welcome = () => {
 
     return (
         <section id="welcome">
+            <div className="hero-portrait-wrap">
+                <img src="/public/images/adam_Me.png" alt="Adam Jemmali" className="hero-portrait" />
+                <div className="hero-portrait-shimmer" aria-hidden="true" />
+            </div>
+
             <div className="hero-brand">
                 <h1 className="hero-title"><PixelTitle /></h1>
             </div>
