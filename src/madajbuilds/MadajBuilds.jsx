@@ -61,6 +61,14 @@ const CLOUD_PUFFS = [
     { cx: 150, cy: 36, rx: 34, ry: 22, squash: 0.42 },
 ];
 
+// Cloud 2 puffs — same shape, separate refs for independent animation
+const CLOUD2_PUFFS = [
+    { cx: 100, cy: 50, rx: 90, ry: 20, squash: 0.14 },
+    { cx: 45, cy: 34, rx: 38, ry: 24, squash: 0.42 },
+    { cx: 100, cy: 24, rx: 42, ry: 28, squash: 0.46 },
+    { cx: 150, cy: 36, rx: 34, ry: 22, squash: 0.42 },
+];
+
 /* ── Rolling digit coordinates ────────────────────────────────────── */
 function RollingDigit({ value, className = "" }) {
     return (
@@ -424,8 +432,19 @@ const MadajBuilds = () => {
     const titleRef = useRef(null);
     const cloudRef = useRef(null);
     const puffRefs = useRef([]);
-    const cloudLadderRef = useRef(null);
+    // Cloud 2 refs
+    const titleCloudRef2 = useRef(null);
+    const titleRef2 = useRef(null);
+    const cloudRef2 = useRef(null);
+    const puffRefs2 = useRef([]);
+
     const { scrollProgress, heroInView } = useScrollProgress(heroRef);
+
+    // Eased scroll progress for smoother premium animations
+    const sp = scrollProgress;
+    const sp2 = sp * sp; // ease-in
+    const sp3 = sp2 * sp; // cubic ease-in
+    const spReverse = 1 - sp; // reverse for fade-out calculations
 
     // Theme persistence
     const [themeIndex, setThemeIndex] = useState(() => {
@@ -550,19 +569,34 @@ const MadajBuilds = () => {
         const startIdle = () => {
             if (idle) idle.kill();
             if (bouncing) return;
-            idle = gsap.to(cloud, {
-                scaleY: 1.04,
-                scaleX: 0.96,
-                duration: 1.7,
-                ease: "sine.inOut",
-                yoyo: true,
-                repeat: -1,
-            });
+            // Stronger idle breathing with rotation wobble
+            idle = gsap.timeline({ repeat: -1, yoyo: true })
+                .to(cloud, {
+                    scaleY: 1.06,
+                    scaleX: 0.94,
+                    rotation: -1.5,
+                    duration: 2.2,
+                    ease: "sine.inOut",
+                })
+                .to(cloud, {
+                    scaleY: 0.97,
+                    scaleX: 1.03,
+                    rotation: 1.5,
+                    duration: 2.0,
+                    ease: "sine.inOut",
+                })
+                .to(cloud, {
+                    scaleY: 1,
+                    scaleX: 1,
+                    rotation: 0,
+                    duration: 1.8,
+                    ease: "sine.inOut",
+                });
         };
 
         const settleAfterBounce = () => {
             bouncing = false;
-            resetPuffs(0.28);
+            resetPuffs(0.35);
             startIdle();
         };
 
@@ -571,20 +605,29 @@ const MadajBuilds = () => {
             gsap.set(cloud, { scaleX: 1, scaleY: 1 });
             settled = true;
         } else {
-            // Gravity drop → impact squash → rebound → settle.
+            // Dramatic gravity drop → hard impact → multiple rebounds → settle
             gsap
                 .timeline()
                 .fromTo(
                     title,
-                    { y: -46, autoAlpha: 0 },
-                    { y: 0, autoAlpha: 1, duration: 0.55, ease: "power2.in" }
+                    { y: -65, autoAlpha: 0, rotation: -3 },
+                    { y: 0, autoAlpha: 1, rotation: 0, duration: 0.5, ease: "power3.in" }
                 )
-                .to(cloud, { scaleY: 0.7, scaleX: 1.32, duration: 0.13, ease: "power2.in" }, ">")
-                .to(title, { y: 5, duration: 0.13, ease: "power2.in" }, "<")
-                .to(cloud, { scaleY: 1.09, scaleX: 0.92, duration: 0.34, ease: "power2.out" }, ">")
-                .to(title, { y: -8, duration: 0.34, ease: "power2.out" }, "<")
-                .to(cloud, { scaleY: 1, scaleX: 1, duration: 0.45, ease: "elastic.out(1, 0.4)" }, ">")
-                .to(title, { y: 0, duration: 0.45, ease: "elastic.out(1, 0.4)" }, "<")
+                // Hard impact squash
+                .to(cloud, { scaleY: 0.55, scaleX: 1.45, duration: 0.08, ease: "power4.in" }, ">")
+                .to(title, { y: 8, duration: 0.08, ease: "power4.in" }, "<")
+                // First big rebound
+                .to(cloud, { scaleY: 1.15, scaleX: 0.85, duration: 0.25, ease: "power2.out" }, ">")
+                .to(title, { y: -18, duration: 0.25, ease: "power2.out" }, "<")
+                // Second smaller bounce
+                .to(cloud, { scaleY: 0.92, scaleX: 1.08, duration: 0.2, ease: "power2.out" }, ">")
+                .to(title, { y: 4, duration: 0.2, ease: "power2.out" }, "<")
+                // Third micro bounce
+                .to(cloud, { scaleY: 1.04, scaleX: 0.97, duration: 0.15, ease: "power2.out" }, ">")
+                .to(title, { y: -5, duration: 0.15, ease: "power2.out" }, "<")
+                // Final elastic settle
+                .to(cloud, { scaleY: 1, scaleX: 1, duration: 0.6, ease: "elastic.out(1.2, 0.3)" }, ">")
+                .to(title, { y: 0, duration: 0.6, ease: "elastic.out(1.2, 0.3)" }, "<")
                 .add(() => {
                     settled = true;
                     startIdle();
@@ -622,30 +665,46 @@ const MadajBuilds = () => {
             dentPuffs(event.clientX, 1);
             gsap.killTweensOf([title, cloud]);
 
+            // Powerful click bounce: hard squash → high launch → multiple impacts → elastic settle
             gsap
                 .timeline({ onComplete: settleAfterBounce })
-                // A click is a local impact, followed by a much higher launch.
+                // Hard pre-launch squash
                 .to(cloud, {
-                    scaleY: 0.62,
-                    scaleX: 1.36,
-                    duration: 0.13,
-                    ease: "power2.in",
+                    scaleY: 0.45,
+                    scaleX: 1.5,
+                    rotation: -2,
+                    duration: 0.1,
+                    ease: "power4.in",
                 })
-                .to(title, { y: -112, duration: 0.42, ease: "power2.out" }, "<")
+                .to(title, { y: 10, rotation: 2, duration: 0.1, ease: "power4.in" }, "<")
+                // Massive launch
+                .to(title, { y: -140, rotation: -4, duration: 0.35, ease: "power3.out" }, "<")
+                // Cloud recoil
                 .to(cloud, {
-                    scaleY: 1.12,
-                    scaleX: 0.9,
-                    duration: 0.3,
+                    scaleY: 1.18,
+                    scaleX: 0.82,
+                    rotation: 1,
+                    duration: 0.22,
                     ease: "power2.out",
-                }, ">-0.04")
-                .to(title, { y: 7, duration: 0.42, ease: "bounce.out" }, ">")
+                }, "<-0.05")
+                // First hard landing
+                .to(title, { y: 12, rotation: 1, duration: 0.3, ease: "bounce.out" }, ">")
+                // Cloud absorbs impact
                 .to(cloud, {
-                    scaleY: 1,
-                    scaleX: 1,
-                    duration: 0.5,
-                    ease: "elastic.out(1, 0.4)",
+                    scaleY: 0.88,
+                    scaleX: 1.12,
+                    duration: 0.12,
+                    ease: "power2.in",
                 }, "<")
-                .to(title, { y: 0, duration: 0.18, ease: "power2.out" }, ">-0.08");
+                // Second bounce
+                .to(title, { y: -45, rotation: -1, duration: 0.2, ease: "power2.out" }, ">")
+                .to(cloud, { scaleY: 1.08, scaleX: 0.93, duration: 0.2, ease: "power2.out" }, "<")
+                // Third smaller bounce
+                .to(title, { y: 5, rotation: 0.5, duration: 0.15, ease: "power2.out" }, ">")
+                .to(cloud, { scaleY: 0.96, scaleX: 1.04, duration: 0.15, ease: "power2.out" }, "<")
+                // Final elastic settle with rotation wobble
+                .to(title, { y: 0, rotation: 0, duration: 0.5, ease: "elastic.out(1.2, 0.25)" }, ">")
+                .to(cloud, { scaleY: 1, scaleX: 1, rotation: 0, duration: 0.5, ease: "elastic.out(1.2, 0.25)" }, "<");
         };
 
         wrapper.addEventListener("pointermove", onMove);
@@ -663,114 +722,320 @@ const MadajBuilds = () => {
         };
     }, []);
 
-    /* ── Cloud + ladder climbing animation ───────────────────────── */
+    /* ── Cloud 2 animation (same as cloud 1) ──────────────────────── */
     useGSAP(() => {
-        const scene = cloudLadderRef.current;
-        if (!scene) return;
+        const title = titleRef2.current;
+        const cloud = cloudRef2.current;
+        const wrapper = titleCloudRef2.current;
+        const puffs = puffRefs2.current;
+        if (!title || !cloud || !wrapper || puffs.length !== CLOUD2_PUFFS.length) return;
 
-        const ladder = scene.querySelector(".scene-ladder");
-        const climbText = scene.querySelector(".scene-climb-text");
-        const cloudWrap = scene.querySelector(".scene-cloud-wrap");
-        const cloudLabel = scene.querySelector(".scene-cloud-label");
-        if (!ladder || !climbText || !cloudWrap) return;
+        gsap.set(title, { transformOrigin: "50% 100%" });
+        gsap.set(cloud, { transformOrigin: "50% 100%" });
 
+        let settled = false;
+        let bouncing = false;
+        let idle = null;
         const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        const resetPuffs = (duration = 0.3) => {
+            CLOUD2_PUFFS.forEach((p, i) => {
+                gsap.to(puffs[i], {
+                    attr: { cx: p.cx, cy: p.cy, rx: p.rx, ry: p.ry },
+                    duration,
+                    ease: "power2.out",
+                    overwrite: "auto",
+                });
+            });
+        };
+
+        const dentPuffs = (clientX, strength = 0.78) => {
+            const rect = cloud.getBoundingClientRect();
+            if (!rect.width) return;
+            const pointerX = Math.max(0, Math.min(200, ((clientX - rect.left) / rect.width) * 200));
+            CLOUD2_PUFFS.forEach((p, i) => {
+                const distance = Math.abs(pointerX - p.cx);
+                const influence = Math.max(0, 1 - distance / 62);
+                const weight = influence * influence * (3 - 2 * influence);
+                const amount = p.squash * strength * weight;
+                const ry = p.ry * (1 - amount);
+                const cy = p.cy + (p.ry - ry);
+                const rx = p.rx * (1 + amount * 0.5);
+                gsap.to(puffs[i], {
+                    attr: { cy, ry, rx },
+                    duration: strength > 0.9 ? 0.1 : 0.16,
+                    ease: "power2.out",
+                    overwrite: "auto",
+                });
+            });
+        };
+
+        const startIdle = () => {
+            if (idle) idle.kill();
+            if (bouncing) return;
+            idle = gsap.timeline({ repeat: -1, yoyo: true })
+                .to(cloud, {
+                    scaleY: 1.06,
+                    scaleX: 0.94,
+                    rotation: -1.5,
+                    duration: 2.2,
+                    ease: "sine.inOut",
+                })
+                .to(cloud, {
+                    scaleY: 0.97,
+                    scaleX: 1.03,
+                    rotation: 1.5,
+                    duration: 2.0,
+                    ease: "sine.inOut",
+                })
+                .to(cloud, {
+                    scaleY: 1,
+                    scaleX: 1,
+                    rotation: 0,
+                    duration: 1.8,
+                    ease: "sine.inOut",
+                });
+        };
+
+        const settleAfterBounce = () => {
+            bouncing = false;
+            resetPuffs(0.35);
+            startIdle();
+        };
+
         if (reducedMotion) {
-            gsap.set(ladder, { opacity: 1, rotate: -30 });
-            gsap.set(climbText, { opacity: 1, y: -80 });
-            return;
+            gsap.set(title, { y: 0, autoAlpha: 1 });
+            gsap.set(cloud, { scaleX: 1, scaleY: 1 });
+            settled = true;
+        } else {
+            // Dramatic gravity drop → hard impact → multiple rebounds → settle
+            gsap
+                .timeline()
+                .fromTo(
+                    title,
+                    { y: -65, autoAlpha: 0, rotation: -3 },
+                    { y: 0, autoAlpha: 1, rotation: 0, duration: 0.5, ease: "power3.in" }
+                )
+                // Hard impact squash
+                .to(cloud, { scaleY: 0.55, scaleX: 1.45, duration: 0.08, ease: "power4.in" }, ">")
+                .to(title, { y: 8, duration: 0.08, ease: "power4.in" }, "<")
+                // First big rebound
+                .to(cloud, { scaleY: 1.15, scaleX: 0.85, duration: 0.25, ease: "power2.out" }, ">")
+                .to(title, { y: -18, duration: 0.25, ease: "power2.out" }, "<")
+                // Second smaller bounce
+                .to(cloud, { scaleY: 0.92, scaleX: 1.08, duration: 0.2, ease: "power2.out" }, ">")
+                .to(title, { y: 4, duration: 0.2, ease: "power2.out" }, "<")
+                // Third micro bounce
+                .to(cloud, { scaleY: 1.04, scaleX: 0.97, duration: 0.15, ease: "power2.out" }, ">")
+                .to(title, { y: -5, duration: 0.15, ease: "power2.out" }, "<")
+                // Final elastic settle
+                .to(cloud, { scaleY: 1, scaleX: 1, duration: 0.6, ease: "elastic.out(1.2, 0.3)" }, ">")
+                .to(title, { y: 0, duration: 0.6, ease: "elastic.out(1.2, 0.3)" }, "<")
+                .add(() => {
+                    settled = true;
+                    startIdle();
+                });
         }
 
-        const tl = gsap.timeline({ delay: 1.6, repeat: -1, repeatDelay: 3 });
+        const onMove = (event) => {
+            if (!settled || bouncing || event.pointerType === "touch") return;
+            if (idle) idle.kill();
+            dentPuffs(event.clientX);
+        };
 
-        // Reset cloud and label at start
-        tl.set(cloudWrap, { scaleX: 1, scaleY: 1 });
-        if (cloudLabel) tl.set(cloudLabel, { textContent: "FOLLOW" });
+        const onPointerDown = (event) => {
+            if (!settled || bouncing) return;
+            if (idle) idle.kill();
+            dentPuffs(event.clientX, 1);
+        };
 
-        // Ladder slides in from the right
-        tl.fromTo(ladder,
-            { opacity: 0, x: 60, rotate: 0 },
-            { opacity: 1, x: 0, rotate: -30, duration: 0.6, ease: "power2.out" }
-        );
+        const onLeave = () => {
+            if (!settled || bouncing) return;
+            resetPuffs();
+            gsap.to(cloud, {
+                scaleX: 1,
+                scaleY: 1,
+                duration: 0.35,
+                ease: "elastic.out(1, 0.35)",
+                onComplete: startIdle,
+            });
+        };
 
-        // @madajbuilds appears at bottom of ladder and climbs up
-        tl.fromTo(climbText,
-            { opacity: 0, y: 0, x: 0, rotation: 30, transformOrigin: "left center" },
-            { opacity: 1, duration: 0.15, ease: "none" },
-            "-=0.1"
-        );
-        // Climb to top of ladder
-        tl.to(climbText, {
-            y: -88,
-            x: 40,
-            duration: 1.2,
-            ease: "power1.inOut",
-        });
+        const onBounce = (event) => {
+            if (!settled || reducedMotion) return;
+            if (idle) idle.kill();
+            bouncing = true;
+            dentPuffs(event.clientX, 1);
+            gsap.killTweensOf([title, cloud]);
 
-        // Pre-calculate offset from climbText position to cloud center
-        const textEnd = climbText.getBoundingClientRect();
-        const cloudEnd = cloudWrap.getBoundingClientRect();
-        const deltaX = (cloudEnd.left + cloudEnd.width / 2) - (textEnd.left + textEnd.width / 2);
-        const deltaY = (cloudEnd.top + cloudEnd.height / 2) - (textEnd.top + textEnd.height / 2);
+            // Powerful click bounce: hard squash → high launch → multiple impacts → elastic settle
+            gsap
+                .timeline({ onComplete: settleAfterBounce })
+                // Hard pre-launch squash
+                .to(cloud, {
+                    scaleY: 0.45,
+                    scaleX: 1.5,
+                    rotation: -2,
+                    duration: 0.1,
+                    ease: "power4.in",
+                })
+                .to(title, { y: 10, rotation: 2, duration: 0.1, ease: "power4.in" }, "<")
+                // Massive launch
+                .to(title, { y: -140, rotation: -4, duration: 0.35, ease: "power3.out" }, "<")
+                // Cloud recoil
+                .to(cloud, {
+                    scaleY: 1.18,
+                    scaleX: 0.82,
+                    rotation: 1,
+                    duration: 0.22,
+                    ease: "power2.out",
+                }, "<-0.05")
+                // First hard landing
+                .to(title, { y: 12, rotation: 1, duration: 0.3, ease: "bounce.out" }, ">")
+                // Cloud absorbs impact
+                .to(cloud, {
+                    scaleY: 0.88,
+                    scaleX: 1.12,
+                    duration: 0.12,
+                    ease: "power2.in",
+                }, "<")
+                // Second bounce
+                .to(title, { y: -45, rotation: -1, duration: 0.2, ease: "power2.out" }, ">")
+                .to(cloud, { scaleY: 1.08, scaleX: 0.93, duration: 0.2, ease: "power2.out" }, "<")
+                // Third smaller bounce
+                .to(title, { y: 5, rotation: 0.5, duration: 0.15, ease: "power2.out" }, ">")
+                .to(cloud, { scaleY: 0.96, scaleX: 1.04, duration: 0.15, ease: "power2.out" }, "<")
+                // Final elastic settle with rotation wobble
+                .to(title, { y: 0, rotation: 0, duration: 0.5, ease: "elastic.out(1.2, 0.25)" }, ">")
+                .to(cloud, { scaleY: 1, scaleX: 1, rotation: 0, duration: 0.5, ease: "elastic.out(1.2, 0.25)" }, "<");
+        };
 
-        // Fly from ladder top into the cloud
-        tl.to(climbText, {
-            x: "+=" + deltaX,
-            y: "+=" + deltaY,
-            rotation: 0,
-            duration: 0.8,
-            ease: "power2.inOut",
-        });
+        wrapper.addEventListener("pointermove", onMove);
+        wrapper.addEventListener("pointerdown", onPointerDown);
+        wrapper.addEventListener("pointerleave", onLeave);
+        wrapper.addEventListener("click", onBounce);
 
-        // Cloud bounces on arrival
-        tl.to(cloudWrap, {
-            scaleX: 1.3,
-            scaleY: 0.75,
-            duration: 0.12,
-            ease: "power2.in",
-        }, "-=0.15");
-        tl.to(cloudWrap, {
-            scaleX: 0.9,
-            scaleY: 1.15,
-            duration: 0.25,
-            ease: "power2.out",
-        });
-        tl.to(cloudWrap, {
-            scaleX: 1.05,
-            scaleY: 0.95,
-            duration: 0.18,
-            ease: "power2.out",
-        });
-        tl.to(cloudWrap, {
-            scaleX: 1,
-            scaleY: 1,
-            duration: 0.3,
-            ease: "elastic.out(1, 0.4)",
-        });
+        return () => {
+            if (idle) idle.kill();
+            gsap.killTweensOf([...puffs, title, cloud]);
+            wrapper.removeEventListener("pointermove", onMove);
+            wrapper.removeEventListener("pointerdown", onPointerDown);
+            wrapper.removeEventListener("pointerleave", onLeave);
+            wrapper.removeEventListener("click", onBounce);
+        };
+    }, []);
 
-        // Update label to include @madajbuilds
-        if (cloudLabel) {
-            tl.call(() => { cloudLabel.textContent = "FOLLOW @madajbuilds"; }, null, "-=0.6");
+
+    /* ── Dynamically position ladder-1 to connect cloud 1 → "m" ── */
+    useGSAP(() => {
+        const ladderEl = document.querySelector(".ladder-1");
+        const cloud1El = document.querySelector(".cloud-1");
+        if (!ladderEl || !cloud1El) return;
+
+        function positionLadder() {
+            const canvas = document.querySelector(".hero-canvas-wrap canvas");
+            if (!canvas) return;
+            const canvasRect = canvas.getBoundingClientRect();
+            const hd = document.querySelector(".hero-diagonal").getBoundingClientRect();
+            const c1 = cloud1El.getBoundingClientRect();
+
+            // Cloud bottom-right (the "end" of the cloud)
+            const cx = c1.right - hd.left;
+            const cy = c1.bottom - hd.top;
+
+            // "m" letter — first letter, roughly 20% from canvas left
+            const mx = canvasRect.left - hd.left + canvasRect.width * 0.20;
+            const my = canvasRect.top - hd.top + canvasRect.height * 0.45;
+
+            // Vector from cloud BR to "m" top-left
+            // Vector from "m" (pivot) to cloud BR (target)
+            const toTargetX = cx - mx;
+            const toTargetY = cy - my; // negative = up
+            const length = Math.sqrt(toTargetX * toTargetX + toTargetY * toTargetY);
+            // Angle from vertical (straight up = -Y). Positive = top leans right.
+            const angle = Math.atan2(toTargetX, -toTargetY) * (180 / Math.PI);
+
+            // Ladder element is22px wide, transform-origin: bottom center.
+            // Pivot is at the horizontal center of the element, bottom edge.
+            // Use clientWidth/clientHeight to exclude padding
+            const hdW = hd.clientWidth || hd.width;
+            const hdH = hd.clientHeight || hd.height;
+            // Account for left padding so CSS percentage lands correctly
+            const hdPadL = hd.left - (hd.parentElement ? hd.parentElement.getBoundingClientRect().left : 0);
+            const mxAdj = mx - hdPadL;
+
+            const pctLength = (length / hdH) * 100;
+            const elemW = 22;
+            const halfW = elemW / 2;
+
+            const leftPct = ((mxAdj - halfW) / hdW) * 100;
+            const topPct = ((my / hdH) * 100) - pctLength;
+
+            ladderEl.style.top = topPct + "%";
+            ladderEl.style.left = leftPct + "%";
+            ladderEl.style.height = pctLength + "%";
+            ladderEl.style.setProperty("--ladder-angle", angle + "deg");
         }
 
-        // Fade text as it merges into cloud
-        tl.to(climbText, {
-            opacity: 0,
-            scale: 0.3,
-            duration: 0.25,
-            ease: "power1.in",
-        }, "-=0.8");
+        // Position immediately and on resize — fast updates to track 3D text
+        positionLadder();
+        const obs = new ResizeObserver(positionLadder);
+        obs.observe(document.querySelector(".hero-diagonal"));
+        const id = setInterval(positionLadder, 50);
 
-        // Ladder retreats
-        tl.to(ladder, {
-            opacity: 0,
-            x: 60,
-            rotate: 0,
-            duration: 0.4,
-            ease: "power2.in",
-        }, ">+0.15");
+        return () => { obs.disconnect(); clearInterval(id); };
+    }, []);
 
-        return () => { tl.kill(); };
+    /* ── Dynamically position ladder-2: "s" → cloud 2 ── */
+    useGSAP(() => {
+        const ladderEl = document.querySelector(".ladder-2");
+        const cloud2El = document.querySelector(".cloud-2");
+        if (!ladderEl || !cloud2El) return;
+
+        function positionLadder2() {
+            const canvas = document.querySelector(".hero-canvas-wrap canvas");
+            if (!canvas) return;
+            const canvasRect = canvas.getBoundingClientRect();
+            const hd = document.querySelector(".hero-diagonal").getBoundingClientRect();
+            const c2 = cloud2El.getBoundingClientRect();
+
+            // "s" letter — use as the ladder TOP (anchor with transform-origin: top center)
+            const sx = canvasRect.left - hd.left + canvasRect.width * 0.78;
+            const sy = canvasRect.top - hd.top + canvasRect.height * 0.45;
+
+            // Cloud 2 — use its top-center as the ladder BOTTOM target
+            const cx = (c2.left + c2.right) / 2 - hd.left;
+            const cy = c2.top - hd.top;
+
+            // Vector from "s" (top/anchor) to cloud 2 (bottom/target)
+            const toTargetX = cx - sx;
+            const toTargetY = cy - sy; // positive = down (cloud-2 is below "s")
+            const length = Math.sqrt(toTargetX * toTargetX + toTargetY * toTargetY);
+            // Angle from vertical-down (+Y). Positive = bottom leans right.
+            const angle = Math.atan2(toTargetX, toTargetY) * (180 / Math.PI);
+
+            const hdW = hd.width;
+            const hdH = hd.height;
+            const pctLength = (length / hdH) * 100;
+            const elemW = 22;
+            const halfW = elemW / 2;
+
+            // Place anchor (top-center) at "s" position
+            const leftPct = ((sx - halfW) / hdW) * 100;
+            const topPct = (sy / hdH) * 100;
+
+            ladderEl.style.top = topPct + "%";
+            ladderEl.style.left = leftPct + "%";
+            ladderEl.style.height = pctLength + "%";
+            ladderEl.style.setProperty("--ladder-angle", angle + "deg");
+        }
+
+        positionLadder2();
+        const obs = new ResizeObserver(positionLadder2);
+        obs.observe(document.querySelector(".hero-diagonal"));
+        const id = setInterval(positionLadder2, 50);
+
+        return () => { obs.disconnect(); clearInterval(id); };
     }, []);
 
     return (
@@ -809,14 +1074,19 @@ const MadajBuilds = () => {
             </nav>
 
             <main>
-                {/* ── HERO ──────────────────────────────────────────── */}
+                                {/* ── HERO ──────────────────────────────────────────── */}
                 <section className="panel panel-hero" ref={heroRef}>
-                    {/* Hero info row: title + tagline + bio */}
-                    <div className="hero-info" style={{
-                        opacity: Math.max(0, 1 - scrollProgress * 1.2),
-                        transform: `translateY(${-scrollProgress * 60}%) translateZ(${-scrollProgress * 80}px)`,
+                    {/* Diagonal cloud-ladder layout */}
+                    <div className="hero-diagonal" style={{
+                        opacity: Math.max(0, 1 - sp * 1.2),
+                        transform: `translateY(${-sp * 60}%) translateZ(${-sp * 80}px)`,
                     }}>
-                        <div className="hero-info-col">
+                        {/* Cloud 1 — top left: Title */}
+                        <div className="cloud-platform cloud-1" style={{
+                            opacity: Math.max(0, spReverse * spReverse),
+                            transform: `translateY(${-sp2 * 180}px) translateZ(${-sp2 * 80}px) scaleX(${1 - sp2 * 0.6}) scaleY(${1 + sp * 0.2}) rotate(${-sp * 5}deg) blur(${sp * 2}px)`,
+                            filter: `blur(${sp * 3}px)`,
+                        }}>
                             <div className="title-on-cloud" ref={titleCloudRef}>
                                 <h1
                                     className="hero-title"
@@ -842,58 +1112,98 @@ const MadajBuilds = () => {
                                 </svg>
                             </div>
                         </div>
-                        <div className="hero-info-col hero-info-center">
-                            <p className="hero-tagline">
-                                Building AI systems<br />Learning in public
-                            </p>
-                        </div>
-                        <div className="hero-info-col hero-info-right flex justify-center text-center">
-                            <p className="hero-bio">
-                                Exploring AI, sports tech &amp; edtech, <br />building systems that ship.
-                                
-                            </p>
 
-                            {/* ── Cloud + ladder scene ───────────────────── */}
-                            <div className="cloud-ladder-scene" ref={cloudLadderRef}>
-                                {/* Cloud with FOLLOW text */}
-                                <div className="scene-cloud-wrap">
-                                    <svg className="scene-cloud" viewBox="0 0 200 70" preserveAspectRatio="none">
-                                        <g fill="currentColor">
-                                            <ellipse cx="100" cy="50" rx="90" ry="20" />
-                                            <ellipse cx="45" cy="34" rx="38" ry="24" />
-                                            <ellipse cx="100" cy="24" rx="42" ry="28" />
-                                            <ellipse cx="150" cy="36" rx="34" ry="22" />
-                                        </g>
-                                    </svg>
-                                    <span className="scene-cloud-label">FOLLOW</span>
-                                </div>
-                                {/* Inclined ladder from right */}
-                                <div className="scene-ladder">
-                                    <span className="s-rail s-rail-l" />
-                                    <span className="s-rail s-rail-r" />
-                                    <span className="s-rung" />
-                                    <span className="s-rung" />
-                                    <span className="s-rung" />
-                                    <span className="s-rung" />
-                                    <span className="s-rung" />
-                                </div>
-                                {/* Climbing text */}
-                                <span className="scene-climb-text">@madajbuilds</span>
+                        {/* Ladder connecting cloud 1 → cloud 2 */}
+                        <div className="diagonal-ladder ladder-1" style={{
+                            opacity: Math.max(0, 0.4 * spReverse * spReverse),
+                            filter: `blur(${sp * 3}px)`,
+                        }}>
+                            <span className="d-rail d-rail-l" />
+                            <span className="d-rail d-rail-r" />
+                            <span className="d-rung" />
+                            <span className="d-rung" />
+                            <span className="d-rung" />
+                            <span className="d-rung" />
+                            <span className="d-rung" />
+                            <span className="d-rung" />
+                            <span className="d-rung" />
+                        </div>
+
+                        {/* Cloud 2 — bottom right: Tagline */}
+                        <div className="cloud-platform cloud-2" style={{
+                            opacity: Math.max(0, spReverse * spReverse),
+                            transform: `translateY(${-sp2 * 160}px) translateZ(${-sp2 * 70}px) scaleX(${1 - sp2 * 0.55}) scaleY(${1 + sp * 0.18}) rotate(${sp * 4}deg)`,
+                            filter: `blur(${sp * 2.5}px)`,
+                        }}>
+                            <div className="title-on-cloud" ref={titleCloudRef2}>
+                                <h1
+                                    className="hero-title"
+                                    ref={titleRef2}
+                                    aria-label="Building AI systems and Learning in public"
+                                >
+                                    <BentTitleLine text="Building AI systems" curve={8} />
+                                    <BentTitleLine text="Learning in public" curve={6} />
+                                </h1>
+                                <svg className="cloud-seat" viewBox="0 0 200 70" preserveAspectRatio="none" ref={cloudRef2} aria-hidden="true">
+                                    <g fill="currentColor">
+                                        {CLOUD2_PUFFS.map((puff, i) => (
+                                            <ellipse
+                                                key={i}
+                                                cx={puff.cx}
+                                                cy={puff.cy}
+                                                rx={puff.rx}
+                                                ry={puff.ry}
+                                                ref={(element) => { puffRefs2.current[i] = element; }}
+                                            />
+                                        ))}
+                                    </g>
+                                </svg>
                             </div>
                         </div>
+
+                        {/* Ladder connecting "s" → cloud 2 */}
+                        <div className="diagonal-ladder ladder-2" style={{
+                            opacity: Math.max(0, 0.4 * spReverse * spReverse),
+                            filter: `blur(${sp * 2.5}px)`,
+                        }}>
+                            <span className="d-rail d-rail-l" />
+                            <span className="d-rail d-rail-r" />
+                            <span className="d-rung" />
+                            <span className="d-rung" />
+                            <span className="d-rung" />
+                            <span className="d-rung" />
+                            <span className="d-rung" />
+                            <span className="d-rung" />
+                            <span className="d-rung" />
+                        </div>
+
                     </div>
 
                     {/* 3D Canvas — absolutely positioned, behind headline */}
+
+{/* 3D Canvas — absolutely positioned, behind headline */}
                     <div className="hero-canvas-wrap">
                         <Hero3D scrollProgress={scrollProgress} themeKey={theme.key} wordmarkRectRef={wordmarkRectRef} />
                     </div>
 
                     {/* Headline overlay */}
                     <div className="hero-headline" style={{
-                        opacity: Math.max(0, 1 - scrollProgress * 1.3),
-                        transform: `translateY(${-scrollProgress * 70}px) rotateX(${scrollProgress * 25}deg)`,
+                        opacity: Math.max(0, 1 - sp * 1.5),
+                        transform: `translateY(${-sp * 80}px) translateX(${-sp2 * 60}px) perspective(1000px) rotateX(${sp * 30}deg) rotateY(${-sp * 8}deg) scale(${1 - sp * 0.1})`,
                     }}>
                         
+                    </div>
+
+                    {/* Bottom-left tagline */}
+                    <div className="hero-tagline" style={{
+                        opacity: Math.max(0, 1 - sp * 1.5),
+                        transform: `translateY(${-sp * 50}px) translateX(${-sp2 * 100}px) perspective(800px) rotateY(${sp * 15}deg)`,
+                    }}>
+                        <p className="hero-tagline-text">
+                            I BRING<br />
+                            CRAFT &amp; TASTE<br />
+                            TO DIGITAL WORK
+                        </p>
                     </div>
 
                     {/* Falling icons layer */}
