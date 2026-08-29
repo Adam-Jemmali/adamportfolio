@@ -10,6 +10,8 @@ import { useScrollProgress } from "../utils/useScrollProgress.js";
 // The 3D hero (three.js + opentype.js, ~0.5 MB gzipped) loads in its own
 // async chunk so the page paints instantly and the wordmark streams in.
 const Hero3D = memo(lazy(() => import("./Hero3D.jsx")));
+// The CTA's balloon-script wordmark — same 3D look, loads on demand.
+const CtaWord3D = memo(lazy(() => import("./CtaWord3D.jsx")));
 
 // Memoise the expensive subtrees so cheap parent re-renders (clock ticking,
 // cursor-coords updating) never reach the 3D canvas or the profile panel.
@@ -194,13 +196,17 @@ const BURST_LINES = Array.from({ length: BURST_COUNT }, (_, i) => {
         y2: 200 + Math.sin(angle) * outer,
         w: (((i * 7 + 3) % 16) / 10 + 0.6).toFixed(2),
         o: (((i * 11 + 2) % 50) / 100 + 0.35).toFixed(2),
+        // 1..5 — each ray takes one of the theme-derived --ray-* hues
+        // (accent, accent-2 and mixes) so the burst is a colour blend
+        // that re-tints with themes A / B / C.
+        c: ((i * 3 + 1) % 5) + 1,
     };
 });
 
-const BurstLines = () => (
-    <svg className="burst-lines" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+const BurstLines = ({ className = "" }) => (
+    <svg className={`burst-lines ${className}`} viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
         {BURST_LINES.map((l, i) => (
-            <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="currentColor" strokeWidth={l.w} strokeLinecap="round" opacity={l.o} />
+            <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={`var(--ray-${l.c})`} strokeWidth={l.w} strokeLinecap="round" opacity={l.o} />
         ))}
     </svg>
 );
@@ -211,24 +217,34 @@ const BurstLines = () => (
    thickness shows when it tumbles on any axis. All colours are driven
    by CSS custom props (--cur-*) so it re-tints with the theme. */
 const CURSOR_PATH = "M30 15 L150 135 L96 135 L134 220 L108 229 L74 150 L30 178 Z";
-const CURSOR_SLICES = 30;
-const CURSOR_SLICE_STEP = 3.8;
+// Chunky extrusion — matched to the hero's thick 3D pointer. A deep stack
+// of slices forms the bulky side wall; it's lit bright near the face and
+// falls off into shadow at the back so the volume reads as a rounded 3D
+// body, not a flat dark slab.
+const CURSOR_SLICES = LOW_END ? 30 : 54;
+const CURSOR_SLICE_STEP = 6.5;
 
 const CursorArrow = () => (
     <div className="cursor-3d" aria-hidden="true">
-        {Array.from({ length: CURSOR_SLICES }, (_, i) => (
-            <svg
-                key={i}
-                className="cursor-3d-slice"
-                viewBox="0 0 180 244"
-                style={{
-                    transform: `translateZ(-${((i + 1) * CURSOR_SLICE_STEP).toFixed(1)}px)`,
-                    filter: `brightness(${(1 - (i / CURSOR_SLICES) * 0.72).toFixed(3)})`,
-                }}
-            >
-                <path d={CURSOR_PATH} />
-            </svg>
-        ))}
+        {Array.from({ length: CURSOR_SLICES }, (_, i) => {
+            const t = i / (CURSOR_SLICES - 1);            // 0 = at the face, 1 = deepest
+            // bright rim just behind the face, easing down to a dark back
+            const lit = 1.18 - t * 0.92;                  // 1.18 → 0.26
+            return (
+                <svg
+                    key={i}
+                    className="cursor-3d-slice"
+                    viewBox="0 0 180 244"
+                    style={{
+                        transform: `translateZ(-${((i + 1) * CURSOR_SLICE_STEP).toFixed(1)}px)`,
+                        filter: `brightness(${lit.toFixed(3)})`,
+                        zIndex: CURSOR_SLICES - i,
+                    }}
+                >
+                    <path d={CURSOR_PATH} />
+                </svg>
+            );
+        })}
         <svg className="cursor-3d-face" viewBox="0 0 180 244" fill="none">
             <defs>
                 <linearGradient id="cg-body" x1="14%" y1="4%" x2="84%" y2="96%">
@@ -237,8 +253,8 @@ const CursorArrow = () => (
                     <stop className="cg-s2" offset="100%" />
                 </linearGradient>
                 <linearGradient id="cg-shine" x1="0%" y1="0%" x2="58%" y2="72%">
-                    <stop offset="0%" stopColor="#ffffff" stopOpacity="0.62" />
-                    <stop offset="52%" stopColor="#ffffff" stopOpacity="0.12" />
+                    <stop offset="0%" stopColor="#ffffff" stopOpacity="0.42" />
+                    <stop offset="46%" stopColor="#ffffff" stopOpacity="0.1" />
                     <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
                 </linearGradient>
             </defs>
@@ -301,13 +317,21 @@ const CursorGalaxyRaw = () => {
             const flyOut = band(p, 0.8, 0.99);
             const cam = reduced ? 0 : flyIn - flyOut; // 0 → 1 → 0
 
-            // Warp-speed starfield — rushes forward out of the depth, and its
-            // brightness ripples like waves rolling past.
+            // Warp-speed rays — the streaks fly straight out from the
+            // centre continuously (CSS keyframe loop). Scroll only sets
+            // the loop SPEED and the master opacity: a steady cruise
+            // through the dive, then at the very end the loop blasts to
+            // hyperspeed and the whole field fades out.
             if (warpRef.current) {
-                const ripple = 0.68 + 0.32 * Math.sin(p * Math.PI * 7);
-                warpRef.current.style.opacity = (env * ripple).toFixed(3);
+                const warpIn = band(p, 0.08, 0.22);
+                const warpRush = band(p, 0.80, 0.93);   // 0 → 1 : loop accelerates
+                const warpOut = band(p, 0.88, 1.0);     // 0 → 1 : final fade-out
+                const vis = warpIn * (1 - warpOut);
+                warpRef.current.style.opacity = vis.toFixed(3);
+                warpRef.current.style.setProperty("--warp-speed", (2.4 - warpRush * 2.08).toFixed(2) + "s");
+                warpRef.current.style.setProperty("--warp-play", vis < 0.01 ? "paused" : "running");
                 warpRef.current.style.transform =
-                    `translate(-50%, -50%) translateZ(${(-560 + env * 360).toFixed(0)}px) scale(${(0.85 + env * 1.15).toFixed(3)}) rotate(${(p * 220).toFixed(1)}deg)`;
+                    `translate(-50%, -50%) translateZ(${(-520 + env * 300).toFixed(0)}px) rotate(${(p * 90).toFixed(1)}deg)`;
             }
 
             // Shockwave rings — a staggered train of ripples flying past the camera.
@@ -321,15 +345,18 @@ const CursorGalaxyRaw = () => {
             }
 
             // Cursor is the portal: the camera drives straight into it
-            // (translateZ toward the viewer) while it tumbles a full 360° on
-            // every axis — the offset bands make it read as a real 3D tumble
-            // that shows the pointer's thickness — then it reforms dead flat.
-            // Full 360° on every axis, front-loaded so the tumble (and the
-            // pointer's thickness) is on show while you dive in, then it holds
-            // dead flat through the finish.
-            const spinY = reduced ? 0 : band(p, 0.06, 0.66) * 360;
-            const spinX = reduced ? 0 : band(p, 0.12, 0.74) * 360;
-            const spinZ = reduced ? 0 : band(p, 0.1, 0.8) * 360;
+            // (translateZ toward the viewer) while it tumbles. The turn is
+            // deliberately slow — a long ease-out to near-profile (so the
+            // thick side wall is clearly on show), a generous HOLD at that
+            // angle, then a long ease back to dead flat for the finish.
+            // Well under a full turn so it reads as a slow, legible
+            // rotation rather than a spin.
+            const rollIn = band(p, 0.06, 0.44);       // slow turn out (38% of scroll)
+            const rollOut = band(p, 0.60, 0.93);      // slow turn back (33% of scroll)
+            const roll = reduced ? 0 : rollIn * (1 - rollOut); // 0 → 1 (held) → 0
+            const spinY = roll * 265;
+            const spinX = roll * 120;
+            const spinZ = roll * 58;
             // Solid + tumbling while you approach and while it reforms (so the
             // thickness reads); dissolves only in the deep middle.
             const through = band(p, 0.24, 0.4) * (1 - band(p, 0.66, 0.82));
@@ -356,8 +383,6 @@ const CursorGalaxyRaw = () => {
 
                 const k = i - 1;
                 const s = 0.24 + k * seg;
-                // Longer readable plateau, gentler Z travel — so the copy is
-                // easy to read even scrolling quickly.
                 const inR = band(p, s, s + seg * 0.22);
                 const outR = band(p, s + seg * 0.82, s + seg * 1.06);
                 const local = clamp01((p - s) / (seg * 1.06));
@@ -371,6 +396,13 @@ const CursorGalaxyRaw = () => {
             // "JUST START" — settles flat as the camera comes to rest, and
             // holds through the end so it hands straight off to the CTA.
             const endIn = band(p, 0.8, 0.95);
+
+            // Settle the stage to the flat CTA background over the last
+            // stretch — the centre glow is gone before the seam so the
+            // galaxy hands straight off to the "LET'S BUILD SOMETHING"
+            // panel with no visible break.
+            section.style.setProperty("--glow-o", (1 - band(p, 0.86, 1)).toFixed(3));
+
             if (textEndRef.current) {
                 textEndRef.current.style.opacity = endIn.toFixed(3);
                 textEndRef.current.style.transform =
@@ -400,6 +432,7 @@ const CursorGalaxyRaw = () => {
                 <div className="cursor-galaxy-3d">
                     <div ref={warpRef} className="cursor-galaxy-warp" aria-hidden="true">
                         <BurstLines />
+                        {!LOW_END && <BurstLines className="warp-b" />}
                     </div>
                     <div className="cursor-galaxy-rings" aria-hidden="true">
                         {Array.from({ length: RING_COUNT }, (_, i) => (
@@ -840,17 +873,22 @@ const CursorSnake = memo(CursorSnakeRaw);
 
 /* ── Falling badges — the hero's icons rain down the CTA once the
    galaxy sequence ends ("LET'S BUILD SOMETHING"). ─────────────────── */
-const CTA_BADGE_COUNT = LOW_END ? 11 : 22;
+// Same per-icon model as the hero's FALLING_ICONS — depth drives the
+// parallax (near = big/sharp/fast, far = small/blurry/slow), plus drift,
+// spin, tumble and a gentle sway. The only difference from the hero is
+// the spawn line: here the rain starts at the cursor tip's height row
+// instead of the top of the screen.
+const CTA_BADGE_COUNT = LOW_END ? 20 : 38;
 const CTA_BADGES = Array.from({ length: CTA_BADGE_COUNT }, (_, i) => ({
     badge: BADGE_ICONS[i % BADGE_ICONS.length],
-    x: (((i * 137 + 23) % 92) + 4) / 100,       // 0..1 of panel width
-    startFrac: ((i * 61 + 13) % 100) / 100,     // where it begins, 0 = top .. 1 = bottom
-    size: 28 + ((i * 13 + 5) % 34),
-    drift: (((i * 29 + 7) % 26) - 13),          // px/s
-    spin: (((i * 47 + 5) % 120) - 60),          // deg/s
-    speed: 55 + ((i * 17 + 3) % 66),            // px/s fall
-    rot0: (i * 53) % 360,
-    tumble: 0.55 + ((i * 41 + 3) % 100) / 220,
+    size: 30 + ((i * 7 + 3) % 38),
+    x: ((i * 137 + 42) % 96),
+    delay: ((i * 1.1 + 0.3) % 7),
+    drift: (((i * 29 + 11) % 26) - 13),
+    startAngle: ((i * 61 + 17) % 360),
+    spin: (((i * 53 + 7) % 220) - 110),
+    tumble: 0.6 + (((i * 41 + 3) % 100) / 100),
+    depth: 0.05 + (((i * 37 + 11) % 105) / 100),
 }));
 
 const FallingBadgesRaw = () => {
@@ -861,71 +899,117 @@ const FallingBadgesRaw = () => {
         const root = rootRef.current;
         if (!root) return;
         const els = elsRef.current;
-        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        if (reduced) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-        let active = false;
-        const io = new IntersectionObserver(
-            ([entry]) => { active = entry.isIntersecting; },
-            { threshold: 0 },
-        );
-        io.observe(root);
+        // This layer is `position: fixed` over the whole viewport (see
+        // `.cta-badge-rain` in the CSS) so the icons can rain from the
+        // very top of the SCREEN — above the big blue galaxy cursor /
+        // "JUST START" — and keep falling straight through into the CTA
+        // panel. Nothing in the CTA panel can clip it because it is not
+        // inside the panel's `overflow` box.
+        const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+        const galaxyEl = document.querySelector(".cursor-galaxy");
+        const ctaEl = root.closest(".panel-cta") || document.querySelector(".panel-cta");
+        const N = CTA_BADGES.length;
+        const STACK = 1500;   // column height reaching up off the top of the screen
 
-        const r0 = root.getBoundingClientRect();
-        const w0 = r0.width || window.innerWidth;
-        const h0 = r0.height || window.innerHeight;
-        const items = CTA_BADGES.map((c, i) => ({
-            el: els[i],
-            x: c.x * w0,
-            // spread through the panel (and a little above) so it's populated
-            // the instant the CTA appears, then keeps raining
-            y: c.startFrac * (h0 + 240) - 180,
-            vy: c.speed,
-            vx: c.drift,
-            rot: c.rot0,
-            rotV: c.spin,
-            tumble: c.tumble,
-        }));
-
-        const paint = (it) => {
-            it.el.style.transform =
-                `translate3d(${it.x.toFixed(1)}px, ${it.y.toFixed(1)}px, 0) ` +
-                `rotateX(${(it.rot * it.tumble).toFixed(1)}deg) ` +
-                `rotateY(${(it.rot * it.tumble * 0.7).toFixed(1)}deg) ` +
-                `rotateZ(${it.rot.toFixed(1)}deg)`;
-        };
-        for (const it of items) if (it.el) paint(it);
+        // Per-icon runtime state — identical parallax model to the hero:
+        // near icons (high depth) fall faster, bigger and sharper; far
+        // icons drift down slow, small and blurred. Pre-spread from well
+        // above the screen down through it so the stream is already full.
+        const spread = STACK + window.innerHeight + 140;
+        const items = CTA_BADGES.map((c, i) => {
+            const speed = 20 + c.depth * 60;
+            const scale = 0.55 + c.depth * 0.75;
+            const blur = Math.max(0, 1 - c.depth) * 3;
+            return {
+                el: els[i],
+                x: c.x,                                  // percent of viewport width
+                y: -STACK + ((i + 0.5) / N) * spread,    // 0 = top of the screen
+                vx: c.drift,
+                vy: speed,
+                rot: c.startAngle,
+                rotV: c.spin,
+                tumble: c.tumble,
+                scale,
+                blur,
+                size: c.size,
+                swayAmp: 6 + ((i * 37 + 5) % 22),
+                swayFreq: 0.4 + ((i * 23 + 7) % 90) / 100,
+                swayPhase: ((i * 17 + 3) % 63) / 10,
+                sway: 0,
+            };
+        });
 
         let last = performance.now();
-        const tick = () => {
-            const now = performance.now();
-            const dt = Math.min((now - last) / 1000, 0.1);
-            last = now;
-            if (!active || document.hidden) return;
+        let layerOpacity = 0;
 
-            const rect = root.getBoundingClientRect();
-            const W = rect.width;
-            const H = rect.height;
+        const frame = () => {
+            raf = requestAnimationFrame(frame);
+            const now = performance.now();
+            const dt = Math.min((now - last) / 1000, 0.05);
+            last = now;
+            if (document.hidden) return;
+
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+
+            // Fade the whole layer in the moment the cursor animation is
+            // finishing — while "JUST START" is still centred, before the
+            // CTA panel is reached — and back out once the CTA has
+            // scrolled off the top. Keyed to the galaxy section's own
+            // scroll progress, not the CTA's position.
+            let target = 0;
+            if (galaxyEl && ctaEl) {
+                const g = galaxyEl.getBoundingClientRect();
+                const c = ctaEl.getBoundingClientRect();
+                const gp = clamp01(-g.top / Math.max(1, g.height - vh)); // 0..1 through the galaxy
+                const enter = clamp01((gp - 0.66) / 0.16);              // fully in by ~82% (JUST START)
+                const leave = clamp01(c.bottom / (vh * 0.7));
+                target = Math.min(enter, leave);
+            }
+            layerOpacity += (target - layerOpacity) * Math.min(1, dt * 6);
+            root.style.opacity = layerOpacity.toFixed(3);
+            if (layerOpacity < 0.004) return;
+
             for (const it of items) {
                 if (!it.el) continue;
+
+                it.swayPhase += it.swayFreq * dt;
+                it.sway = Math.sin(it.swayPhase) * it.swayAmp;
+                it.rot += it.rotV * dt;
                 it.y += it.vy * dt;
                 it.x += it.vx * dt;
-                it.rot += it.rotV * dt;
-                if (it.y > H + 70) { it.y = -90; it.x = Math.random() * W; }
-                if (it.x < -70) it.x = W + 50;
-                else if (it.x > W + 70) it.x = -50;
-                paint(it);
+
+                // Recycle straight back above the top of the screen.
+                if (it.y > vh + 90) {
+                    it.y = -60 - Math.random() * 240;
+                    it.x = 4 + Math.random() * 92;
+                }
+                if (it.x < 2) { it.x = 2; it.vx = Math.abs(it.vx); }
+                else if (it.x > 98) { it.x = 98; it.vx = -Math.abs(it.vx); }
+
+                const half = (it.size * it.scale) / 2;
+                const rx = (it.x / 100) * vw + it.sway;
+                const z = it.scale * 90;
+
+                // Soft fade in above the screen top, fade out at the foot.
+                let op = 0.5;
+                if (it.y < 0) op = Math.max(0, 0.5 * (1 + it.y / 200));
+                else if (it.y > vh - 90) op = Math.max(0, 0.5 * ((vh - it.y) / 90));
+
+                it.el.style.transform =
+                    `translate3d(${(rx - half).toFixed(1)}px, ${(it.y - half).toFixed(1)}px, ${z.toFixed(1)}px) ` +
+                    `rotateX(${(it.rot * it.tumble).toFixed(2)}deg) ` +
+                    `rotateY(${(it.rot * it.tumble * 0.7).toFixed(2)}deg) ` +
+                    `rotateZ(${it.rot.toFixed(2)}deg) scale(${it.scale.toFixed(3)})`;
+                it.el.style.opacity = op.toFixed(3);
+                it.el.style.filter = it.blur > 0.02 ? `blur(${it.blur.toFixed(2)}px)` : "none";
             }
         };
 
-        let raf = requestAnimationFrame(function loop() {
-            raf = requestAnimationFrame(loop);
-            tick();
-        });
-        return () => {
-            cancelAnimationFrame(raf);
-            io.disconnect();
-        };
+        let raf = requestAnimationFrame(frame);
+        return () => cancelAnimationFrame(raf);
     }, []);
 
     return (
@@ -1187,10 +1271,13 @@ const MadajBuilds = () => {
             // 0 when the section first pokes above the fold, 1 once it has
             // risen ~1.6 viewports — a long window so the poster is still
             // visibly curling while its content is on screen.
-            const enter = Math.max(0, Math.min(1, (vh - r.top) / (vh * 1.6)));
+            const enter = Math.max(0, Math.min(1, (vh - r.top) / (vh * 0.85)));
             const curl = 1 - smooth(enter);
             section.style.setProperty("--curl", curl.toFixed(4));
-            section.style.setProperty("--curl-opacity", Math.min(1, enter * 3.2).toFixed(3));
+            // Fade in as soon as the panel starts entering from the bottom
+            // so there's no empty run between it and the hero.
+            const appear = Math.max(0, Math.min(1, (vh * 1.05 - r.top) / (vh * 0.42)));
+            section.style.setProperty("--curl-opacity", appear.toFixed(3));
         };
         const onScroll = () => {
             if (ticking) return;
@@ -1666,20 +1753,33 @@ const MadajBuilds = () => {
                     <svg className="star" viewBox="0 0 40 40" style={{ color: "#fbbf24" }} aria-hidden="true">
                         <path fill="currentColor" d="M20 2 L24 15 L38 15 L27 24 L31 38 L20 29 L9 38 L13 24 L2 15 L16 15 Z" />
                     </svg>
-                    <svg className="blob br" viewBox="0 0 120 90" style={{ color: "#f472b6" }} aria-hidden="true">
+                    <svg className="blob br" viewBox="0 0 120 90" aria-hidden="true">
                         <path fill="currentColor" d="M8 46 Q2 24 22 16 Q30 4 48 10 Q66 2 76 18 Q96 20 92 42 Q100 60 80 66 Q70 82 50 76 Q30 88 16 70 Q-2 66 8 46 Z" />
                     </svg>
 
-                    
-                    <h2 className="headline">LET&apos;S BUILD<br />SOMETHING</h2>
+                    {/* 3D chained cursive — the hero's balloon-script style,
+                        floating in the space above the headline */}
+                    <Suspense fallback={null}>
+                        <CtaWord3D themeKey={theme.key} />
+                    </Suspense>
 
-                    <div className="cta-links mono">
-                        <a href="mailto:adam.official.514@gmail.com">EMAIL</a>
-                        <a href="https://github.com/Adam-Jemmali" target="_blank" rel="noopener noreferrer">GITHUB</a>
-                        <a href="https://www.instagram.com/madaj_2/" target="_blank" rel="noopener noreferrer">INSTAGRAM</a>
+                    <div className="cta-stage">
+                        <h2 className="headline cta-headline">
+                            <span className="cta-row cta-line-a">BUILD</span>
+                            <span className="cta-row cta-line-b">IN PUBLIC</span>
+                            <span className="cta-row cta-line-c">WITH ME</span>
+                        </h2>
                     </div>
 
-                    <p className="footer-note mono">MADAJ.BUILDS &copy; <span id="mb-year" /></p>
+                    <div className="cta-footer">
+                        <div className="cta-links mono">
+                            <a href="https://www.youtube.com/@madajbuilds" target="_blank" rel="noopener noreferrer">YOUTUBE</a>
+                            <a href="https://github.com/Adam-Jemmali" target="_blank" rel="noopener noreferrer">GITHUB</a>
+                            <a href="https://www.instagram.com/madaj_2/" target="_blank" rel="noopener noreferrer">INSTAGRAM</a>
+                            <a href="mailto:adam.official.514@gmail.com">EMAIL</a>
+                        </div>
+                        <p className="footer-note mono">MADAJ.BUILDS &copy; <span id="mb-year" /></p>
+                    </div>
                 </section>
             </main>
 

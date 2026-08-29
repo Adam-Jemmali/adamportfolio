@@ -78,10 +78,7 @@ const LockScreen = () => {
             </div>
 
             <div ref={cardRef} className="lock-card">
-                <div className="lock-portrait-wrap">
-                    <img src="/public/images/adam_Me.png" alt="Adam Jemmali" className="lock-portrait" />
-                </div>
-                <div className="lock-initials" aria-hidden="true" style={{ display: 'none' }}>
+                <div className="lock-initials" aria-hidden="true">
                     <BrandName monogramsOnly />
                 </div>
                 <h1><BrandName /></h1>

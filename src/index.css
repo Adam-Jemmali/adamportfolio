@@ -1,5 +1,5 @@
 /* Use this instead - forces variable font */
-@import url("https://fonts.googleapis.com/css2?family=Georama:wght@100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Georama:wght@100..900&family=Lobster&display=swap");
 @import "tailwindcss";
 
 html,
@@ -944,6 +944,8 @@ body {
     #welcome {
         @apply flex flex-col justify-center items-center absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 select-none max-sm:h-full max-sm:w-full max-sm:px-6 z-10 pointer-events-none text-center;
         width: min(100%, calc(100vw - 2rem));
+        /* sit higher so the CTA never collides with the bottom dock */
+        top: 42%;
     }
 
     #welcome .hero-eyebrow {
@@ -970,45 +972,72 @@ body {
         width: 100%;
     }
 
-    /* Welcome hero portrait with sunlight shadow */
+    /* Welcome hero portrait — dissolves into the desktop instead of
+       sitting on it as a card: no border, no hard corners, the edges
+       feathered to transparent by a radial mask, a soft accent glow
+       bloom behind, and a light script signature. */
+    .hero-portrait-block {
+        @apply relative mx-auto;
+        width: 220px;
+        isolation: isolate;
+    }
+
+    /* faint accent haze behind the portrait */
+    .hero-portrait-block::before {
+        content: "";
+        @apply absolute pointer-events-none;
+        inset: -24% -20% -12%;
+        z-index: -1;
+        background: radial-gradient(
+            ellipse 60% 56% at 50% 42%,
+            color-mix(in srgb, var(--pfp-a) 14%, transparent) 0%,
+            color-mix(in srgb, var(--pfp-a) 5%, transparent) 45%,
+            transparent 72%
+        );
+        filter: blur(26px);
+    }
+
+    .hero-portrait-signature {
+        @apply absolute pointer-events-none z-20;
+        top: -0.5rem;
+        left: -0.6rem;
+        color: #c4ff00;
+        font-family: "Lobster", "Brush Script MT", cursive;
+        font-size: 1.7rem;
+        font-style: italic;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+        white-space: nowrap;
+        opacity: 0.9;
+        transform: rotate(-10deg);
+        transform-origin: left bottom;
+        text-shadow: 0 0 18px rgb(196 255 0 / 0.25);
+    }
+
     .hero-portrait-wrap {
-        @apply relative w-[180px] h-[240px] overflow-hidden mx-auto;
-        border-radius: 12px;
-        box-shadow: 0 10px 40px rgb(0 0 0 / 0.45);
-    }
-
-    .hero-portrait-wrap::after {
-        content: "";
-        @apply absolute inset-0 pointer-events-none z-10;
-        background: linear-gradient(
-            to bottom right,
-            transparent 38%,
-            rgba(0, 0, 0, 0.15) 40%,
-            rgba(0, 0, 0, 0.92) 42%,
-            rgba(0, 0, 0, 0.97) 100%
+        @apply relative w-full mx-auto;
+        height: 270px;
+        /* ghosted like a passport watermark — very low opacity, blends
+           with the desktop so it never fights the UI */
+        opacity: 0.32;
+        mix-blend-mode: luminosity;
+        --portrait-mask: radial-gradient(
+            ellipse 74% 80% at 50% 40%,
+            #000 40%,
+            rgba(0, 0, 0, 0.55) 66%,
+            transparent 100%
         );
-    }
-
-    .hero-portrait-wrap::before {
-        content: "";
-        @apply absolute inset-0 pointer-events-none z-10;
-        background: linear-gradient(
-            to bottom right,
-            rgba(255, 183, 77, 0.18) 0%,
-            rgba(255, 152, 0, 0.08) 30%,
-            transparent 45%
-        );
-        mix-blend-mode: screen;
+        -webkit-mask-image: var(--portrait-mask);
+        mask-image: var(--portrait-mask);
     }
 
     .hero-portrait-shimmer {
         @apply absolute inset-0 pointer-events-none z-10;
         background: linear-gradient(
             to bottom right,
-            rgba(255, 213, 79, 0.12) 36%,
-            rgba(255, 183, 77, 0.22) 40%,
-            rgba(255, 152, 0, 0.15) 42%,
-            transparent 50%
+            rgba(255, 255, 255, 0.06) 34%,
+            rgba(255, 255, 255, 0.10) 44%,
+            transparent 58%
         );
         mix-blend-mode: screen;
         animation: sunlight-breathe 4s ease-in-out infinite;
@@ -1016,6 +1045,7 @@ body {
 
     .hero-portrait {
         @apply w-full h-full object-cover;
+        filter: grayscale(1) contrast(1.05) brightness(1.05);
     }
 
     #welcome .brand-name {
@@ -1100,7 +1130,7 @@ body {
     }
 
     #welcome .hero-ctas {
-        @apply pointer-events-auto flex flex-wrap justify-center items-center gap-3 mt-6;
+        @apply pointer-events-auto flex flex-wrap justify-center items-center gap-3 mt-4;
     }
 
     #welcome .hero-cta {
@@ -5206,6 +5236,90 @@ body {
         /* Safari: tighter blog padding */
         #safari .blog {
             padding: 1rem;
+        }
+    }
+
+    /* ── Update nag toast — retro dialog, bottom-right ─────────────── */
+    .update-toast {
+        @apply fixed z-[6000] flex flex-col select-none;
+        right: 1.25rem;
+        bottom: calc(1.25rem + 84px); /* clear of the dock */
+        width: 320px;
+        font-family: var(--font-roboto);
+        background: #c8c8c8;
+        color: #111;
+        border: 2px solid;
+        border-color: #f4f4f4 #5a5a5a #5a5a5a #f4f4f4;
+        box-shadow: 3px 3px 0 rgb(0 0 0 / 0.35), 0 18px 40px rgb(0 0 0 / 0.45);
+        animation: update-toast-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .update-toast-out {
+        animation: update-toast-out 0.4s ease-in both;
+    }
+
+    @keyframes update-toast-in {
+        from { opacity: 0; transform: translateY(24px) scale(0.96); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes update-toast-out {
+        to { opacity: 0; transform: translateX(28px); }
+    }
+
+    .update-toast-bar {
+        @apply flex items-center justify-between px-2 py-1 text-white text-sm font-bold;
+        background: linear-gradient(90deg, #1c3fb0 0%, #2f6fd6 55%, #4aa3e6 100%);
+    }
+
+    .update-toast-x {
+        @apply grid place-items-center text-xs font-bold leading-none;
+        width: 18px;
+        height: 18px;
+        color: #111;
+        background: #c8c8c8;
+        border: 2px solid;
+        border-color: #f4f4f4 #5a5a5a #5a5a5a #f4f4f4;
+    }
+
+    .update-toast-x:active {
+        border-color: #5a5a5a #f4f4f4 #f4f4f4 #5a5a5a;
+    }
+
+    .update-toast-body {
+        @apply flex flex-col gap-1.5 px-3.5 py-3 text-[13px] leading-snug;
+    }
+
+    .update-toast-strong {
+        @apply font-bold;
+    }
+
+    .update-toast-install {
+        @apply mt-1.5 self-start inline-flex items-center gap-2 px-3.5 py-1.5 text-[13px] font-bold;
+        background: #c8c8c8;
+        border: 2px solid;
+        border-color: #f4f4f4 #5a5a5a #5a5a5a #f4f4f4;
+        box-shadow: 2px 2px 0 rgb(0 0 0 / 0.28);
+        cursor: pointer;
+        transition: filter 0.12s ease;
+    }
+
+    .update-toast-install:hover {
+        filter: brightness(1.05);
+    }
+
+    .update-toast-install:active {
+        border-color: #5a5a5a #f4f4f4 #f4f4f4 #5a5a5a;
+        box-shadow: none;
+        transform: translate(1px, 1px);
+    }
+
+    @media (max-width: 640px) {
+        .update-toast {
+            right: 0.75rem;
+            left: 0.75rem;
+            width: auto;
+            bottom: calc(0.75rem + 78px);
         }
     }
 }

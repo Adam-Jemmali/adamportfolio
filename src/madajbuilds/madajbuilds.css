@@ -395,9 +395,10 @@ body {
 }
 
 .panel-cta {
-    /* Continues straight out of the galaxy section — no colour seam */
+    /* Continues straight out of the galaxy section — no colour seam.
+       Top stop is the galaxy's exact base colour and there is no
+       `filter` here, so the boundary is invisible. */
     background: linear-gradient(180deg, #05070e 0%, #070a18 55%, #090c1e 100%);
-    filter: brightness(0.95) contrast(1.05);
 }
 
 .eyebrow {
@@ -968,13 +969,65 @@ body {
     z-index: 2;
 }
 
-/* ── Falling badges behind the CTA ───────────────────────────── */
-.cta-badge-rain {
-    z-index: 0;
+/* ── CTA "last page" — headline + 3D chained script ───────────── */
+.cta-stage {
+    position: relative;
+    z-index: 2;
+    width: min(1120px, 92vw);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
 }
 
-.cta-badge-rain .falling-icon {
-    opacity: 0.62;
+.cta-headline {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 0.04em;
+    font-size: clamp(2.6rem, 8.6vw, 7rem);
+    line-height: 0.96;
+    text-transform: uppercase;
+    color: var(--fg);
+}
+
+/* editorial stagger — like the reference's off-set lines */
+.cta-line-a { align-self: flex-start; }
+.cta-line-b { align-self: flex-end; }
+.cta-line-c { align-self: flex-start; padding-left: 0.6em; }
+
+/* 3D chained cursive — the hero's puffy balloon-script wordmark, in its
+   own WebGL canvas, sitting behind the headline. */
+.cta-word3d {
+    position: absolute;
+    z-index: 1;
+    left: 50%;
+    top: -8vh;
+    transform: translateX(-50%);
+    /* occupies the upper band of the panel — sits high, between where the
+       galaxy cursor handed off and the headline below */
+    width: min(150vw, 1500px);
+    height: 50vh;
+    pointer-events: none;
+}
+
+.cta-word3d canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* ── Falling badges — a viewport-fixed overlay so the rain can start
+   from the top of the SCREEN (above the galaxy cursor / "JUST START")
+   and fall straight through into the CTA, un-clipped by any panel. ── */
+.cta-badge-rain {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;             /* over the galaxy cursor; CTA headline still on top */
+    opacity: 0;              /* JS-driven fade across the galaxy→CTA seam */
+    overflow: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1002,11 +1055,15 @@ body {
 
 .blob {
     position: absolute;
-    width: 120px;
-    opacity: 0.85;
+    width: 84px;
+    opacity: 0.7;
+    /* follows the theme accents (A / B / C) */
+    color: color-mix(in srgb, var(--accent) 45%, var(--accent-2));
 }
 
-.blob.br { bottom: 8%; right: 6%; transform: scaleX(-1); }
+/* lower-left — above the copyright line, clear of the headline and the
+   bottom-right footer links */
+.blob.br { bottom: 15%; left: 3.5%; transform: scaleX(-1); }
 
 .star {
     position: absolute;
@@ -1020,14 +1077,27 @@ body {
     to { transform: rotate(360deg); }
 }
 
-.cta-links {
-    position: relative;
-    z-index: 2;
-    margin-top: 2.25rem;
+/* ── CTA footer — email/socials row + copyright, pinned to the foot ── */
+.cta-footer {
+    position: absolute;
+    z-index: 3;
+    left: 0;
+    right: 0;
+    bottom: clamp(4.5rem, 11vh, 7rem);
+    padding: 0 clamp(1.5rem, 5vw, 4.5rem);
     display: flex;
-    gap: 1.5rem;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.85rem;
+}
+
+.cta-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: clamp(1rem, 2.4vw, 2rem);
     font-size: 12px;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
 }
 
 .cta-links a {
@@ -1043,12 +1113,10 @@ body {
 }
 
 .footer-note {
-    position: absolute;
-    z-index: 2;
-    bottom: 2.5rem;
-    left: 50%;
-    transform: translateX(-50%);
+    margin: 0;
+    align-self: flex-start;
     font-size: 11px;
+    letter-spacing: 0.08em;
     color: var(--dim);
 }
 
@@ -1169,6 +1237,11 @@ body {
     align-items: stretch;
     justify-content: flex-start;
     padding: 0;
+    /* sit tight under the hero — the hero's content has already faded
+       out by the time this overlaps it */
+    margin-top: -4vh;
+    min-height: 82vh;
+    overflow: visible;
     background: linear-gradient(
         180deg,
         #0a1119 0%,
@@ -1205,11 +1278,13 @@ body {
     transform-origin: 50% 100%;
     transform-style: preserve-3d;
     will-change: transform, opacity;
+    /* Gentle curl only — a heavy tilt used to shove the content far down
+       the panel and open a big gap under the hero. */
     transform:
-        perspective(1400px)
-        rotateX(calc(var(--curl, 1) * 44deg))
-        translateY(calc(var(--curl, 1) * 130px))
-        scale(calc(1 - var(--curl, 1) * 0.16));
+        perspective(1600px)
+        rotateX(calc(var(--curl, 1) * 16deg))
+        translateY(calc(var(--curl, 1) * 34px))
+        scale(calc(1 - var(--curl, 1) * 0.07));
 }
 
 .profile-curve::after {
@@ -1229,7 +1304,6 @@ body {
     position: relative;
     z-index: 8;
     width: 100%;
-    min-height: 100svh;
     overflow: visible;
 }
 
@@ -1237,10 +1311,10 @@ body {
     position: relative;
     z-index: 9;
     display: grid;
-    grid-template-columns: minmax(300px, 29vw) minmax(0, 1fr);
-    gap: clamp(2rem, 2.2vw, 2.75rem);
+    grid-template-columns: minmax(260px, 24vw) minmax(0, 1fr);
+    gap: clamp(2rem, 2.4vw, 3rem);
     width: 100%;
-    padding: clamp(8rem, 18.8vh, 12rem) clamp(2rem, 3.8vw, 4.5rem) 6rem;
+    padding: clamp(4rem, 9vh, 6.5rem) clamp(2rem, 3.8vw, 4.5rem) 4.5rem;
 }
 
 .profile-template-identity {
@@ -1248,13 +1322,13 @@ body {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    width: min(100%, 426px);
+    width: min(100%, 340px);
 }
 
 .profile-template-photo-wrap {
     position: relative;
     width: 100%;
-    aspect-ratio: 1;
+    aspect-ratio: 4 / 5;
     overflow: hidden;
     isolation: isolate;
     opacity: 0;
@@ -1303,15 +1377,26 @@ body {
 .cursor-galaxy {
     position: relative;
     width: 100%;
-    height: 340vh;
+    /* taller section = more scroll distance per beat = slower sequence */
+    height: 560vh;
     background: #05070e;
 
     /* Theme-driven palette (A/B/C set --accent / --accent-2 on :root) */
     --cur-lite: color-mix(in srgb, var(--accent) 40%, #ffffff);
     --cur-mid: var(--accent);
     --cur-dark: color-mix(in srgb, var(--accent) 52%, #05070e);
-    --cur-wall: color-mix(in srgb, var(--accent) 80%, #0a1024);
+    /* side wall — a vivid, near-full-accent so the brightness ramp on the
+       slice stack sweeps it from a lit rim to a shadowed back */
+    --cur-wall: color-mix(in srgb, var(--accent) 86%, #ffffff);
     --galaxy-ray: var(--accent-2);
+
+    /* Galaxy warp rays — a blend of the two theme accents plus mixes,
+       so the burst reads as multi-colour and re-tints with A / B / C. */
+    --ray-1: var(--accent-2);
+    --ray-2: var(--accent);
+    --ray-3: color-mix(in srgb, var(--accent) 50%, var(--accent-2));
+    --ray-4: color-mix(in srgb, var(--accent-2) 62%, #ffffff);
+    --ray-5: color-mix(in srgb, var(--accent) 68%, #ffffff);
 }
 
 .cursor-galaxy-stage {
@@ -1321,9 +1406,18 @@ body {
     overflow: hidden;
     perspective: 850px;
     perspective-origin: 50% 46%;
-    background:
-        radial-gradient(circle at 50% 46%, color-mix(in srgb, var(--galaxy-ray) 15%, transparent), transparent 58%),
-        #05070e;
+    background: #05070e;
+}
+
+/* Centre glow — faded out by JS over the last of the scroll so the
+   stage settles to the flat #05070e that the CTA panel opens on. */
+.cursor-galaxy-stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at 50% 46%, color-mix(in srgb, var(--galaxy-ray) 15%, transparent), transparent 58%);
+    opacity: var(--glow-o, 1);
 }
 
 /* The 3D room — every layer lives in this shared depth space so the
@@ -1349,11 +1443,35 @@ body {
 
 .cursor-galaxy-warp {
     color: var(--galaxy-ray);
+    /* JS sets --warp-speed: long while cruising, tiny for the end rush */
+    --warp-speed: 2.4s;
 }
 
+/* Continuous warp streak — the rays fly straight out from the centre on
+   a loop, forever. Two copies half a cycle apart so it never blinks. */
 .cursor-galaxy-warp .burst-lines {
-    opacity: 1;
+    position: absolute;
+    inset: 0;
+    opacity: 0;
     filter: drop-shadow(0 0 6px color-mix(in srgb, var(--galaxy-ray) 45%, transparent));
+    animation: warp-fly var(--warp-speed) linear infinite;
+    animation-play-state: var(--warp-play, running);
+    will-change: transform, opacity;
+}
+
+.cursor-galaxy-warp .burst-lines.warp-b {
+    animation-delay: calc(var(--warp-speed) / -2);
+}
+
+@keyframes warp-fly {
+    0%   { transform: scale(0.28); opacity: 0; }
+    16%  { opacity: 1; }
+    78%  { opacity: 1; }
+    100% { transform: scale(2.7); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cursor-galaxy-warp .burst-lines { animation: none; opacity: 0.5; }
 }
 
 /* Shockwave rings rushing past the camera */
@@ -1417,9 +1535,10 @@ body {
    the pointer's depth outline reads at any angle. */
 .cursor-3d-slice path {
     fill: var(--cur-wall);
-    stroke: color-mix(in srgb, var(--cur-dark) 45%, #000000);
-    stroke-width: 4;
+    stroke: color-mix(in srgb, var(--cur-dark) 55%, #000000);
+    stroke-width: 5;
     stroke-linejoin: round;
+    paint-order: stroke;
 }
 
 .cursor-3d-face {
@@ -1474,7 +1593,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .cursor-galaxy { height: 180vh; }
+    .cursor-galaxy { height: 240vh; }
     .cursor-galaxy-stage { perspective: none; }
     .cursor-galaxy-warp,
     .cursor-galaxy-rings { display: none; }
@@ -1517,22 +1636,23 @@ body {
 .profile-template-signature {
     position: absolute;
     z-index: 3;
-    top: -9%;
-    left: -9%;
+    top: 5%;
+    left: -3%;
     display: block;
     width: max-content;
     max-width: none;
     overflow: visible;
     white-space: nowrap;
+    padding: 0.12em 0.1em;
     clip-path: inset(0 100% 0 0);
     opacity: 0;
     color: #c4ff00;
     font-family: "Lobster", "Brush Script MT", cursive;
-    font-size: clamp(3rem, 5.2vw, 6.2rem);
+    font-size: clamp(2.3rem, 3.9vw, 4.3rem);
     font-weight: 400;
     font-style: italic;
     letter-spacing: -0.06em;
-    line-height: 0.9;
+    line-height: 1.15;
     transform: rotate(-12deg);
     transform-origin: left bottom;
     text-shadow: 0 0 16px rgba(196, 255, 0, 0.18);

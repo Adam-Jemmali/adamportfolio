@@ -14,6 +14,7 @@ import SuspendScreen from "#components/SuspendScreen.jsx";
 import CrashScreen from "#components/CrashScreen.jsx";
 import Screensaver from "#components/Screensaver.jsx";
 import TimeTravelOverlay from "#components/TimeTravelOverlay.jsx";
+import UpdateToast from "#components/UpdateToast.jsx";
 import { Terminal, Finder, Text, Image, Safari, Resume, Contact, Gallery, Snake, Games, Code, Journey, DrawPix, PopQuiz, Mafia, HighScores, Backgrounds, Guestbook, AboutMe } from "#window/index.js";
 import { wallpapers } from "#constants/index.js";
 import useSystemStore from "#store/system.js";
@@ -189,6 +190,7 @@ const App = () => {
             <Spotlight />
             <Dock />
             <TourGuide />
+            <UpdateToast />
             {timeTraveling && <TimeTravelOverlay />}
         </main>
     );

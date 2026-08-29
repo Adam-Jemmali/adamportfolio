@@ -5,7 +5,8 @@ import * as THREE from "three";
 /* ── CONSTANTS ────────────────────────────────────────────────────── */
 const FONT_URL = "/fonts/Lobster-Regular.ttf";
 const WORD = "madaj builds";
-const SCALE = 0.002; // 5439 × 0.002 = 10.88 world units — fills edge-to-edge with cam z=14
+export const SCALE = 0.002; // 5439 × 0.002 = 10.88 world units — fills edge-to-edge with cam z=14
+const HERO_WORD_SCALE = 1.28; // extra chunk applied to the whole wordmark group
 const TRACKING = 1.0; // tight cursive flow, letters overlap naturally
 
 // Per-letter minimum gap — keep tight so cursive connects
@@ -20,7 +21,7 @@ const GAP_OVERRIDES = {
 const CURSOR_COLOR = "#3fa9f5";
 
 // Colors per theme
-const THEMES_COLORS = {
+export const THEMES_COLORS = {
     A: { letter: "#7fc4ff", emissive: "#1e8fd8", rim: "#0f5f9e", cursor: "#3fa9f5", accent: [0.31, 0.61, 1.0] },
     B: { letter: "#ffd9a3", emissive: "#d4882b", rim: "#8b5e2b", cursor: "#e8a44a", accent: [0.95, 0.78, 0.45] },
     C: { letter: "#ffb3b3", emissive: "#d45555", rim: "#8b3030", cursor: "#e86060", accent: [0.95, 0.5, 0.5] },
@@ -33,7 +34,7 @@ const STICKER_COLORS = ["#4ade80", "#facc15", "#f87171", "#22d3ee", "#a78bfa", "
 let cachedFont = null;
 let fontPromise = null;
 
-async function loadFont() {
+export async function loadFont() {
     if (cachedFont) return cachedFont;
     if (fontPromise) return fontPromise;
     fontPromise = (async () => {
@@ -87,7 +88,7 @@ function pathToShapes(path) {
  * Extract per-letter layout data: advance width, glyph shapes, and
  * the gap-adjusted x position.
  */
-function computeLayout(font, word) {
+export function computeLayout(font, word) {
     if (!font) return [];
 
     const letters = [];
@@ -163,10 +164,10 @@ function computeWordmarkRects(letters, canvas) {
         }
         if (!isFinite(minX)) continue;
 
-        const x0 = (letter.x + minX) * SCALE;
-        const x1 = (letter.x + maxX) * SCALE;
-        const y0 = minY * SCALE;
-        const y1 = maxY * SCALE;
+        const x0 = (letter.x + minX) * SCALE * HERO_WORD_SCALE;
+        const x1 = (letter.x + maxX) * SCALE * HERO_WORD_SCALE;
+        const y0 = minY * SCALE * HERO_WORD_SCALE;
+        const y1 = maxY * SCALE * HERO_WORD_SCALE;
 
         let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
         for (const [cx, cy] of [[x0, y0], [x0, y1], [x1, y0], [x1, y1]]) {
@@ -189,7 +190,7 @@ function computeWordmarkRects(letters, canvas) {
  * A single extruded 3D letter with glossy puffy material.
  * Deep extrusion + smooth bevel for the chunky bubble look.
  */
-function Letter3D({ shapes, position, themeKey = "A" }) {
+export function Letter3D({ shapes, position, themeKey = "A" }) {
     const groupRef = useRef(null);
     const meshRef = useRef(null);
     const colors = THEMES_COLORS[themeKey] || THEMES_COLORS.A;
@@ -277,7 +278,8 @@ function ScriptWord({ layoutData, scrollProgress, themeKey = "A" }) {
         g.rotation.y += (mx + turnRight - g.rotation.y) * groupEase;
         g.rotation.x += (tiltX - g.rotation.x) * groupEase;
         g.position.z = -sp * 5;
-        g.scale.setScalar(1 - sp * 0.35);
+        // chunkier wordmark, still centred on origin
+        g.scale.setScalar((1 - sp * 0.35) * HERO_WORD_SCALE);
 
         // Per-letter gravity animation
         const mouseNDC = mouseRef.current;
