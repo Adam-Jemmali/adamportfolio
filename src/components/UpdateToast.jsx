@@ -5,7 +5,7 @@ import useSystemStore from "#store/system.js";
 // A discoverable alternative to the hidden "click the clock 3×" easter
 // egg: a retro update-nag that slides in bottom-right, sits for 10s, and
 // jumps to the madajbuilds build when pressed.
-const APPEAR_DELAY_MS = 3500;
+const APPEAR_DELAY_MS = 1000;
 const VISIBLE_MS = 10000;
 const OUT_MS = 450;
 
@@ -17,14 +17,7 @@ const UpdateToast = () => {
 
     useEffect(() => {
         if (screen !== "desktop") return;
-        try {
-            if (sessionStorage.getItem("mb-update-toast-seen")) return;
-        } catch { /* storage blocked — still show it once */ }
-
-        const t1 = setTimeout(() => {
-            setPhase("in");
-            try { sessionStorage.setItem("mb-update-toast-seen", "1"); } catch { /* ignore */ }
-        }, APPEAR_DELAY_MS);
+        const t1 = setTimeout(() => setPhase("in"), APPEAR_DELAY_MS);
         const t2 = setTimeout(() => setPhase("out"), APPEAR_DELAY_MS + VISIBLE_MS);
         const t3 = setTimeout(() => setPhase("gone"), APPEAR_DELAY_MS + VISIBLE_MS + OUT_MS);
         return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };

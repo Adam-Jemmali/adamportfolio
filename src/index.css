@@ -3819,7 +3819,7 @@ body {
         }
 
         .aboutme-photo-wrap {
-            @apply relative w-full max-w-[260px] overflow-hidden;
+            @apply relative w-full max-w-65 overflow-hidden;
             aspect-ratio: 3 / 4;
             border-radius: 10px;
             box-shadow: 0 8px 32px rgb(0 0 0 / 0.5);
@@ -5241,7 +5241,7 @@ body {
 
     /* ── Update nag toast — retro dialog, bottom-right ─────────────── */
     .update-toast {
-        @apply fixed z-[6000] flex flex-col select-none;
+        @apply fixed z-6000lex flex-col select-none;
         right: 1.25rem;
         bottom: calc(1.25rem + 84px); /* clear of the dock */
         width: 320px;
