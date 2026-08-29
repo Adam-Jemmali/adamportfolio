@@ -1,8 +1,6 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment } from "@react-three/drei";
 import * as THREE from "three";
-import { parse as parseBuffer } from "opentype.js";
 
 /* ── CONSTANTS ────────────────────────────────────────────────────── */
 const FONT_URL = "/fonts/Lobster-Regular.ttf";
@@ -40,8 +38,12 @@ async function loadFont() {
     if (fontPromise) return fontPromise;
     fontPromise = (async () => {
         try {
-            const resp = await fetch(FONT_URL);
-            const buf = await resp.arrayBuffer();
+            // opentype.js is heavy — load it lazily so it stays out of the
+            // initial bundle and never blocks first paint.
+            const [{ parse: parseBuffer }, buf] = await Promise.all([
+                import("opentype.js"),
+                fetch(FONT_URL).then((r) => r.arrayBuffer()),
+            ]);
             cachedFont = parseBuffer(buf);
             return cachedFont;
         } catch (err) {
@@ -198,10 +200,12 @@ function Letter3D({ shapes, position, themeKey = "A" }) {
 
         const extrudeSettings = {
             depth: 280,
+            steps: 1,
+            curveSegments: 6,
             bevelEnabled: true,
             bevelThickness: 45,
             bevelSize: 20,
-            bevelSegments: 8,
+            bevelSegments: 3,
         };
 
         if (shapes.length === 1) {
@@ -568,18 +572,21 @@ function ShimmerSweep() {
 function Scene({ layoutData, scrollProgress, themeKey }) {
     return (
         <>
-            <ambientLight intensity={0.35} />
-            <directionalLight position={[3, 5, 6]} intensity={2.5} />
-            <directionalLight position={[-6, 3, 5]} intensity={1.8} color="#8ec5ff" />
-            <pointLight position={[0, -4, 6]} intensity={1.5} color="#6ab0ff" />
-            <pointLight position={[6, 2, 3]} intensity={0.8} color="#ffffff" />
+            {/* Self-contained lighting rig — no network HDR fetch, so the
+                hero can render the instant the font is ready. */}
+            <ambientLight intensity={0.5} />
+            <hemisphereLight args={["#cfe4ff", "#243049", 0.9]} />
+            <directionalLight position={[3, 5, 6]} intensity={3.0} />
+            <directionalLight position={[-6, 3, 5]} intensity={2.1} color="#8ec5ff" />
+            <pointLight position={[0, -4, 6]} intensity={1.8} color="#6ab0ff" />
+            <pointLight position={[6, 2, 3]} intensity={1.1} color="#ffffff" />
+            <pointLight position={[-4, -1, 4]} intensity={0.7} color="#ffffff" />
             <Suspense fallback={null}>
                 <ScriptWord layoutData={layoutData} scrollProgress={scrollProgress} themeKey={themeKey} />
                 <Cursor3D layoutData={layoutData} themeKey={themeKey} />
                 <CursorTrail layoutData={layoutData} themeKey={themeKey} />
                 <GlitchStickers layoutData={layoutData} />
                 <ShimmerSweep />
-                <Environment preset="city" />
             </Suspense>
         </>
     );
@@ -587,10 +594,12 @@ function Scene({ layoutData, scrollProgress, themeKey }) {
 
 /* ── MAIN COMPONENT ───────────────────────────────────────────────── */
 
-export default function Hero3D({ scrollProgress = 0, themeKey = "A", wordmarkRectRef = null }) {
+export default function Hero3D({ scrollProgress = 0, themeKey = "A", wordmarkRectRef = null, active = true }) {
     const [layoutData, setLayoutData] = useState(null);
     const stateRef = useRef(null);
     const startRef = useRef(0);
+    const activeRef = useRef(active);
+    activeRef.current = active;
 
     useEffect(() => {
         loadFont().then((font) => {
@@ -600,32 +609,43 @@ export default function Hero3D({ scrollProgress = 0, themeKey = "A", wordmarkRec
         });
     }, []);
 
-    // Expose per-letter viewport rects (computed from layout + camera, not the
-    // render loop) so falling icons can fade behind the glyphs even when the
-    // WebGL render loop is throttled or stalled.
+    // Per-letter viewport rects are computed from the deterministic layout +
+    // a fixed camera, so they only change when the canvas is resized — no
+    // need to recompute every frame.
     useEffect(() => {
         if (!layoutData || !wordmarkRectRef) return;
-        const tick = () => {
+        const recompute = () => {
             const canvas = document.querySelector(".hero-canvas-wrap canvas");
             if (canvas) {
+                // eslint-disable-next-line react-hooks/immutability -- shared rect cache, read by FallingIcons' rAF loop
                 wordmarkRectRef.current = computeWordmarkRects(layoutData, canvas);
             }
         };
-        tick();
-        const id = setInterval(tick, 16);
-        return () => clearInterval(id);
+        recompute();
+        // A couple of delayed passes catch the canvas settling its size.
+        const t1 = setTimeout(recompute, 120);
+        const t2 = setTimeout(recompute, 500);
+        window.addEventListener("resize", recompute);
+        return () => {
+            clearTimeout(t1);
+            clearTimeout(t2);
+            window.removeEventListener("resize", recompute);
+        };
     }, [layoutData, wordmarkRectRef]);
 
-    // Drive the render loop on a wall-clock timer so the scene keeps
-    // animating even when the Preview tab throttles requestAnimationFrame.
+    // Drive the render loop with rAF. Pause entirely when the hero is out of
+    // view or the tab is hidden so a scrolled-past canvas costs nothing.
     useEffect(() => {
-        const interval = setInterval(() => {
+        let raf = 0;
+        const loop = () => {
+            raf = requestAnimationFrame(loop);
             const state = stateRef.current;
-            if (state && startRef.current) {
-                state.advance((performance.now() - startRef.current) / 1000);
-            }
-        }, 16);
-        return () => clearInterval(interval);
+            if (!state || !startRef.current) return;
+            if (!activeRef.current || document.hidden) return;
+            state.advance((performance.now() - startRef.current) / 1000);
+        };
+        raf = requestAnimationFrame(loop);
+        return () => cancelAnimationFrame(raf);
     }, []);
 
     if (!layoutData) return <div className="hero-canvas" style={{ width: "100%", height: "400px" }} />;
@@ -633,10 +653,10 @@ export default function Hero3D({ scrollProgress = 0, themeKey = "A", wordmarkRec
     return (
         <Canvas
             className="hero-canvas"
-            dpr={[1, 2]}
+            dpr={[1, 1.5]}
             frameloop="never"
             camera={{ position: [0, 2.5, 14], fov: 42 }}
-            gl={{ antialias: true, alpha: true, preserveDrawingBuffer: false }}
+            gl={{ antialias: true, alpha: true, preserveDrawingBuffer: false, powerPreference: "high-performance" }}
             onCreated={(state) => {
                 stateRef.current = state;
                 startRef.current = performance.now();

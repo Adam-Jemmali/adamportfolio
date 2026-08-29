@@ -1,5 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Georama:wght@400;600;800;900&family=Roboto+Mono:wght@400;500;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Lobster&display=swap");
+/* One combined request instead of two chained @imports (the HTML also
+   preconnects to the font hosts so this resolves as fast as possible). */
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@800&family=Georama:wght@400;600;800;900&family=Lobster&family=Roboto+Mono:wght@400;500;700&display=swap");
 
 :root {
     --bg: #0b1030;
@@ -49,6 +50,52 @@ body {
     transform-origin: left;
     z-index: 100;
     pointer-events: none;
+}
+
+/* ── Frozen pixel-mosaic of the fallen icons ──────────────────── */
+.pixel-snapshot {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 4;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    opacity: 0;
+    transition: opacity 0.7s ease;
+}
+
+.pixel-snapshot-on {
+    opacity: 0.9;
+}
+
+/* ── Cursor-following green snake (every section below the hero) ─── */
+.cursor-snake {
+    position: fixed;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.cursor-snake-on {
+    opacity: 1;
+}
+
+.cursor-snake-block {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+    border-radius: 2px;
+    background: #84b71b;
+    box-shadow: 0 0 12px rgba(159, 226, 32, 0.35);
+    will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cursor-snake { display: none; }
 }
 
 /* ── Grid + crosshair overlay ─────────────────────────────────── */
@@ -348,8 +395,9 @@ body {
 }
 
 .panel-cta {
-    background: var(--bg);
-    filter: brightness(0.82) contrast(1.08);
+    /* Continues straight out of the galaxy section — no colour seam */
+    background: linear-gradient(180deg, #05070e 0%, #070a18 55%, #090c1e 100%);
+    filter: brightness(0.95) contrast(1.05);
 }
 
 .eyebrow {
@@ -391,9 +439,9 @@ body {
 .cloud-seat-static {
     width: 260px;
     height: 50px;
-    color: #22d3ee;
+    color: var(--accent-2);
     opacity: 0.9;
-    filter: drop-shadow(0 8px 14px rgba(34, 211, 238, 0.25));
+    filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--accent-2) 26%, transparent));
 }
 
 .cloud-platform-text {
@@ -525,13 +573,14 @@ body {
     bottom: 0;
     width: 120%;
     height: 58px;
-    color: #22d3ee;
+    color: var(--accent-2);
     z-index: 0;
     opacity: 0.9;
-    filter: drop-shadow(0 10px 18px rgba(34, 211, 238, 0.28));
+    filter: drop-shadow(0 10px 18px color-mix(in srgb, var(--accent-2) 28%, transparent));
     pointer-events: auto;
     transform-origin: 50% 100%;
     will-change: transform;
+    transition: color 0.4s ease, filter 0.4s ease;
 }
 
 
@@ -919,6 +968,19 @@ body {
     z-index: 2;
 }
 
+/* ── Falling badges behind the CTA ───────────────────────────── */
+.cta-badge-rain {
+    z-index: 0;
+}
+
+.cta-badge-rain .falling-icon {
+    opacity: 0.62;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cta-badge-rain { display: none; }
+}
+
 /* ── Gem ──────────────────────────────────────────────────────── */
 .gem {
     position: absolute;
@@ -959,6 +1021,8 @@ body {
 }
 
 .cta-links {
+    position: relative;
+    z-index: 2;
     margin-top: 2.25rem;
     display: flex;
     gap: 1.5rem;
@@ -980,6 +1044,7 @@ body {
 
 .footer-note {
     position: absolute;
+    z-index: 2;
     bottom: 2.5rem;
     left: 50%;
     transform: translateX(-50%);
@@ -1131,6 +1196,35 @@ body {
     background-size: 10px 10px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
 }
 
+/* Curved-poster wrapper — bends/reclines as it scrolls in from the hero.
+   --curl / --curl-opacity are set on .panel-two by a scroll listener. */
+.profile-curve {
+    position: relative;
+    width: 100%;
+    opacity: var(--curl-opacity, 0);
+    transform-origin: 50% 100%;
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+    transform:
+        perspective(1400px)
+        rotateX(calc(var(--curl, 1) * 44deg))
+        translateY(calc(var(--curl, 1) * 130px))
+        scale(calc(1 - var(--curl, 1) * 0.16));
+}
+
+.profile-curve::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    opacity: var(--curl, 0);
+    transition: opacity 0.2s linear;
+    background:
+        linear-gradient(90deg, rgba(3, 5, 14, 0.9), transparent 15%, transparent 85%, rgba(3, 5, 14, 0.9)),
+        linear-gradient(180deg, transparent 55%, rgba(3, 5, 14, 0.55));
+}
+
 .profile-template {
     position: relative;
     z-index: 8;
@@ -1171,7 +1265,8 @@ body {
         radial-gradient(ellipse at 52% 43%, #70c8c2 0%, #117986 25%, #064151 57%, #02151d 100%);
 }
 
-/* Diagonal sunlight shadow — soft natural window light, not a hard split */
+/* Soft corner shadow — a gradual falloff so it reads as light, never a
+   hard diagonal seam across the photo. */
 .profile-template-photo-wrap::after {
     content: "";
     position: absolute;
@@ -1180,11 +1275,11 @@ body {
     pointer-events: none;
     background: linear-gradient(
         to bottom right,
-        transparent 50%,
-        rgba(0, 0, 0, 0.12) 60%,
-        rgba(0, 0, 0, 0.35) 75%,
-        rgba(0, 0, 0, 0.55) 90%,
-        rgba(0, 0, 0, 0.65) 100%
+        transparent 0%,
+        transparent 42%,
+        rgba(0, 0, 0, 0.10) 62%,
+        rgba(0, 0, 0, 0.26) 82%,
+        rgba(0, 0, 0, 0.42) 100%
     );
 }
 
@@ -1204,27 +1299,185 @@ body {
     mix-blend-mode: screen;
 }
 
-/* Cursor — free-floating, full viewport, no container */
-.cursor-wrap {
+/* ── Cursor → galaxy 3D scroll sequence ──────────────────────── */
+.cursor-galaxy {
     position: relative;
     width: 100%;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg);
+    height: 340vh;
+    background: #05070e;
+
+    /* Theme-driven palette (A/B/C set --accent / --accent-2 on :root) */
+    --cur-lite: color-mix(in srgb, var(--accent) 40%, #ffffff);
+    --cur-mid: var(--accent);
+    --cur-dark: color-mix(in srgb, var(--accent) 52%, #05070e);
+    --cur-wall: color-mix(in srgb, var(--accent) 80%, #0a1024);
+    --galaxy-ray: var(--accent-2);
+}
+
+.cursor-galaxy-stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
     overflow: hidden;
+    perspective: 850px;
+    perspective-origin: 50% 46%;
+    background:
+        radial-gradient(circle at 50% 46%, color-mix(in srgb, var(--galaxy-ray) 15%, transparent), transparent 58%),
+        #05070e;
 }
 
-.cursor-icon {
-    width: clamp(200px, 32vw, 400px);
+/* The 3D room — every layer lives in this shared depth space so the
+   camera (perspective) can fly through them. No grid/flex here: those
+   can flatten a preserve-3d context in some engines. */
+.cursor-galaxy-3d {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+}
+
+.cursor-galaxy-warp {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 170vmax;
+    height: 170vmax;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+}
+
+.cursor-galaxy-warp {
+    color: var(--galaxy-ray);
+}
+
+.cursor-galaxy-warp .burst-lines {
+    opacity: 1;
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--galaxy-ray) 45%, transparent));
+}
+
+/* Shockwave rings rushing past the camera */
+.cursor-galaxy-rings {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    pointer-events: none;
+}
+
+.cursor-galaxy-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: min(46vw, 520px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 2px solid color-mix(in srgb, var(--galaxy-ray) 72%, transparent);
+    box-shadow:
+        inset 0 0 40px color-mix(in srgb, var(--galaxy-ray) 32%, transparent),
+        0 0 34px color-mix(in srgb, var(--galaxy-ray) 30%, transparent);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    will-change: transform, opacity;
+}
+
+.cursor-galaxy-cursor {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: clamp(150px, 25vw, 340px);
+    transform: translate(-50%, -50%);
+    transform-style: preserve-3d;
+    will-change: transform, opacity;
+    /* no `filter` here — it would flatten the preserve-3d slice stack */
+}
+
+/* Extruded 3D pointer: a deep stack of slices (bulky side wall) + face */
+.cursor-3d {
+    position: relative;
+    display: block;
+    width: 100%;
+    transform-style: preserve-3d;
+}
+
+.cursor-3d-face,
+.cursor-3d-slice {
+    display: block;
+    width: 100%;
     height: auto;
-    animation: cursor-breathe 4.5s ease-in-out infinite;
 }
 
-@keyframes cursor-breathe {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+.cursor-3d-slice {
+    position: absolute;
+    top: 0;
+    left: 0;
+    backface-visibility: visible;
+}
+
+/* Extruded side wall — a crisp dark 3D silhouette edge on every slice so
+   the pointer's depth outline reads at any angle. */
+.cursor-3d-slice path {
+    fill: var(--cur-wall);
+    stroke: color-mix(in srgb, var(--cur-dark) 45%, #000000);
+    stroke-width: 4;
+    stroke-linejoin: round;
+}
+
+.cursor-3d-face {
+    position: relative;
+    backface-visibility: hidden;
+    filter: drop-shadow(0 0 34px color-mix(in srgb, var(--galaxy-ray) 45%, transparent));
+}
+
+.cursor-3d-face .cg-s0 { stop-color: var(--cur-lite); }
+.cursor-3d-face .cg-s1 { stop-color: var(--cur-mid); }
+.cursor-3d-face .cg-s2 { stop-color: var(--cur-dark); }
+
+/* Front face is just the blue body — no outline of its own */
+.cursor-3d-body {
+    stroke: none;
+}
+
+.cursor-galaxy-copy {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    pointer-events: none;
+}
+
+.cursor-galaxy-line {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+    width: min(90vw, 15ch);
+    text-align: center;
+    font-family: "Georama", sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: clamp(2.1rem, 7vw, 6.6rem);
+    line-height: 0.94;
+    letter-spacing: -0.02em;
+    color: var(--fg);
+    text-shadow:
+        0 2px 8px rgba(3, 6, 16, 0.9),
+        0 6px 40px rgba(3, 6, 16, 0.85),
+        0 0 70px rgba(3, 6, 16, 0.7);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+}
+
+.cursor-galaxy-line-end {
+    font-size: clamp(2rem, 6vw, 5rem);
+    letter-spacing: 0.05em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cursor-galaxy { height: 180vh; }
+    .cursor-galaxy-stage { perspective: none; }
+    .cursor-galaxy-warp,
+    .cursor-galaxy-rings { display: none; }
 }
 
 /* Breathing shimmer along the sunlit edge */
@@ -1251,13 +1504,14 @@ body {
 
 .profile-template-photo {
     position: relative;
-    z-index: 0;
+    z-index: 1;
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    filter: grayscale(1) contrast(1.48) brightness(0.92);
-    mix-blend-mode: multiply;
+    /* Moody B&W grade, but the photo now paints normally — no multiply blend
+       against the panel gradient, which was what split it into two tones. */
+    filter: grayscale(1) contrast(1.16) brightness(0.98);
 }
 
 .profile-template-signature {

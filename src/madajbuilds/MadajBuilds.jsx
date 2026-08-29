@@ -1,13 +1,31 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, memo, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { getCapsule } from "@wenhaoqi/wasm_design_utils/squircle";
 import { ReactLenis } from "lenis/react";
-import Hero3D from "./Hero3D.jsx";
-import OceanWave from "./OceanWave.jsx";
-import WaterDrop from "./WaterDrop.jsx";
-import ProfilePanel from "./ProfilePanel.jsx";
+import OceanWaveRaw from "./OceanWave.jsx";
+import WaterDropRaw from "./WaterDrop.jsx";
+import ProfilePanelRaw from "./ProfilePanel.jsx";
 import { useScrollProgress } from "../utils/useScrollProgress.js";
+
+// The 3D hero (three.js + opentype.js, ~0.5 MB gzipped) loads in its own
+// async chunk so the page paints instantly and the wordmark streams in.
+const Hero3D = memo(lazy(() => import("./Hero3D.jsx")));
+
+// Memoise the expensive subtrees so cheap parent re-renders (clock ticking,
+// cursor-coords updating) never reach the 3D canvas or the profile panel.
+const OceanWave = memo(OceanWaveRaw);
+const WaterDrop = memo(WaterDropRaw);
+const ProfilePanel = memo(ProfilePanelRaw);
+
+// Static capsule path for the nav pills (was a WASM call — pure load-time
+// overhead for a shape that never changes). 108 × 34, radius 17.
+const PILL_PATH = "M 17 0 L 91 0 A 17 17 0 0 1 91 34 L 17 34 A 17 17 0 0 1 17 0 Z";
+
+// Fewer falling badges on low-core machines — same motion, lighter load.
+const LOW_END =
+    typeof navigator !== "undefined" &&
+    ((navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) ||
+        (navigator.deviceMemory && navigator.deviceMemory <= 4));
 
 // Keep GSAP advancing on wall-clock time when rAF is throttled (the Preview
 // tab throttles requestAnimationFrame), so the intro can't stall.
@@ -38,7 +56,8 @@ const BADGE_ICONS = [
     { kind: "smile", color: "#f0a7c8", ink: "#3a1d2c" },
 ];
 
-const FALLING_ICONS = Array.from({ length: 34 }, (_, i) => ({
+const FALLING_ICON_COUNT = LOW_END ? 16 : 34;
+const FALLING_ICONS = Array.from({ length: FALLING_ICON_COUNT }, (_, i) => ({
     badge: BADGE_ICONS[i % BADGE_ICONS.length],
     size: 30 + (((i * 7 + 3) % 38)),
     x: ((i * 137 + 42) % 96),
@@ -178,17 +197,240 @@ const BURST_LINES = Array.from({ length: BURST_COUNT }, (_, i) => {
     };
 });
 
-const BurstLines = ({ color }) => {
-    const lines = BURST_LINES;
+const BurstLines = () => (
+    <svg className="burst-lines" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        {BURST_LINES.map((l, i) => (
+            <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke="currentColor" strokeWidth={l.w} strokeLinecap="round" opacity={l.o} />
+        ))}
+    </svg>
+);
+
+/* ── Cursor arrow — a chunky extruded 3D pointer ───────────────────
+   The silhouette is stacked as a deep run of Z-offset slices, each
+   progressively darker, so it reads as a solid bulky volume and its
+   thickness shows when it tumbles on any axis. All colours are driven
+   by CSS custom props (--cur-*) so it re-tints with the theme. */
+const CURSOR_PATH = "M30 15 L150 135 L96 135 L134 220 L108 229 L74 150 L30 178 Z";
+const CURSOR_SLICES = 30;
+const CURSOR_SLICE_STEP = 3.8;
+
+const CursorArrow = () => (
+    <div className="cursor-3d" aria-hidden="true">
+        {Array.from({ length: CURSOR_SLICES }, (_, i) => (
+            <svg
+                key={i}
+                className="cursor-3d-slice"
+                viewBox="0 0 180 244"
+                style={{
+                    transform: `translateZ(-${((i + 1) * CURSOR_SLICE_STEP).toFixed(1)}px)`,
+                    filter: `brightness(${(1 - (i / CURSOR_SLICES) * 0.72).toFixed(3)})`,
+                }}
+            >
+                <path d={CURSOR_PATH} />
+            </svg>
+        ))}
+        <svg className="cursor-3d-face" viewBox="0 0 180 244" fill="none">
+            <defs>
+                <linearGradient id="cg-body" x1="14%" y1="4%" x2="84%" y2="96%">
+                    <stop className="cg-s0" offset="0%" />
+                    <stop className="cg-s1" offset="52%" />
+                    <stop className="cg-s2" offset="100%" />
+                </linearGradient>
+                <linearGradient id="cg-shine" x1="0%" y1="0%" x2="58%" y2="72%">
+                    <stop offset="0%" stopColor="#ffffff" stopOpacity="0.62" />
+                    <stop offset="52%" stopColor="#ffffff" stopOpacity="0.12" />
+                    <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                </linearGradient>
+            </defs>
+            <path className="cursor-3d-body" d={CURSOR_PATH} fill="url(#cg-body)" />
+            <path d={CURSOR_PATH} fill="url(#cg-shine)" />
+        </svg>
+    </div>
+);
+
+/* ── Cursor → galaxy scroll sequence ──────────────────────────────
+   A long pinned 3D section. As it scrolls the camera flies straight
+   INTO the cursor (real CSS perspective — translateZ toward the
+   viewer), passes through it into a warp-speed starfield where the
+   content-creation lines rush toward you out of the depth, then the
+   camera pulls back out and the cursor reassembles flat as "JUST
+   START" lands. One rAF writes every style — no per-frame render. */
+const MOTIVATION = [
+    "INNOVATE WITH PURPOSE",
+    "POST BEFORE YOU'RE READY",
+    "DONE BEATS PERFECT",
+    "MAKE MORE THAN YOU CONSUME",
+    "SHOW YOUR WORK",
+];
+const RING_COUNT = 4;
+
+const CursorGalaxyRaw = () => {
+    const sectionRef = useRef(null);
+    const warpRef = useRef(null);
+    const cursorRef = useRef(null);
+    const ringRefs = useRef([]);
+    const lineRefs = useRef([]);
+    const textEndRef = useRef(null);
+
+    useEffect(() => {
+        const section = sectionRef.current;
+        if (!section) return;
+
+        const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
+        const smooth = (t) => t * t * (3 - 2 * t);
+        const band = (p, a, b) => smooth(clamp01((p - a) / (b - a)));
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const N = MOTIVATION.length;
+        const seg = 0.56 / (N - 1);
+
+        let raf = 0;
+        let ticking = false;
+
+        const apply = () => {
+            ticking = false;
+            const rect = section.getBoundingClientRect();
+            const scrollable = rect.height - window.innerHeight;
+            const p = scrollable > 0 ? clamp01(-rect.top / scrollable) : 0;
+
+            // Overall warp envelope: 0 → 1 → 0 across the whole section.
+            const env = Math.sin(clamp01((p - 0.05) / 0.9) * Math.PI);
+
+            // Camera flight: 0 at the ends, deep INTO the scene in the middle.
+            // Holds flat a beat first so the opening line reads before the dive.
+            const flyIn = band(p, 0.16, 0.46);
+            const flyOut = band(p, 0.8, 0.99);
+            const cam = reduced ? 0 : flyIn - flyOut; // 0 → 1 → 0
+
+            // Warp-speed starfield — rushes forward out of the depth, and its
+            // brightness ripples like waves rolling past.
+            if (warpRef.current) {
+                const ripple = 0.68 + 0.32 * Math.sin(p * Math.PI * 7);
+                warpRef.current.style.opacity = (env * ripple).toFixed(3);
+                warpRef.current.style.transform =
+                    `translate(-50%, -50%) translateZ(${(-560 + env * 360).toFixed(0)}px) scale(${(0.85 + env * 1.15).toFixed(3)}) rotate(${(p * 220).toFixed(1)}deg)`;
+            }
+
+            // Shockwave rings — a staggered train of ripples flying past the camera.
+            for (let i = 0; i < RING_COUNT; i++) {
+                const el = ringRefs.current[i];
+                if (!el) continue;
+                const phase = ((p * 4) + i / RING_COUNT) % 1;
+                el.style.transform =
+                    `translate(-50%, -50%) translateZ(${(-950 + phase * 1520).toFixed(0)}px) scale(${(0.5 + phase * 1.4).toFixed(3)})`;
+                el.style.opacity = (Math.sin(phase * Math.PI) * env * 0.72).toFixed(3);
+            }
+
+            // Cursor is the portal: the camera drives straight into it
+            // (translateZ toward the viewer) while it tumbles a full 360° on
+            // every axis — the offset bands make it read as a real 3D tumble
+            // that shows the pointer's thickness — then it reforms dead flat.
+            // Full 360° on every axis, front-loaded so the tumble (and the
+            // pointer's thickness) is on show while you dive in, then it holds
+            // dead flat through the finish.
+            const spinY = reduced ? 0 : band(p, 0.06, 0.66) * 360;
+            const spinX = reduced ? 0 : band(p, 0.12, 0.74) * 360;
+            const spinZ = reduced ? 0 : band(p, 0.1, 0.8) * 360;
+            // Solid + tumbling while you approach and while it reforms (so the
+            // thickness reads); dissolves only in the deep middle.
+            const through = band(p, 0.24, 0.4) * (1 - band(p, 0.66, 0.82));
+            if (cursorRef.current) {
+                cursorRef.current.style.transform =
+                    `translate(-50%, -50%) translateZ(${(cam * 380).toFixed(1)}px) rotateX(${spinX.toFixed(1)}deg) rotateY(${spinY.toFixed(1)}deg) rotateZ(${spinZ.toFixed(1)}deg)`;
+                cursorRef.current.style.opacity = reduced ? "1" : (1 - through * 0.88).toFixed(3);
+            }
+
+            // Lines. #0 opens flat and near the camera before the dive; the
+            // rest rush toward you out of the deep Z and fly past overhead.
+            for (let i = 0; i < N; i++) {
+                const el = lineRefs.current[i];
+                if (!el) continue;
+
+                if (i === 0) {
+                    const inR = band(p, 0.05, 0.11);
+                    const outR = band(p, 0.16, 0.24);
+                    el.style.opacity = (inR * (1 - outR)).toFixed(3);
+                    el.style.transform =
+                        `translate(-50%, -50%) translateZ(${(inR * 20 - outR * 320).toFixed(0)}px) scale(${(0.84 + inR * 0.16).toFixed(3)})`;
+                    continue;
+                }
+
+                const k = i - 1;
+                const s = 0.24 + k * seg;
+                // Longer readable plateau, gentler Z travel — so the copy is
+                // easy to read even scrolling quickly.
+                const inR = band(p, s, s + seg * 0.22);
+                const outR = band(p, s + seg * 0.82, s + seg * 1.06);
+                const local = clamp01((p - s) / (seg * 1.06));
+                const z = reduced ? 0 : -620 + local * 980; // far → near → past
+                el.style.opacity = (inR * (1 - outR)).toFixed(3);
+                el.style.transform =
+                    `translate(-50%, -50%) translateZ(${z.toFixed(0)}px) rotateX(${((0.5 - local) * 10).toFixed(2)}deg) scale(${(0.96 + env * 0.08).toFixed(3)})`;
+                el.style.letterSpacing = `${(-0.02 + env * 0.18).toFixed(3)}em`;
+            }
+
+            // "JUST START" — settles flat as the camera comes to rest, and
+            // holds through the end so it hands straight off to the CTA.
+            const endIn = band(p, 0.8, 0.95);
+            if (textEndRef.current) {
+                textEndRef.current.style.opacity = endIn.toFixed(3);
+                textEndRef.current.style.transform =
+                    `translate(-50%, -50%) translateZ(${((1 - endIn) * -420).toFixed(0)}px) scale(${(0.92 + endIn * 0.08).toFixed(3)})`;
+            }
+        };
+
+        const onScroll = () => {
+            if (ticking) return;
+            ticking = true;
+            raf = requestAnimationFrame(apply);
+        };
+
+        apply();
+        window.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("resize", onScroll);
+        return () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener("scroll", onScroll);
+            window.removeEventListener("resize", onScroll);
+        };
+    }, []);
 
     return (
-        <svg className="burst-lines" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            {lines.map((l, i) => (
-                <line key={i} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} stroke={color} strokeWidth={l.w} strokeLinecap="round" opacity={l.o} />
-            ))}
-        </svg>
+        <section ref={sectionRef} className="cursor-galaxy">
+            <div className="cursor-galaxy-stage">
+                <div className="cursor-galaxy-3d">
+                    <div ref={warpRef} className="cursor-galaxy-warp" aria-hidden="true">
+                        <BurstLines />
+                    </div>
+                    <div className="cursor-galaxy-rings" aria-hidden="true">
+                        {Array.from({ length: RING_COUNT }, (_, i) => (
+                            <span
+                                key={i}
+                                ref={(el) => { ringRefs.current[i] = el; }}
+                                className="cursor-galaxy-ring"
+                            />
+                        ))}
+                    </div>
+                    <div ref={cursorRef} className="cursor-galaxy-cursor">
+                        <CursorArrow />
+                    </div>
+                    <div className="cursor-galaxy-copy">
+                        {MOTIVATION.map((line, i) => (
+                            <p
+                                key={line}
+                                ref={(el) => { lineRefs.current[i] = el; }}
+                                className="cursor-galaxy-line"
+                            >
+                                {line}
+                            </p>
+                        ))}
+                        <p ref={textEndRef} className="cursor-galaxy-line cursor-galaxy-line-end">JUST START</p>
+                    </div>
+                </div>
+            </div>
+        </section>
     );
 };
+const CursorGalaxy = memo(CursorGalaxyRaw);
 
 /* ── Pill ─────────────────────────────────────────────────────────── */
 const Pill = ({ path, children, ...rest }) => (
@@ -201,14 +443,9 @@ const Pill = ({ path, children, ...rest }) => (
 );
 
 /* ── Falling 3D icons with parallax depth ─────────────────────────── */
-function FallingIcons({ scrollProgress, wordmarkRectRef }) {
+function FallingIconsRaw({ scrollProgressRef, wordmarkRectRef, onFreeze }) {
     const layerRef = useRef(null);
     const iconElsRef = useRef([]);
-    const scrollProgressRef = useRef(scrollProgress);
-
-    useEffect(() => {
-        scrollProgressRef.current = scrollProgress;
-    }, [scrollProgress]);
 
     useEffect(() => {
         const els = iconElsRef.current;
@@ -233,6 +470,8 @@ function FallingIcons({ scrollProgress, wordmarkRectRef }) {
                 blur,
                 depth: icon.depth,
                 size: icon.size,
+                color: icon.badge.color,
+                ink: icon.badge.ink,
                 // gentle horizontal sway while falling
                 swayAmp: 6 + ((i * 37 + 5) % 22),
                 swayFreq: 0.4 + ((i * 23 + 7) % 90) / 100,
@@ -242,25 +481,78 @@ function FallingIcons({ scrollProgress, wordmarkRectRef }) {
         });
 
         let last = performance.now();
+        // Every time the hero starts leaving, commit a fresh snapshot of where
+        // the badges currently are — the fall keeps running, so it's a different
+        // arrangement each trip. Re-arms whenever you scroll back to the top.
+        let armed = true;
+        let buffer = null; // freshest pre-transition arrangement
+        const FREEZE_AT = 0.13;
+        const REARM_BELOW = 0.04;
+
+        const buildSnap = () => {
+            const layer = layerRef.current;
+            const lr = layer
+                ? layer.getBoundingClientRect()
+                : { left: 0, top: 0, width: window.innerWidth };
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            let dots = [];
+            for (const it of items) {
+                const x = (it.x / 100) * lr.width + it.sway + lr.left;
+                const y = it.y + lr.top;
+                if (y < -120 || y > vh + 120 || x < -120 || x > vw + 120) continue;
+                dots.push({
+                    x, y,
+                    size: it.size * it.scale,
+                    color: it.color,
+                    ink: it.ink,
+                    depth: it.depth,
+                });
+            }
+            // Thin a dense arrangement so the mosaic reads as texture, not clutter.
+            const MAX = 15;
+            if (dots.length > MAX) {
+                const step = dots.length / MAX;
+                dots = Array.from({ length: MAX }, (_, i) => dots[Math.floor(i * step)]);
+            }
+            return { vw, vh, dots };
+        };
 
         const tick = () => {
             const now = performance.now();
             const dt = Math.min((now - last) / 1000, 2);
             last = now;
-            const H = window.innerHeight;
-            const layer = layerRef.current;
-            const lr = layer ? layer.getBoundingClientRect() : { left: 0, top: 0, width: H };
+            if (document.hidden) return;
 
-            // Headline text lines ("I BRING / DEPTH & DISCIPLINE / TO ENGINEERING WORK")
-            const headlineTargets = [];
-            const headline = document.querySelector(".hero-headline-text");
-            if (headline) {
-                const range = document.createRange();
-                range.selectNodeContents(headline);
-                for (const r of Array.from(range.getClientRects())) {
-                    if (r.width > 4 && r.height > 4) headlineTargets.push(r);
+            const sp = scrollProgressRef.current;
+            const layer = layerRef.current;
+
+            if (armed) {
+                if (sp >= FREEZE_AT) {
+                    armed = false;
+                    if (onFreeze) onFreeze(buffer || buildSnap());
+                } else if (sp > 0.01) {
+                    // keep a live copy of the current (natural, pre-vacuum) layout
+                    buffer = buildSnap();
                 }
+            } else if (sp < REARM_BELOW) {
+                armed = true;
+                buffer = null;
             }
+
+            // Drive the layer's scroll fade here rather than through React so a
+            // scroll never re-renders this 34-node subtree.
+            if (layer) {
+                const layerOpacity = Math.max(0, 1 - sp * 2);
+                layer.style.opacity = layerOpacity.toFixed(3);
+                layer.style.transform = `translateY(${(-sp * 100).toFixed(2)}%)`;
+            }
+
+            // The layer is fully faded by sp ≈ 0.5 — stop per-icon work past that.
+            if (sp > 0.55) return;
+
+            const H = window.innerHeight;
+            const lr = layer ? layer.getBoundingClientRect() : { left: 0, top: 0, width: H };
 
             for (const it of items) {
                 // Gentle horizontal sway
@@ -322,22 +614,6 @@ function FallingIcons({ scrollProgress, wordmarkRectRef }) {
                     opacity *= wmFade;
                 }
 
-                // Same soft fade behind the "I BRING…" headline text lines.
-                if (headlineTargets.length) {
-                    const margin = 22;
-                    let hFade = 1;
-                    for (const r of headlineTargets) {
-                        const insideX = Math.min(vpx - (r.left - margin), (r.right + margin) - vpx);
-                        const insideY = Math.min(vpy - (r.top - margin), (r.bottom + margin) - vpy);
-                        const inside = Math.min(insideX, insideY);
-                        if (inside > 0) {
-                            const t = Math.min(1, inside / margin);
-                            hFade = Math.min(hFade, 1 - 0.5 * t);
-                        }
-                    }
-                    opacity *= hFade;
-                }
-
                 it.el.style.transform =
                     `translate3d(${(rx - half).toFixed(1)}px, ${(ry - half).toFixed(1)}px, ${z.toFixed(1)}px) ` +
                     `rotateX(${(it.rot * it.tumble).toFixed(2)}deg) ` +
@@ -348,15 +624,15 @@ function FallingIcons({ scrollProgress, wordmarkRectRef }) {
             }
         };
 
-        const interval = setInterval(tick, 16);
-        return () => clearInterval(interval);
-    }, []);
+        let raf = requestAnimationFrame(function loop() {
+            raf = requestAnimationFrame(loop);
+            tick();
+        });
+        return () => cancelAnimationFrame(raf);
+    }, [scrollProgressRef, wordmarkRectRef, onFreeze]);
 
     return (
-        <div ref={layerRef} className="falling-icons-layer" aria-hidden="true" style={{
-            opacity: Math.max(0, 1 - scrollProgress * 2),
-            transform: `translateY(${-scrollProgress * 100}%)`,
-        }}>
+        <div ref={layerRef} className="falling-icons-layer" aria-hidden="true">
             {FALLING_ICONS.map((icon, i) => (
                 <div
                     key={i}
@@ -376,6 +652,303 @@ function FallingIcons({ scrollProgress, wordmarkRectRef }) {
         </div>
     );
 }
+const FallingIcons = memo(FallingIconsRaw);
+
+/* ── Pixelised snapshot of the fallen icons ───────────────────────
+   Draws the frozen badge arrangement as a chunky low-res pixel mosaic
+   on a fixed full-viewport canvas, so it sits in the background of
+   every section below the hero exactly where the icons landed. */
+const PIX_CELL = 6;
+
+function hexToRgba(hex, a) {
+    const h = hex.replace("#", "");
+    const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
+    return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
+function pixNoise(x, y) {
+    const s = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+    return s - Math.floor(s);
+}
+
+const PixelSnapshot = memo(function PixelSnapshot({ snapshot }) {
+    const canvasRef = useRef(null);
+
+    // Self-determined visibility: show whenever the hero is out of view.
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        const hero = document.querySelector(".panel-hero");
+        if (!canvas || !hero) {
+            if (canvas) canvas.classList.add("pixel-snapshot-on");
+            return;
+        }
+        const io = new IntersectionObserver(
+            ([e]) => canvas.classList.toggle("pixel-snapshot-on", !e.isIntersecting),
+            { threshold: 0 },
+        );
+        io.observe(hero);
+        return () => io.disconnect();
+    }, []);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas || !snapshot) return;
+        const ctx = canvas.getContext("2d");
+
+        const draw = () => {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = w * dpr;
+            canvas.height = h * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.clearRect(0, 0, w, h);
+
+            const sx = snapshot.vw ? w / snapshot.vw : 1;
+            const sy = snapshot.vh ? h / snapshot.vh : 1;
+
+            // Silhouettes only — a faint dot-matrix halftone of each badge,
+            // dim and transparent so it reads as a ghost, not a graphic.
+            const DOT = 2; // tiny dot inside each grid cell
+            for (const d of snapshot.dots) {
+                const cx = Math.round((d.x * sx) / PIX_CELL) * PIX_CELL;
+                const cy = Math.round((d.y * sy) / PIX_CELL) * PIX_CELL;
+                const rad = Math.max(2, Math.round((d.size * 0.36) / PIX_CELL));
+                const baseA = 0.2 + d.depth * 0.18;
+
+                for (let gy = -rad; gy <= rad; gy++) {
+                    for (let gx = -rad; gx <= rad; gx++) {
+                        const dist = Math.sqrt(gx * gx + gy * gy);
+                        if (dist > rad + 0.15) continue;
+                        // drop a few dots for a lighter halftone
+                        if (pixNoise(gx * 7 + d.x, gy * 7 + d.y) < 0.16) continue;
+                        const px = cx + gx * PIX_CELL;
+                        const py = cy + gy * PIX_CELL;
+                        const fall = 0.55 + 0.45 * (1 - dist / (rad + 0.5));
+                        const a = baseA * fall * (0.72 + 0.28 * pixNoise(px, py));
+                        ctx.fillStyle = hexToRgba(d.color, Math.min(0.55, a));
+                        ctx.fillRect(px, py, DOT, DOT);
+                    }
+                }
+            }
+        };
+
+        draw();
+        window.addEventListener("resize", draw);
+        return () => window.removeEventListener("resize", draw);
+    }, [snapshot]);
+
+    return <canvas ref={canvasRef} className="pixel-snapshot" aria-hidden="true" />;
+});
+
+/* ── Cursor-following green snake — rides along on every section
+   below the hero (lifted out of the profile panel). ─────────────── */
+const SNAKE_BLOCKS = Array.from({ length: 15 }, (_, i) => ({
+    size: 11 + ((i * 7) % 14),
+    opacity: 0.5 + ((i % 4) * 0.12),
+}));
+
+const CursorSnakeRaw = () => {
+    const wrapRef = useRef(null);
+    const blockRefs = useRef([]);
+
+    useEffect(() => {
+        const wrap = wrapRef.current;
+        if (!wrap) return;
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        let active = false;
+        const hero = document.querySelector(".panel-hero");
+        const io = hero
+            ? new IntersectionObserver(
+                ([e]) => {
+                    active = !e.isIntersecting;
+                    wrap.classList.toggle("cursor-snake-on", active);
+                },
+                { threshold: 0 },
+            )
+            : null;
+        if (io) io.observe(hero);
+        else { active = true; wrap.classList.add("cursor-snake-on"); }
+
+        const cx0 = window.innerWidth / 2;
+        const cy0 = window.innerHeight / 2;
+        const points = SNAKE_BLOCKS.map(() => ({ x: cx0, y: cy0 }));
+        const target = { x: cx0, y: cy0 };
+        const onMove = (e) => { target.x = e.clientX; target.y = e.clientY; };
+        window.addEventListener("pointermove", onMove, { passive: true });
+
+        let last = performance.now();
+        const tick = () => {
+            const now = performance.now();
+            const dt = Math.min((now - last) / 1000, 0.08);
+            last = now;
+            if (!active || document.hidden || reduced) return;
+
+            const headEase = 1 - Math.pow(0.0009, dt);
+            points[0].x += (target.x - points[0].x) * headEase;
+            points[0].y += (target.y - points[0].y) * headEase;
+
+            for (let i = 1; i < points.length; i++) {
+                const prev = points[i - 1];
+                const pt = points[i];
+                const dx = prev.x - pt.x;
+                const dy = prev.y - pt.y;
+                const dist = Math.hypot(dx, dy) || 1;
+                const gap = 17 + i * 1.4;
+                if (dist > gap) {
+                    const ease = 1 - Math.pow(0.0001, dt);
+                    pt.x += (prev.x - (dx / dist) * gap - pt.x) * ease;
+                    pt.y += (prev.y - (dy / dist) * gap - pt.y) * ease;
+                }
+            }
+
+            for (let i = 0; i < points.length; i++) {
+                const el = blockRefs.current[i];
+                if (!el) continue;
+                const s = SNAKE_BLOCKS[i].size;
+                const pulse = 1 + Math.sin(now / 260 + i * 0.7) * 0.09;
+                el.style.transform =
+                    `translate3d(${(points[i].x - s / 2).toFixed(1)}px, ${(points[i].y - s / 2).toFixed(1)}px, 0) scale(${pulse.toFixed(3)})`;
+            }
+        };
+
+        let raf = requestAnimationFrame(function loop() {
+            raf = requestAnimationFrame(loop);
+            tick();
+        });
+        return () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener("pointermove", onMove);
+            if (io) io.disconnect();
+        };
+    }, []);
+
+    return (
+        <div ref={wrapRef} className="cursor-snake" aria-hidden="true">
+            {SNAKE_BLOCKS.map((b, i) => (
+                <span
+                    key={i}
+                    ref={(el) => { blockRefs.current[i] = el; }}
+                    className="cursor-snake-block"
+                    style={{ width: b.size, height: b.size, opacity: b.opacity }}
+                />
+            ))}
+        </div>
+    );
+};
+const CursorSnake = memo(CursorSnakeRaw);
+
+/* ── Falling badges — the hero's icons rain down the CTA once the
+   galaxy sequence ends ("LET'S BUILD SOMETHING"). ─────────────────── */
+const CTA_BADGE_COUNT = LOW_END ? 11 : 22;
+const CTA_BADGES = Array.from({ length: CTA_BADGE_COUNT }, (_, i) => ({
+    badge: BADGE_ICONS[i % BADGE_ICONS.length],
+    x: (((i * 137 + 23) % 92) + 4) / 100,       // 0..1 of panel width
+    startFrac: ((i * 61 + 13) % 100) / 100,     // where it begins, 0 = top .. 1 = bottom
+    size: 28 + ((i * 13 + 5) % 34),
+    drift: (((i * 29 + 7) % 26) - 13),          // px/s
+    spin: (((i * 47 + 5) % 120) - 60),          // deg/s
+    speed: 55 + ((i * 17 + 3) % 66),            // px/s fall
+    rot0: (i * 53) % 360,
+    tumble: 0.55 + ((i * 41 + 3) % 100) / 220,
+}));
+
+const FallingBadgesRaw = () => {
+    const rootRef = useRef(null);
+    const elsRef = useRef([]);
+
+    useEffect(() => {
+        const root = rootRef.current;
+        if (!root) return;
+        const els = elsRef.current;
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        if (reduced) return;
+
+        let active = false;
+        const io = new IntersectionObserver(
+            ([entry]) => { active = entry.isIntersecting; },
+            { threshold: 0 },
+        );
+        io.observe(root);
+
+        const r0 = root.getBoundingClientRect();
+        const w0 = r0.width || window.innerWidth;
+        const h0 = r0.height || window.innerHeight;
+        const items = CTA_BADGES.map((c, i) => ({
+            el: els[i],
+            x: c.x * w0,
+            // spread through the panel (and a little above) so it's populated
+            // the instant the CTA appears, then keeps raining
+            y: c.startFrac * (h0 + 240) - 180,
+            vy: c.speed,
+            vx: c.drift,
+            rot: c.rot0,
+            rotV: c.spin,
+            tumble: c.tumble,
+        }));
+
+        const paint = (it) => {
+            it.el.style.transform =
+                `translate3d(${it.x.toFixed(1)}px, ${it.y.toFixed(1)}px, 0) ` +
+                `rotateX(${(it.rot * it.tumble).toFixed(1)}deg) ` +
+                `rotateY(${(it.rot * it.tumble * 0.7).toFixed(1)}deg) ` +
+                `rotateZ(${it.rot.toFixed(1)}deg)`;
+        };
+        for (const it of items) if (it.el) paint(it);
+
+        let last = performance.now();
+        const tick = () => {
+            const now = performance.now();
+            const dt = Math.min((now - last) / 1000, 0.1);
+            last = now;
+            if (!active || document.hidden) return;
+
+            const rect = root.getBoundingClientRect();
+            const W = rect.width;
+            const H = rect.height;
+            for (const it of items) {
+                if (!it.el) continue;
+                it.y += it.vy * dt;
+                it.x += it.vx * dt;
+                it.rot += it.rotV * dt;
+                if (it.y > H + 70) { it.y = -90; it.x = Math.random() * W; }
+                if (it.x < -70) it.x = W + 50;
+                else if (it.x > W + 70) it.x = -50;
+                paint(it);
+            }
+        };
+
+        let raf = requestAnimationFrame(function loop() {
+            raf = requestAnimationFrame(loop);
+            tick();
+        });
+        return () => {
+            cancelAnimationFrame(raf);
+            io.disconnect();
+        };
+    }, []);
+
+    return (
+        <div ref={rootRef} className="falling-icons-layer cta-badge-rain" aria-hidden="true">
+            {CTA_BADGES.map((c, i) => (
+                <div
+                    key={i}
+                    ref={(el) => { elsRef.current[i] = el; }}
+                    className={`falling-icon falling-badge falling-badge-${c.badge.kind}`}
+                    style={{
+                        width: c.size,
+                        height: c.size,
+                        "--badge-color": c.badge.color,
+                        "--badge-ink": c.badge.ink,
+                    }}
+                >
+                    <span className="falling-badge-symbol" />
+                </div>
+            ))}
+        </div>
+    );
+};
+const FallingBadges = memo(FallingBadgesRaw);
 
 /* ── Side vacuum transition ─────────────────────────────────────── */
 const VACUUM_STREAMS = Array.from({ length: 9 }, (_, i) => ({
@@ -422,12 +995,164 @@ function VacuumTransition({ scrollProgress }) {
     );
 }
 
+/* ── Title-on-cloud bounce (shared by both cloud platforms) ──────────
+   Pointer pressure dents the nearest puff; a click launches the title
+   into a taller jelly bounce. Returns a cleanup function. */
+function setupCloudBounce({ title, cloud, wrapper, puffs, PUFFS }) {
+    if (!title || !cloud || !wrapper || puffs.length !== PUFFS.length) return () => {};
+
+    gsap.set(title, { transformOrigin: "50% 100%" });
+    gsap.set(cloud, { transformOrigin: "50% 100%" });
+
+    let settled = false;
+    let bouncing = false;
+    let idle = null;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const resetPuffs = (duration = 0.3) => {
+        PUFFS.forEach((p, i) => {
+            gsap.to(puffs[i], {
+                attr: { cx: p.cx, cy: p.cy, rx: p.rx, ry: p.ry },
+                duration,
+                ease: "power2.out",
+                overwrite: "auto",
+            });
+        });
+    };
+
+    const dentPuffs = (clientX, strength = 0.78) => {
+        const rect = cloud.getBoundingClientRect();
+        if (!rect.width) return;
+        const pointerX = Math.max(0, Math.min(200, ((clientX - rect.left) / rect.width) * 200));
+        PUFFS.forEach((p, i) => {
+            const distance = Math.abs(pointerX - p.cx);
+            const influence = Math.max(0, 1 - distance / 62);
+            const weight = influence * influence * (3 - 2 * influence);
+            const amount = p.squash * strength * weight;
+            const ry = p.ry * (1 - amount);
+            const cy = p.cy + (p.ry - ry);
+            const rx = p.rx * (1 + amount * 0.5);
+            gsap.to(puffs[i], {
+                attr: { cy, ry, rx },
+                duration: strength > 0.9 ? 0.1 : 0.16,
+                ease: "power2.out",
+                overwrite: "auto",
+            });
+        });
+    };
+
+    const startIdle = () => {
+        if (idle) idle.kill();
+        if (bouncing) return;
+        idle = gsap.timeline({ repeat: -1, yoyo: true })
+            .to(cloud, { scaleY: 1.06, scaleX: 0.94, rotation: -1.5, duration: 2.2, ease: "sine.inOut" })
+            .to(cloud, { scaleY: 0.97, scaleX: 1.03, rotation: 1.5, duration: 2.0, ease: "sine.inOut" })
+            .to(cloud, { scaleY: 1, scaleX: 1, rotation: 0, duration: 1.8, ease: "sine.inOut" });
+    };
+
+    const settleAfterBounce = () => {
+        bouncing = false;
+        resetPuffs(0.35);
+        startIdle();
+    };
+
+    if (reducedMotion) {
+        gsap.set(title, { y: 0, autoAlpha: 1 });
+        gsap.set(cloud, { scaleX: 1, scaleY: 1 });
+        settled = true;
+    } else {
+        gsap
+            .timeline()
+            .fromTo(
+                title,
+                { y: -65, autoAlpha: 0, rotation: -3 },
+                { y: 0, autoAlpha: 1, rotation: 0, duration: 0.5, ease: "power3.in" }
+            )
+            .to(cloud, { scaleY: 0.55, scaleX: 1.45, duration: 0.08, ease: "power4.in" }, ">")
+            .to(title, { y: 8, duration: 0.08, ease: "power4.in" }, "<")
+            .to(cloud, { scaleY: 1.15, scaleX: 0.85, duration: 0.25, ease: "power2.out" }, ">")
+            .to(title, { y: -18, duration: 0.25, ease: "power2.out" }, "<")
+            .to(cloud, { scaleY: 0.92, scaleX: 1.08, duration: 0.2, ease: "power2.out" }, ">")
+            .to(title, { y: 4, duration: 0.2, ease: "power2.out" }, "<")
+            .to(cloud, { scaleY: 1.04, scaleX: 0.97, duration: 0.15, ease: "power2.out" }, ">")
+            .to(title, { y: -5, duration: 0.15, ease: "power2.out" }, "<")
+            .to(cloud, { scaleY: 1, scaleX: 1, duration: 0.6, ease: "elastic.out(1.2, 0.3)" }, ">")
+            .to(title, { y: 0, duration: 0.6, ease: "elastic.out(1.2, 0.3)" }, "<")
+            .add(() => {
+                settled = true;
+                startIdle();
+            });
+    }
+
+    const onMove = (event) => {
+        if (!settled || bouncing || event.pointerType === "touch") return;
+        if (idle) idle.kill();
+        dentPuffs(event.clientX);
+    };
+
+    const onPointerDown = (event) => {
+        if (!settled || bouncing) return;
+        if (idle) idle.kill();
+        dentPuffs(event.clientX, 1);
+    };
+
+    const onLeave = () => {
+        if (!settled || bouncing) return;
+        resetPuffs();
+        gsap.to(cloud, {
+            scaleX: 1,
+            scaleY: 1,
+            duration: 0.35,
+            ease: "elastic.out(1, 0.35)",
+            onComplete: startIdle,
+        });
+    };
+
+    const onBounce = (event) => {
+        if (!settled || reducedMotion) return;
+        if (idle) idle.kill();
+        bouncing = true;
+        dentPuffs(event.clientX, 1);
+        gsap.killTweensOf([title, cloud]);
+
+        gsap
+            .timeline({ onComplete: settleAfterBounce })
+            .to(cloud, { scaleY: 0.45, scaleX: 1.5, rotation: -2, duration: 0.1, ease: "power4.in" })
+            .to(title, { y: 10, rotation: 2, duration: 0.1, ease: "power4.in" }, "<")
+            .to(title, { y: -140, rotation: -4, duration: 0.35, ease: "power3.out" }, "<")
+            .to(cloud, { scaleY: 1.18, scaleX: 0.82, rotation: 1, duration: 0.22, ease: "power2.out" }, "<-0.05")
+            .to(title, { y: 12, rotation: 1, duration: 0.3, ease: "bounce.out" }, ">")
+            .to(cloud, { scaleY: 0.88, scaleX: 1.12, duration: 0.12, ease: "power2.in" }, "<")
+            .to(title, { y: -45, rotation: -1, duration: 0.2, ease: "power2.out" }, ">")
+            .to(cloud, { scaleY: 1.08, scaleX: 0.93, duration: 0.2, ease: "power2.out" }, "<")
+            .to(title, { y: 5, rotation: 0.5, duration: 0.15, ease: "power2.out" }, ">")
+            .to(cloud, { scaleY: 0.96, scaleX: 1.04, duration: 0.15, ease: "power2.out" }, "<")
+            .to(title, { y: 0, rotation: 0, duration: 0.5, ease: "elastic.out(1.2, 0.25)" }, ">")
+            .to(cloud, { scaleY: 1, scaleX: 1, rotation: 0, duration: 0.5, ease: "elastic.out(1.2, 0.25)" }, "<");
+    };
+
+    wrapper.addEventListener("pointermove", onMove);
+    wrapper.addEventListener("pointerdown", onPointerDown);
+    wrapper.addEventListener("pointerleave", onLeave);
+    wrapper.addEventListener("click", onBounce);
+
+    return () => {
+        if (idle) idle.kill();
+        gsap.killTweensOf([...puffs, title, cloud]);
+        wrapper.removeEventListener("pointermove", onMove);
+        wrapper.removeEventListener("pointerdown", onPointerDown);
+        wrapper.removeEventListener("pointerleave", onLeave);
+        wrapper.removeEventListener("click", onBounce);
+    };
+}
+
 /* ════════════════════════════════════════════════════════════════════
    MAIN COMPONENT
    ════════════════════════════════════════════════════════════════════ */
 const MadajBuilds = () => {
     const heroRef = useRef(null);
     const wordmarkRectRef = useRef(null);
+    const profileCurveRef = useRef(null);
     const titleCloudRef = useRef(null);
     const titleRef = useRef(null);
     const cloudRef = useRef(null);
@@ -440,11 +1165,53 @@ const MadajBuilds = () => {
 
     const { scrollProgress, heroInView } = useScrollProgress(heroRef);
 
+    // A live ref of scroll progress for rAF loops that must not trigger renders.
+    const scrollProgressRef = useRef(scrollProgress);
+    useEffect(() => {
+        scrollProgressRef.current = scrollProgress;
+    }, [scrollProgress]);
+
+    // Curved-poster: the profile panel bends/reclines as it scrolls up into
+    // view out of the hero, then eases dead flat. Driven straight to CSS
+    // custom props on the (untransformed) section — no React re-render.
+    useEffect(() => {
+        const section = profileCurveRef.current;
+        if (!section) return;
+        const smooth = (t) => t * t * (3 - 2 * t);
+        let raf = 0;
+        let ticking = false;
+        const measure = () => {
+            ticking = false;
+            const r = section.getBoundingClientRect();
+            const vh = window.innerHeight || 1;
+            // 0 when the section first pokes above the fold, 1 once it has
+            // risen ~1.6 viewports — a long window so the poster is still
+            // visibly curling while its content is on screen.
+            const enter = Math.max(0, Math.min(1, (vh - r.top) / (vh * 1.6)));
+            const curl = 1 - smooth(enter);
+            section.style.setProperty("--curl", curl.toFixed(4));
+            section.style.setProperty("--curl-opacity", Math.min(1, enter * 3.2).toFixed(3));
+        };
+        const onScroll = () => {
+            if (ticking) return;
+            ticking = true;
+            raf = requestAnimationFrame(measure);
+        };
+        measure();
+        window.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("resize", onScroll);
+        return () => {
+            cancelAnimationFrame(raf);
+            window.removeEventListener("scroll", onScroll);
+            window.removeEventListener("resize", onScroll);
+        };
+    }, []);
+
     // Eased scroll progress for smoother premium animations
     const sp = scrollProgress;
     const sp2 = sp * sp; // ease-in
-    const sp3 = sp2 * sp; // cubic ease-in
     const spReverse = 1 - sp; // reverse for fade-out calculations
+
 
     // Theme persistence
     const [themeIndex, setThemeIndex] = useState(() => {
@@ -456,19 +1223,17 @@ const MadajBuilds = () => {
         }
     });
     const [soundOn, setSoundOn] = useState(false);
-    const [pillPath, setPillPath] = useState(null);
+    const pillPath = PILL_PATH;
     const [clock, setClock] = useState("--:--:--");
     const [coords, setCoords] = useState("0000 X 0000 Y");
     const beep = useBeep(soundOn);
     const theme = THEMES[themeIndex];
 
-    // Capsule pill shape from WASM
-    useEffect(() => {
-        let alive = true;
-        getCapsule(PILL_W, PILL_H, PILL_H / 2)
-            .then((d) => { if (alive) setPillPath(d); })
-            .catch(() => {});
-        return () => { alive = false; };
+    // Pixel-mosaic of the falling icons — re-captured fresh each time the hero
+    // leaves, so it reflects the icons' latest positions rather than a fixed one.
+    const [pixelSnapshot, setPixelSnapshot] = useState(null);
+    const handleIconFreeze = useCallback((snap) => {
+        setPixelSnapshot(snap);
     }, []);
 
     // Apply theme CSS vars
@@ -496,13 +1261,29 @@ const MadajBuilds = () => {
         return () => clearInterval(id);
     }, []);
 
-    // Coords
+    // Coords — throttled to ~10 Hz. Updating this on every mousemove would
+    // re-render the whole page (and thrash the rolling-digit spans) constantly.
     useEffect(() => {
-        const onMove = (e) => {
-            const pad = (n) => String(n).padStart(4, "0");
-            setCoords(`${pad(Math.round(e.clientX))} X ${pad(Math.round(e.clientY))} Y`);
+        let nextX = 0;
+        let nextY = 0;
+        let queued = false;
+        let lastPush = 0;
+        const pad = (n) => String(n).padStart(4, "0");
+
+        const flush = () => {
+            queued = false;
+            lastPush = performance.now();
+            setCoords(`${pad(nextX)} X ${pad(nextY)} Y`);
         };
-        window.addEventListener("mousemove", onMove);
+        const onMove = (e) => {
+            nextX = Math.round(e.clientX);
+            nextY = Math.round(e.clientY);
+            if (queued) return;
+            queued = true;
+            const wait = Math.max(0, 100 - (performance.now() - lastPush));
+            setTimeout(flush, wait);
+        };
+        window.addEventListener("mousemove", onMove, { passive: true });
         return () => window.removeEventListener("mousemove", onMove);
     }, []);
 
@@ -512,418 +1293,22 @@ const MadajBuilds = () => {
         if (el) el.textContent = new Date().getFullYear();
     }, []);
 
-    // Title-on-cloud animation: pointer pressure dents the nearest puff, while
-    // clicking launches the title into a taller jelly bounce.
-    useGSAP(() => {
-        const title = titleRef.current;
-        const cloud = cloudRef.current;
-        const wrapper = titleCloudRef.current;
-        const puffs = puffRefs.current;
-        if (!title || !cloud || !wrapper || puffs.length !== CLOUD_PUFFS.length) return;
+    // Title-on-cloud bounce — both platforms share one implementation.
+    useGSAP(() => setupCloudBounce({
+        title: titleRef.current,
+        cloud: cloudRef.current,
+        wrapper: titleCloudRef.current,
+        puffs: puffRefs.current,
+        PUFFS: CLOUD_PUFFS,
+    }), []);
 
-        gsap.set(title, { transformOrigin: "50% 100%" });
-        gsap.set(cloud, { transformOrigin: "50% 100%" });
-
-        let settled = false;
-        let bouncing = false;
-        let idle = null;
-        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-        const resetPuffs = (duration = 0.3) => {
-            CLOUD_PUFFS.forEach((p, i) => {
-                gsap.to(puffs[i], {
-                    attr: { cx: p.cx, cy: p.cy, rx: p.rx, ry: p.ry },
-                    duration,
-                    ease: "power2.out",
-                    overwrite: "auto",
-                });
-            });
-        };
-
-        const dentPuffs = (clientX, strength = 0.78) => {
-            const rect = cloud.getBoundingClientRect();
-            if (!rect.width) return;
-
-            // Map the viewport pointer to the cloud's 0–200 SVG coordinate.
-            // The smooth falloff keeps the pressed spot soft while preserving
-            // a clearly local dent rather than flattening the whole cloud.
-            const pointerX = Math.max(0, Math.min(200, ((clientX - rect.left) / rect.width) * 200));
-            CLOUD_PUFFS.forEach((p, i) => {
-                const distance = Math.abs(pointerX - p.cx);
-                const influence = Math.max(0, 1 - distance / 62);
-                const weight = influence * influence * (3 - 2 * influence);
-                const amount = p.squash * strength * weight;
-                const ry = p.ry * (1 - amount);
-                const cy = p.cy + (p.ry - ry);
-                const rx = p.rx * (1 + amount * 0.5);
-
-                gsap.to(puffs[i], {
-                    attr: { cy, ry, rx },
-                    duration: strength > 0.9 ? 0.1 : 0.16,
-                    ease: "power2.out",
-                    overwrite: "auto",
-                });
-            });
-        };
-
-        const startIdle = () => {
-            if (idle) idle.kill();
-            if (bouncing) return;
-            // Stronger idle breathing with rotation wobble
-            idle = gsap.timeline({ repeat: -1, yoyo: true })
-                .to(cloud, {
-                    scaleY: 1.06,
-                    scaleX: 0.94,
-                    rotation: -1.5,
-                    duration: 2.2,
-                    ease: "sine.inOut",
-                })
-                .to(cloud, {
-                    scaleY: 0.97,
-                    scaleX: 1.03,
-                    rotation: 1.5,
-                    duration: 2.0,
-                    ease: "sine.inOut",
-                })
-                .to(cloud, {
-                    scaleY: 1,
-                    scaleX: 1,
-                    rotation: 0,
-                    duration: 1.8,
-                    ease: "sine.inOut",
-                });
-        };
-
-        const settleAfterBounce = () => {
-            bouncing = false;
-            resetPuffs(0.35);
-            startIdle();
-        };
-
-        if (reducedMotion) {
-            gsap.set(title, { y: 0, autoAlpha: 1 });
-            gsap.set(cloud, { scaleX: 1, scaleY: 1 });
-            settled = true;
-        } else {
-            // Dramatic gravity drop → hard impact → multiple rebounds → settle
-            gsap
-                .timeline()
-                .fromTo(
-                    title,
-                    { y: -65, autoAlpha: 0, rotation: -3 },
-                    { y: 0, autoAlpha: 1, rotation: 0, duration: 0.5, ease: "power3.in" }
-                )
-                // Hard impact squash
-                .to(cloud, { scaleY: 0.55, scaleX: 1.45, duration: 0.08, ease: "power4.in" }, ">")
-                .to(title, { y: 8, duration: 0.08, ease: "power4.in" }, "<")
-                // First big rebound
-                .to(cloud, { scaleY: 1.15, scaleX: 0.85, duration: 0.25, ease: "power2.out" }, ">")
-                .to(title, { y: -18, duration: 0.25, ease: "power2.out" }, "<")
-                // Second smaller bounce
-                .to(cloud, { scaleY: 0.92, scaleX: 1.08, duration: 0.2, ease: "power2.out" }, ">")
-                .to(title, { y: 4, duration: 0.2, ease: "power2.out" }, "<")
-                // Third micro bounce
-                .to(cloud, { scaleY: 1.04, scaleX: 0.97, duration: 0.15, ease: "power2.out" }, ">")
-                .to(title, { y: -5, duration: 0.15, ease: "power2.out" }, "<")
-                // Final elastic settle
-                .to(cloud, { scaleY: 1, scaleX: 1, duration: 0.6, ease: "elastic.out(1.2, 0.3)" }, ">")
-                .to(title, { y: 0, duration: 0.6, ease: "elastic.out(1.2, 0.3)" }, "<")
-                .add(() => {
-                    settled = true;
-                    startIdle();
-                });
-        }
-
-        const onMove = (event) => {
-            if (!settled || bouncing || event.pointerType === "touch") return;
-            if (idle) idle.kill();
-            dentPuffs(event.clientX);
-        };
-
-        const onPointerDown = (event) => {
-            if (!settled || bouncing) return;
-            if (idle) idle.kill();
-            dentPuffs(event.clientX, 1);
-        };
-
-        const onLeave = () => {
-            if (!settled || bouncing) return;
-            resetPuffs();
-            gsap.to(cloud, {
-                scaleX: 1,
-                scaleY: 1,
-                duration: 0.35,
-                ease: "elastic.out(1, 0.35)",
-                onComplete: startIdle,
-            });
-        };
-
-        const onBounce = (event) => {
-            if (!settled || reducedMotion) return;
-            if (idle) idle.kill();
-            bouncing = true;
-            dentPuffs(event.clientX, 1);
-            gsap.killTweensOf([title, cloud]);
-
-            // Powerful click bounce: hard squash → high launch → multiple impacts → elastic settle
-            gsap
-                .timeline({ onComplete: settleAfterBounce })
-                // Hard pre-launch squash
-                .to(cloud, {
-                    scaleY: 0.45,
-                    scaleX: 1.5,
-                    rotation: -2,
-                    duration: 0.1,
-                    ease: "power4.in",
-                })
-                .to(title, { y: 10, rotation: 2, duration: 0.1, ease: "power4.in" }, "<")
-                // Massive launch
-                .to(title, { y: -140, rotation: -4, duration: 0.35, ease: "power3.out" }, "<")
-                // Cloud recoil
-                .to(cloud, {
-                    scaleY: 1.18,
-                    scaleX: 0.82,
-                    rotation: 1,
-                    duration: 0.22,
-                    ease: "power2.out",
-                }, "<-0.05")
-                // First hard landing
-                .to(title, { y: 12, rotation: 1, duration: 0.3, ease: "bounce.out" }, ">")
-                // Cloud absorbs impact
-                .to(cloud, {
-                    scaleY: 0.88,
-                    scaleX: 1.12,
-                    duration: 0.12,
-                    ease: "power2.in",
-                }, "<")
-                // Second bounce
-                .to(title, { y: -45, rotation: -1, duration: 0.2, ease: "power2.out" }, ">")
-                .to(cloud, { scaleY: 1.08, scaleX: 0.93, duration: 0.2, ease: "power2.out" }, "<")
-                // Third smaller bounce
-                .to(title, { y: 5, rotation: 0.5, duration: 0.15, ease: "power2.out" }, ">")
-                .to(cloud, { scaleY: 0.96, scaleX: 1.04, duration: 0.15, ease: "power2.out" }, "<")
-                // Final elastic settle with rotation wobble
-                .to(title, { y: 0, rotation: 0, duration: 0.5, ease: "elastic.out(1.2, 0.25)" }, ">")
-                .to(cloud, { scaleY: 1, scaleX: 1, rotation: 0, duration: 0.5, ease: "elastic.out(1.2, 0.25)" }, "<");
-        };
-
-        wrapper.addEventListener("pointermove", onMove);
-        wrapper.addEventListener("pointerdown", onPointerDown);
-        wrapper.addEventListener("pointerleave", onLeave);
-        wrapper.addEventListener("click", onBounce);
-
-        return () => {
-            if (idle) idle.kill();
-            gsap.killTweensOf([...puffs, title, cloud]);
-            wrapper.removeEventListener("pointermove", onMove);
-            wrapper.removeEventListener("pointerdown", onPointerDown);
-            wrapper.removeEventListener("pointerleave", onLeave);
-            wrapper.removeEventListener("click", onBounce);
-        };
-    }, []);
-
-    /* ── Cloud 2 animation (same as cloud 1) ──────────────────────── */
-    useGSAP(() => {
-        const title = titleRef2.current;
-        const cloud = cloudRef2.current;
-        const wrapper = titleCloudRef2.current;
-        const puffs = puffRefs2.current;
-        if (!title || !cloud || !wrapper || puffs.length !== CLOUD2_PUFFS.length) return;
-
-        gsap.set(title, { transformOrigin: "50% 100%" });
-        gsap.set(cloud, { transformOrigin: "50% 100%" });
-
-        let settled = false;
-        let bouncing = false;
-        let idle = null;
-        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-        const resetPuffs = (duration = 0.3) => {
-            CLOUD2_PUFFS.forEach((p, i) => {
-                gsap.to(puffs[i], {
-                    attr: { cx: p.cx, cy: p.cy, rx: p.rx, ry: p.ry },
-                    duration,
-                    ease: "power2.out",
-                    overwrite: "auto",
-                });
-            });
-        };
-
-        const dentPuffs = (clientX, strength = 0.78) => {
-            const rect = cloud.getBoundingClientRect();
-            if (!rect.width) return;
-            const pointerX = Math.max(0, Math.min(200, ((clientX - rect.left) / rect.width) * 200));
-            CLOUD2_PUFFS.forEach((p, i) => {
-                const distance = Math.abs(pointerX - p.cx);
-                const influence = Math.max(0, 1 - distance / 62);
-                const weight = influence * influence * (3 - 2 * influence);
-                const amount = p.squash * strength * weight;
-                const ry = p.ry * (1 - amount);
-                const cy = p.cy + (p.ry - ry);
-                const rx = p.rx * (1 + amount * 0.5);
-                gsap.to(puffs[i], {
-                    attr: { cy, ry, rx },
-                    duration: strength > 0.9 ? 0.1 : 0.16,
-                    ease: "power2.out",
-                    overwrite: "auto",
-                });
-            });
-        };
-
-        const startIdle = () => {
-            if (idle) idle.kill();
-            if (bouncing) return;
-            idle = gsap.timeline({ repeat: -1, yoyo: true })
-                .to(cloud, {
-                    scaleY: 1.06,
-                    scaleX: 0.94,
-                    rotation: -1.5,
-                    duration: 2.2,
-                    ease: "sine.inOut",
-                })
-                .to(cloud, {
-                    scaleY: 0.97,
-                    scaleX: 1.03,
-                    rotation: 1.5,
-                    duration: 2.0,
-                    ease: "sine.inOut",
-                })
-                .to(cloud, {
-                    scaleY: 1,
-                    scaleX: 1,
-                    rotation: 0,
-                    duration: 1.8,
-                    ease: "sine.inOut",
-                });
-        };
-
-        const settleAfterBounce = () => {
-            bouncing = false;
-            resetPuffs(0.35);
-            startIdle();
-        };
-
-        if (reducedMotion) {
-            gsap.set(title, { y: 0, autoAlpha: 1 });
-            gsap.set(cloud, { scaleX: 1, scaleY: 1 });
-            settled = true;
-        } else {
-            // Dramatic gravity drop → hard impact → multiple rebounds → settle
-            gsap
-                .timeline()
-                .fromTo(
-                    title,
-                    { y: -65, autoAlpha: 0, rotation: -3 },
-                    { y: 0, autoAlpha: 1, rotation: 0, duration: 0.5, ease: "power3.in" }
-                )
-                // Hard impact squash
-                .to(cloud, { scaleY: 0.55, scaleX: 1.45, duration: 0.08, ease: "power4.in" }, ">")
-                .to(title, { y: 8, duration: 0.08, ease: "power4.in" }, "<")
-                // First big rebound
-                .to(cloud, { scaleY: 1.15, scaleX: 0.85, duration: 0.25, ease: "power2.out" }, ">")
-                .to(title, { y: -18, duration: 0.25, ease: "power2.out" }, "<")
-                // Second smaller bounce
-                .to(cloud, { scaleY: 0.92, scaleX: 1.08, duration: 0.2, ease: "power2.out" }, ">")
-                .to(title, { y: 4, duration: 0.2, ease: "power2.out" }, "<")
-                // Third micro bounce
-                .to(cloud, { scaleY: 1.04, scaleX: 0.97, duration: 0.15, ease: "power2.out" }, ">")
-                .to(title, { y: -5, duration: 0.15, ease: "power2.out" }, "<")
-                // Final elastic settle
-                .to(cloud, { scaleY: 1, scaleX: 1, duration: 0.6, ease: "elastic.out(1.2, 0.3)" }, ">")
-                .to(title, { y: 0, duration: 0.6, ease: "elastic.out(1.2, 0.3)" }, "<")
-                .add(() => {
-                    settled = true;
-                    startIdle();
-                });
-        }
-
-        const onMove = (event) => {
-            if (!settled || bouncing || event.pointerType === "touch") return;
-            if (idle) idle.kill();
-            dentPuffs(event.clientX);
-        };
-
-        const onPointerDown = (event) => {
-            if (!settled || bouncing) return;
-            if (idle) idle.kill();
-            dentPuffs(event.clientX, 1);
-        };
-
-        const onLeave = () => {
-            if (!settled || bouncing) return;
-            resetPuffs();
-            gsap.to(cloud, {
-                scaleX: 1,
-                scaleY: 1,
-                duration: 0.35,
-                ease: "elastic.out(1, 0.35)",
-                onComplete: startIdle,
-            });
-        };
-
-        const onBounce = (event) => {
-            if (!settled || reducedMotion) return;
-            if (idle) idle.kill();
-            bouncing = true;
-            dentPuffs(event.clientX, 1);
-            gsap.killTweensOf([title, cloud]);
-
-            // Powerful click bounce: hard squash → high launch → multiple impacts → elastic settle
-            gsap
-                .timeline({ onComplete: settleAfterBounce })
-                // Hard pre-launch squash
-                .to(cloud, {
-                    scaleY: 0.45,
-                    scaleX: 1.5,
-                    rotation: -2,
-                    duration: 0.1,
-                    ease: "power4.in",
-                })
-                .to(title, { y: 10, rotation: 2, duration: 0.1, ease: "power4.in" }, "<")
-                // Massive launch
-                .to(title, { y: -140, rotation: -4, duration: 0.35, ease: "power3.out" }, "<")
-                // Cloud recoil
-                .to(cloud, {
-                    scaleY: 1.18,
-                    scaleX: 0.82,
-                    rotation: 1,
-                    duration: 0.22,
-                    ease: "power2.out",
-                }, "<-0.05")
-                // First hard landing
-                .to(title, { y: 12, rotation: 1, duration: 0.3, ease: "bounce.out" }, ">")
-                // Cloud absorbs impact
-                .to(cloud, {
-                    scaleY: 0.88,
-                    scaleX: 1.12,
-                    duration: 0.12,
-                    ease: "power2.in",
-                }, "<")
-                // Second bounce
-                .to(title, { y: -45, rotation: -1, duration: 0.2, ease: "power2.out" }, ">")
-                .to(cloud, { scaleY: 1.08, scaleX: 0.93, duration: 0.2, ease: "power2.out" }, "<")
-                // Third smaller bounce
-                .to(title, { y: 5, rotation: 0.5, duration: 0.15, ease: "power2.out" }, ">")
-                .to(cloud, { scaleY: 0.96, scaleX: 1.04, duration: 0.15, ease: "power2.out" }, "<")
-                // Final elastic settle with rotation wobble
-                .to(title, { y: 0, rotation: 0, duration: 0.5, ease: "elastic.out(1.2, 0.25)" }, ">")
-                .to(cloud, { scaleY: 1, scaleX: 1, rotation: 0, duration: 0.5, ease: "elastic.out(1.2, 0.25)" }, "<");
-        };
-
-        wrapper.addEventListener("pointermove", onMove);
-        wrapper.addEventListener("pointerdown", onPointerDown);
-        wrapper.addEventListener("pointerleave", onLeave);
-        wrapper.addEventListener("click", onBounce);
-
-        return () => {
-            if (idle) idle.kill();
-            gsap.killTweensOf([...puffs, title, cloud]);
-            wrapper.removeEventListener("pointermove", onMove);
-            wrapper.removeEventListener("pointerdown", onPointerDown);
-            wrapper.removeEventListener("pointerleave", onLeave);
-            wrapper.removeEventListener("click", onBounce);
-        };
-    }, []);
+    useGSAP(() => setupCloudBounce({
+        title: titleRef2.current,
+        cloud: cloudRef2.current,
+        wrapper: titleCloudRef2.current,
+        puffs: puffRefs2.current,
+        PUFFS: CLOUD2_PUFFS,
+    }), []);
 
 
     /* ── Dynamically position ladder-1 to connect cloud 1 → "m" ── */
@@ -977,13 +1362,29 @@ const MadajBuilds = () => {
             ladderEl.style.setProperty("--ladder-angle", angle + "deg");
         }
 
-        // Position immediately and on resize — fast updates to track 3D text
+        // The ladder only moves on resize or as the hero scrolls (the
+        // hero-diagonal carries a scroll transform) — no forever-interval.
+        const hero = document.querySelector(".hero-diagonal");
         positionLadder();
+        const t1 = setTimeout(positionLadder, 150);
+        const t2 = setTimeout(positionLadder, 600);
         const obs = new ResizeObserver(positionLadder);
-        obs.observe(document.querySelector(".hero-diagonal"));
-        const id = setInterval(positionLadder, 50);
+        if (hero) obs.observe(hero);
 
-        return () => { obs.disconnect(); clearInterval(id); };
+        let queued = false;
+        const onScroll = () => {
+            if (queued) return;
+            queued = true;
+            requestAnimationFrame(() => { queued = false; positionLadder(); });
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+
+        return () => {
+            clearTimeout(t1);
+            clearTimeout(t2);
+            obs.disconnect();
+            window.removeEventListener("scroll", onScroll);
+        };
     }, []);
 
     /* ── Dynamically position ladder-2: "s" → cloud 2 ── */
@@ -1030,20 +1431,40 @@ const MadajBuilds = () => {
             ladderEl.style.setProperty("--ladder-angle", angle + "deg");
         }
 
+        const hero = document.querySelector(".hero-diagonal");
         positionLadder2();
+        const t1 = setTimeout(positionLadder2, 150);
+        const t2 = setTimeout(positionLadder2, 600);
         const obs = new ResizeObserver(positionLadder2);
-        obs.observe(document.querySelector(".hero-diagonal"));
-        const id = setInterval(positionLadder2, 50);
+        if (hero) obs.observe(hero);
 
-        return () => { obs.disconnect(); clearInterval(id); };
+        let queued = false;
+        const onScroll = () => {
+            if (queued) return;
+            queued = true;
+            requestAnimationFrame(() => { queued = false; positionLadder2(); });
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+
+        return () => {
+            clearTimeout(t1);
+            clearTimeout(t2);
+            obs.disconnect();
+            window.removeEventListener("scroll", onScroll);
+        };
     }, []);
 
     return (
         <ReactLenis root options={{ duration: 1.2, smoothWheel: true }}>
             {/* Background effects */}
-            <OceanWave scrollProgress={scrollProgress} />
-            <WaterDrop scrollProgress={scrollProgress} />
+            <OceanWave scrollProgressRef={scrollProgressRef} />
+            <WaterDrop scrollProgressRef={scrollProgressRef} />
             <VacuumTransition scrollProgress={scrollProgress} />
+
+            {/* Frozen pixel-mosaic of the fallen icons + cursor-snake —
+                both ride the background of every section below the hero */}
+            {pixelSnapshot && <PixelSnapshot snapshot={pixelSnapshot} />}
+            <CursorSnake />
 
             {/* Grid overlay */}
             <div className="grid-overlay" aria-hidden="true" />
@@ -1180,18 +1601,10 @@ const MadajBuilds = () => {
                     </div>
 
                     {/* 3D Canvas — absolutely positioned, behind headline */}
-
-{/* 3D Canvas — absolutely positioned, behind headline */}
                     <div className="hero-canvas-wrap">
-                        <Hero3D scrollProgress={scrollProgress} themeKey={theme.key} wordmarkRectRef={wordmarkRectRef} />
-                    </div>
-
-                    {/* Headline overlay */}
-                    <div className="hero-headline" style={{
-                        opacity: Math.max(0, 1 - sp * 1.5),
-                        transform: `translateY(${-sp * 80}px) translateX(${-sp2 * 60}px) perspective(1000px) rotateX(${sp * 30}deg) rotateY(${-sp * 8}deg) scale(${1 - sp * 0.1})`,
-                    }}>
-                        
+                        <Suspense fallback={<div className="hero-canvas" style={{ width: "100%", height: "100%" }} />}>
+                            <Hero3D scrollProgress={scrollProgress} themeKey={theme.key} wordmarkRectRef={wordmarkRectRef} active={heroInView} />
+                        </Suspense>
                     </div>
 
                     {/* Bottom-left tagline */}
@@ -1207,7 +1620,7 @@ const MadajBuilds = () => {
                     </div>
 
                     {/* Falling icons layer */}
-                    <FallingIcons scrollProgress={scrollProgress} wordmarkRectRef={wordmarkRectRef} />
+                    <FallingIcons scrollProgressRef={scrollProgressRef} wordmarkRectRef={wordmarkRectRef} onFreeze={handleIconFreeze} />
 
                     {/* Hero-meta row at bottom of hero */}
                     <div className="hero-meta">
@@ -1237,63 +1650,19 @@ const MadajBuilds = () => {
                     </div>
                 </section>
 
-                {/* ── PANEL TWO: PROFILE ────────────────────────────── */}
-                <section className="panel panel-two" style={{
-                    opacity: Math.min(1, Math.max(0, (scrollProgress - 0.05) * 3)),
-                    transform: `translateY(${Math.max(0, (1 - Math.min(1, (scrollProgress - 0.05) * 3)) * 40)}px)`,
-                }}>
-                    <ProfilePanel />
+                {/* ── PANEL TWO: PROFILE (curved poster) ────────────── */}
+                <section className="panel panel-two" ref={profileCurveRef}>
+                    <div className="profile-curve">
+                        <ProfilePanel />
+                    </div>
                 </section>
 
-                {/* ── PANEL CURSOR ──────────────────────────────── */}
-                <div className="cursor-wrap" aria-hidden="true">
-                    <svg className="cursor-icon" viewBox="0 0 100 130" fill="none">
-                        <defs>
-                            <linearGradient id="curGrad" x1="10%" y1="0%" x2="80%" y2="100%">
-                                <stop offset="0%" stopColor="#5577dd" />
-                                <stop offset="45%" stopColor="#3b5cc9" />
-                                <stop offset="100%" stopColor="#2d4aad" />
-                            </linearGradient>
-                            <linearGradient id="curEdge" x1="0%" y1="0%" x2="50%" y2="100%">
-                                <stop offset="0%" stopColor="#7799ee" />
-                                <stop offset="100%" stopColor="#3355aa" />
-                            </linearGradient>
-                            <linearGradient id="curHL" x1="5%" y1="0%" x2="35%" y2="50%">
-                                <stop offset="0%" stopColor="white" stopOpacity="0.25" />
-                                <stop offset="100%" stopColor="white" stopOpacity="0" />
-                            </linearGradient>
-                            <filter id="curShadow">
-                                <feDropShadow dx="2" dy="3" stdDeviation="3" floodColor="#000" floodOpacity="0.4" />
-                            </filter>
-                        </defs>
-
-                        {/* Outer border / edge stroke */}
-                        <path
-                            d="M 14.5 4 L 7.5 97 C 7.5 99.5 9 101 11 100.5 L 36 77.5 L 87 102 C 89.5 103 92 101.5 91 99 L 41.5 29.5 C 40 27 37.5 25 35 24 L 14.5 4 Z"
-                            fill="none"
-                            stroke="url(#curEdge)"
-                            stroke-width="3"
-                            stroke-linejoin="round"
-                            stroke-linecap="round"
-                            filter="url(#curShadow)"
-                        />
-
-                        {/* Main filled cursor body */}
-                        <path
-                            d="M 15 5 L 8 96 C 8 98.5 9.5 100 11.5 99.5 L 36.5 77 L 86.5 101 C 89 102 91 100.5 90 98 L 41 30 C 39.5 27.5 37 25.5 34.5 24.5 L 15 5 Z"
-                            fill="url(#curGrad)"
-                        />
-
-                        {/* White highlight on left edge */}
-                        <path
-                            d="M 15 5 L 8 96 C 8 98.5 9.5 100 11.5 99.5 L 22 87 L 34.5 24.5 L 15 5 Z"
-                            fill="url(#curHL)"
-                        />
-                    </svg>
-                </div>
+                {/* ── PANEL CURSOR → GALAXY ─────────────────────── */}
+                <CursorGalaxy />
 
                 {/* ── PANEL CTA ─────────────────────────────────────── */}
                 <section className="panel panel-cta" id="contact">
+                    <FallingBadges />
                     <svg className="star" viewBox="0 0 40 40" style={{ color: "#fbbf24" }} aria-hidden="true">
                         <path fill="currentColor" d="M20 2 L24 15 L38 15 L27 24 L31 38 L20 29 L9 38 L13 24 L2 15 L16 15 Z" />
                     </svg>
@@ -1301,8 +1670,8 @@ const MadajBuilds = () => {
                         <path fill="currentColor" d="M8 46 Q2 24 22 16 Q30 4 48 10 Q66 2 76 18 Q96 20 92 42 Q100 60 80 66 Q70 82 50 76 Q30 88 16 70 Q-2 66 8 46 Z" />
                     </svg>
 
-                    <p className="eyebrow mono">004 — say hi</p>
-                    <h2 className="headline">LET&apos;S BUILD<br />SOMETHING SCRAPPY</h2>
+                    
+                    <h2 className="headline">LET&apos;S BUILD<br />SOMETHING</h2>
 
                     <div className="cta-links mono">
                         <a href="mailto:adam.official.514@gmail.com">EMAIL</a>

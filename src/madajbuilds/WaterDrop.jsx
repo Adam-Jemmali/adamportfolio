@@ -2,42 +2,40 @@ import { useEffect, useRef } from "react";
 
 /**
  * Glowing orb that follows the cursor with eased lerp.
- * Ocean-blue radial gradient with mix-blend-mode: screen.
- * Fades out when scrollProgress > ~0.67.
+ * Fades out when scrollProgress rises. scrollProgress is read through a
+ * ref so a scroll never tears down and rebuilds the rAF loop / listeners.
  */
-export default function WaterDrop({ scrollProgress = 0 }) {
+export default function WaterDrop({ scrollProgressRef }) {
     const ref = useRef(null);
     const pos = useRef({ x: -200, y: -200 });
     const target = useRef({ x: -200, y: -200 });
-    const rafRef = useRef(null);
 
     useEffect(() => {
         const onMove = (e) => {
             target.current = { x: e.clientX, y: e.clientY };
         };
-        window.addEventListener("mousemove", onMove);
+        window.addEventListener("mousemove", onMove, { passive: true });
 
+        let raf = 0;
         const tick = () => {
+            raf = requestAnimationFrame(tick);
             const el = ref.current;
-            if (!el) return;
+            if (!el || document.hidden) return;
 
             pos.current.x += (target.current.x - pos.current.x) * 0.12;
             pos.current.y += (target.current.y - pos.current.y) * 0.12;
 
-            const opacity = Math.max(0, 1 - scrollProgress * 2.2);
-
+            const opacity = Math.max(0, 1 - (scrollProgressRef.current || 0) * 2.2);
             el.style.transform = `translate(${pos.current.x - 90}px, ${pos.current.y - 90}px)`;
             el.style.opacity = opacity;
-
-            rafRef.current = requestAnimationFrame(tick);
         };
 
-        rafRef.current = requestAnimationFrame(tick);
+        raf = requestAnimationFrame(tick);
         return () => {
-            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            cancelAnimationFrame(raf);
             window.removeEventListener("mousemove", onMove);
         };
-    }, [scrollProgress]);
+    }, [scrollProgressRef]);
 
     return (
         <div

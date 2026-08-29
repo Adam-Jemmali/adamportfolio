@@ -3,20 +3,22 @@ import { useEffect, useRef } from "react";
 /**
  * Full-viewport canvas that renders layered ocean-blue sine waves.
  * Waves warp and peak near the cursor. Fades out with scrollProgress.
- * Theme-aware via CSS custom properties.
+ *
+ * scrollProgress is read through a ref so a scroll never tears down and
+ * rebuilds the canvas / rAF loop / listeners.
  */
-export default function OceanWave({ scrollProgress = 0 }) {
+export default function OceanWave({ scrollProgressRef }) {
     const canvasRef = useRef(null);
     const mouseRef = useRef({ x: 0.5, y: 0.5 });
-    const rafRef = useRef(null);
 
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext("2d");
 
+        let dpr = 1;
         const resize = () => {
-            const dpr = window.devicePixelRatio || 1;
+            dpr = Math.min(window.devicePixelRatio || 1, 2);
             canvas.width = window.innerWidth * dpr;
             canvas.height = window.innerHeight * dpr;
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -30,21 +32,34 @@ export default function OceanWave({ scrollProgress = 0 }) {
                 y: e.clientY / window.innerHeight,
             };
         };
-        window.addEventListener("mousemove", onMouse);
+        window.addEventListener("mousemove", onMouse, { passive: true });
 
         const WAVE_COUNT = 5;
         const phases = Array.from({ length: WAVE_COUNT }, () => Math.random() * Math.PI * 2);
+        const STEP = (window.devicePixelRatio || 1) > 1.5 ? 6 : 4;
+
+        let raf = 0;
+        let cleared = false;
 
         const draw = (t) => {
+            raf = requestAnimationFrame(draw);
+
+            if (document.hidden) return;
+
             const w = window.innerWidth;
             const h = window.innerHeight;
-            ctx.clearRect(0, 0, w, h);
+            const opacity = Math.max(0, 1 - (scrollProgressRef.current || 0) * 1.5);
 
-            const opacity = Math.max(0, 1 - scrollProgress * 1.5);
             if (opacity <= 0) {
-                rafRef.current = requestAnimationFrame(draw);
+                // Hero scrolled away — clear once, then idle cheaply.
+                if (!cleared) {
+                    ctx.clearRect(0, 0, w, h);
+                    cleared = true;
+                }
                 return;
             }
+            cleared = false;
+            ctx.clearRect(0, 0, w, h);
 
             const mx = mouseRef.current.x * w;
 
@@ -58,7 +73,7 @@ export default function OceanWave({ scrollProgress = 0 }) {
                 ctx.beginPath();
                 ctx.moveTo(0, h);
 
-                for (let x = 0; x <= w; x += 3) {
+                for (let x = 0; x <= w; x += STEP) {
                     const distX = (x - mx) / w;
                     const push = Math.exp(-distX * distX * 12) * 25;
                     const y =
@@ -73,18 +88,16 @@ export default function OceanWave({ scrollProgress = 0 }) {
                 ctx.fillStyle = `rgba(100, 180, 255, ${waveOpacity})`;
                 ctx.fill();
             }
-
-            rafRef.current = requestAnimationFrame(draw);
         };
 
-        rafRef.current = requestAnimationFrame(draw);
+        raf = requestAnimationFrame(draw);
 
         return () => {
-            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            cancelAnimationFrame(raf);
             window.removeEventListener("resize", resize);
             window.removeEventListener("mousemove", onMouse);
         };
-    }, [scrollProgress]);
+    }, [scrollProgressRef]);
 
     return (
         <canvas
