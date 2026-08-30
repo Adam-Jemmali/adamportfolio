@@ -14,7 +14,7 @@ const QUESTIONS = [
     {
         id: "goal",
         prompt: "What brings you here?",
-        options: ["Sports tech", "Agentic AI", "EdTech / tutoring", "Something else"],
+        options: ["Sports tech", "Agentic AI", "EdTech", "Something else"],
     },
     {
         id: "stage",

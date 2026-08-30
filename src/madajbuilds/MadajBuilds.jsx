@@ -5,6 +5,8 @@ import { ReactLenis } from "lenis/react";
 import OceanWaveRaw from "./OceanWave.jsx";
 import WaterDropRaw from "./WaterDrop.jsx";
 import ProfilePanelRaw from "./ProfilePanel.jsx";
+import CtaSignup from "./CtaSignup.jsx";
+import { getWeek } from "./weeks.js";
 import { useScrollProgress } from "../utils/useScrollProgress.js";
 
 // The 3D hero (three.js + opentype.js, ~0.5 MB gzipped) loads in its own
@@ -12,6 +14,8 @@ import { useScrollProgress } from "../utils/useScrollProgress.js";
 const Hero3D = memo(lazy(() => import("./Hero3D.jsx")));
 // The CTA's balloon-script wordmark — same 3D look, loads on demand.
 const CtaWord3D = memo(lazy(() => import("./CtaWord3D.jsx")));
+// The Build Log quiz — only pulled in when the URL asks for it (?w=<n>).
+const ClimbQuiz = lazy(() => import("./ClimbQuiz.jsx"));
 
 // Memoise the expensive subtrees so cheap parent re-renders (clock ticking,
 // cursor-coords updating) never reach the 3D canvas or the profile panel.
@@ -585,6 +589,8 @@ function FallingIconsRaw({ scrollProgressRef, wordmarkRectRef, onFreeze }) {
     useEffect(() => {
         const els = iconElsRef.current;
         if (!els.length) return;
+        const heroEl = document.querySelector(".panel-hero");
+        const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
         // Per-icon runtime state. Depth drives parallax: near icons fall
         // faster, render larger and sharper; far icons fall slower, smaller, blurrier.
@@ -675,58 +681,79 @@ function FallingIconsRaw({ scrollProgressRef, wordmarkRectRef, onFreeze }) {
                 buffer = null;
             }
 
-            // Drive the layer's scroll fade here rather than through React so a
-            // scroll never re-renders this 34-node subtree.
+            // Progress from the hero INTO the profile section:
+            //   0  = hero at the top
+            //   1  = hero fully scrolled past (profile fills the viewport)
+            //   ~2 = a full viewport into the profile section
+            const H = window.innerHeight;
+            let p = sp;
+            if (heroEl) p = Math.max(0, 1 - heroEl.getBoundingClientRect().bottom / H);
+
+            // breeze — a slow float that lets the emoji drift in and hang
+            //          over the profile for a beat.
+            // gust   — a hard downward blow that clears them off the bottom.
+            const breeze = clamp01((p - 0.42) / 0.5);
+            const gust = clamp01((p - 1.0) / 0.7);
+            const g2 = gust * gust * gust;
+
             if (layer) {
-                const layerOpacity = Math.max(0, 1 - sp * 2);
-                layer.style.opacity = layerOpacity.toFixed(3);
-                layer.style.transform = `translateY(${(-sp * 100).toFixed(2)}%)`;
+                const lf = p < 1.5 ? 1 : Math.max(0, 1 - (p - 1.5) / 0.7);
+                layer.style.opacity = lf.toFixed(3);
+                layer.style.transform = "none";
             }
 
-            // The layer is fully faded by sp ≈ 0.5 — stop per-icon work past that.
-            if (sp > 0.55) return;
+            // Done once the field has blown well past the profile.
+            if (p > 2.4) return;
 
-            const H = window.innerHeight;
             const lr = layer ? layer.getBoundingClientRect() : { left: 0, top: 0, width: H };
 
             for (const it of items) {
                 // Gentle horizontal sway
                 it.swayPhase += it.swayFreq * dt;
                 it.sway = Math.sin(it.swayPhase) * it.swayAmp;
-
                 it.rot += it.rotV * dt;
-                it.y += it.vy * dt;
-                it.x += it.vx * dt;
 
-                // As the hero leaves, pull badges into the side vacuum instead
-                // of simply hiding them. The curved pull gives the transition
-                // a physical, sucked-away feeling while remaining reversible.
-                const vacuumProgress = Math.max(0, Math.min(1, (scrollProgressRef.current - 0.18) / 0.68));
-                if (vacuumProgress > 0) {
-                    const pull = vacuumProgress * vacuumProgress;
-                    it.x += (101 - it.x) * pull * dt * 1.65;
-                    it.y += (H * 0.5 - it.y) * pull * dt * 0.85;
-                    it.rot += pull * 180 * dt;
+                // Normal fall, damped hard during the breeze so the emoji
+                // hang over the profile, then released by the gust.
+                const fallMul = 1 - 0.82 * breeze * (1 - gust);
+                it.y += it.vy * fallMul * dt;
+                it.x += it.vx * fallMul * dt;
+
+                if (breeze > 0 && gust < 1) {
+                    const bob = Math.sin(it.swayPhase * 0.5 + it.depth * 3);
+                    it.y += breeze * (1 - gust) * bob * 16 * dt;
+                    it.x += breeze * (1 - gust) * Math.sin(it.swayPhase * 0.7 + 1.3) * 12 * dt;
+                }
+                if (gust > 0) {
+                    // wind blows them straight down and off the bottom
+                    it.y += g2 * 900 * dt;
+                    it.x += g2 * Math.sin(it.x * 0.11) * 24 * dt;
+                    it.rot += g2 * 150 * dt;
                 }
 
-                // Respawn above once it clears the bottom
-                if (it.y > H + 80) {
-                    it.y = -80;
-                    it.x = 4 + Math.random() * 92;
+                if (p < 0.35) {
+                    // Only recycle / bounce while still falling in the hero.
+                    if (it.y > H + 80) {
+                        it.y = -80;
+                        it.x = 4 + Math.random() * 92;
+                    }
+                    if (it.x < 2) { it.x = 2; it.vx = Math.abs(it.vx); }
+                    else if (it.x > 98) { it.x = 98; it.vx = -Math.abs(it.vx); }
                 }
-                if (it.x < 2) { it.x = 2; it.vx = Math.abs(it.vx); }
-                else if (it.x > 98) { it.x = 98; it.vx = -Math.abs(it.vx); }
 
                 const rx = (it.x / 100) * lr.width + it.sway;
                 const ry = it.y;
                 const vpx = rx + lr.left;
                 const vpy = ry + lr.top;
 
-                // Soft fade in/out at the screen edges
+                // Fade in at the top while falling in the hero; stay bright
+                // through the breeze (so you see them cross into the profile),
+                // then fade as the gust blows them off the bottom.
                 let opacity = 0.4;
                 if (it.y < 0) opacity = Math.max(0, 0.4 * (1 + it.y / 90));
-                else if (it.y > H - 90) opacity = Math.max(0, 0.4 * ((H - it.y) / 90));
-                opacity *= 1 - Math.min(0.86, vacuumProgress * 0.86);
+                else if (p < 0.3 && it.y > H - 90) opacity = Math.max(0, 0.4 * ((H - it.y) / 90));
+                opacity *= 1 - gust * 0.5;
+                if (it.y > H + 30) opacity *= Math.max(0, 1 - (it.y - H - 30) / 240);
 
                 // How far the icon is over a 3D wordmark letter (0 = clear,
                 // 1 = right on it). The badge layer sits ABOVE the wordmark
@@ -1143,51 +1170,6 @@ const FallingBadgesRaw = () => {
 };
 const FallingBadges = memo(FallingBadgesRaw);
 
-/* ── Side vacuum transition ─────────────────────────────────────── */
-const VACUUM_STREAMS = Array.from({ length: 9 }, (_, i) => ({
-    angle: -34 + i * 8,
-    delay: `${(i * 0.11).toFixed(2)}s`,
-    width: `${72 + ((i * 17) % 64)}px`,
-}));
-
-function VacuumTransition({ scrollProgress }) {
-    const progress = Math.max(0, Math.min(1, (scrollProgress - 0.16) / 0.76));
-    const visibility = Math.sin(progress * Math.PI);
-
-    return (
-        <div
-            className="vacuum-transition"
-            aria-hidden="true"
-            style={{
-                opacity: visibility,
-                "--vacuum-progress": progress,
-            }}
-        >
-            <div className="vacuum-streams">
-                {VACUUM_STREAMS.map((stream, i) => (
-                    <span
-                        className="vacuum-stream"
-                        key={i}
-                        style={{
-                            "--stream-angle": `${stream.angle}deg`,
-                            "--stream-delay": stream.delay,
-                            "--stream-width": stream.width,
-                        }}
-                    />
-                ))}
-            </div>
-            <div className="vacuum-mouth">
-                <span className="vacuum-ring vacuum-ring-outer" />
-                <span className="vacuum-ring vacuum-ring-inner" />
-                <span className="vacuum-core" />
-            </div>
-            <span className="vacuum-particle vacuum-particle-a" />
-            <span className="vacuum-particle vacuum-particle-b" />
-            <span className="vacuum-particle vacuum-particle-c" />
-        </div>
-    );
-}
-
 /* ── Title-on-cloud bounce (shared by both cloud platforms) ──────────
    Pointer pressure dents the nearest puff; a click launches the title
    into a taller jelly bounce. Returns a cleanup function. */
@@ -1454,6 +1436,20 @@ const MadajBuilds = () => {
         setPixelSnapshot(snap);
     }, []);
 
+    // The Build Log quiz — opened by /madajbuilds/?w=<n> (email links here).
+    const [quizWeek, setQuizWeek] = useState(() => {
+        if (typeof window === "undefined") return null;
+        return getWeek(new URLSearchParams(window.location.search).get("w"))?.n ?? null;
+    });
+    const closeQuiz = useCallback(() => {
+        setQuizWeek(null);
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("w");
+            window.history.replaceState({}, "", url);
+        } catch { /* ignore */ }
+    }, []);
+
     // Apply theme CSS vars
     useEffect(() => {
         document.documentElement.style.setProperty("--accent", theme.accent);
@@ -1678,12 +1674,16 @@ const MadajBuilds = () => {
             {/* Background effects */}
             <OceanWave scrollProgressRef={scrollProgressRef} hoverRef={heroHoverRef} />
             <WaterDrop scrollProgressRef={scrollProgressRef} />
-            <VacuumTransition scrollProgress={scrollProgress} />
 
             {/* Frozen pixel-mosaic of the fallen icons + cursor-snake —
                 both ride the background of every section below the hero */}
             {pixelSnapshot && <PixelSnapshot snapshot={pixelSnapshot} />}
             <CursorSnake />
+
+            {/* Falling emoji — a viewport-fixed overlay so the breeze can
+                carry them out of the hero and across into the profile
+                section before they blow off the bottom. */}
+            <FallingIcons scrollProgressRef={scrollProgressRef} wordmarkRectRef={wordmarkRectRef} onFreeze={handleIconFreeze} />
 
             {/* Grid overlay */}
             <div className="grid-overlay" aria-hidden="true" />
@@ -1843,9 +1843,6 @@ const MadajBuilds = () => {
                         </p>
                     </div>
 
-                    {/* Falling icons layer */}
-                    <FallingIcons scrollProgressRef={scrollProgressRef} wordmarkRectRef={wordmarkRectRef} onFreeze={handleIconFreeze} />
-
                     {/* Hero-meta row at bottom of hero */}
                     <div className="hero-meta">
                         <span className="sb-item">
@@ -1909,6 +1906,7 @@ const MadajBuilds = () => {
                             <span className="cta-row cta-line-b">IN PUBLIC</span>
                             <span className="cta-row cta-line-c">WITH ME</span>
                         </h2>
+                        <CtaSignup />
                     </div>
 
                     <div className="cta-footer">
@@ -1949,6 +1947,12 @@ const MadajBuilds = () => {
                     </svg>
                 </span>
             </div>
+
+            {quizWeek != null && (
+                <Suspense fallback={null}>
+                    <ClimbQuiz week={quizWeek} onClose={closeQuiz} />
+                </Suspense>
+            )}
         </ReactLenis>
     );
 };

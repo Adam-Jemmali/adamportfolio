@@ -30,4 +30,10 @@ export default defineConfig([
       ],
     },
   },
+  {
+    // Vercel serverless functions run on Node, not the browser.
+    files: ['api/**/*.js'],
+    languageOptions: { globals: globals.node },
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
 ])
