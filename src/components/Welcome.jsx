@@ -6,9 +6,9 @@ import useWindowStore from "#store/window.js";
 import PixelTitle from "#components/PixelTitle.jsx";
 
 const ROLES = [
-    "computer vision systems",
-    "agentic AI",
-    "sports analytics",
+    "ML systems",
+    "AI automation",
+    "sports & edtech tools",
     "things that actually ship",
 ];
 

@@ -114,7 +114,7 @@ const Contact = () => {
                     </div>
                     <h3>Let's build something.</h3>
                     <p className="contact-tagline">
-                        Computer Vision &amp; AI Systems Engineer, open to sports tech, agentic AI
+                        Building ML systems &amp; AI automation, open to sports tech, agentic AI
                         and EdTech conversations.
                     </p>
 

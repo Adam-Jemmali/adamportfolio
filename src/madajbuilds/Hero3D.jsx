@@ -25,6 +25,8 @@ export const THEMES_COLORS = {
     A: { letter: "#7fc4ff", emissive: "#1e8fd8", rim: "#0f5f9e", cursor: "#3fa9f5", accent: [0.31, 0.61, 1.0] },
     B: { letter: "#ffd9a3", emissive: "#d4882b", rim: "#8b5e2b", cursor: "#e8a44a", accent: [0.95, 0.78, 0.45] },
     C: { letter: "#ffb3b3", emissive: "#d45555", rim: "#8b3030", cursor: "#e86060", accent: [0.95, 0.5, 0.5] },
+    // Vivid orange — pops against a light-grey surface (used by the OS toast)
+    TOAST: { letter: "#ff7a2f", emissive: "#c73f0a", rim: "#7a2606", cursor: "#ff7a2f", accent: [1.0, 0.48, 0.18] },
 };
 
 // Glitch sticker colors
@@ -58,30 +60,62 @@ export async function loadFont() {
 /* ── GLYPH EXTRACTION ─────────────────────────────────────────────── */
 
 /**
- * Convert an opentype path to THREE.Shape array (one Shape per contour).
+ * Convert an opentype glyph path to an array of FULLY-FILLED solid
+ * THREE.Shape objects — no holes at all.
+ *
+ * Every letter comes out as a chunky filled blob: the bowls/counters of
+ * a / b / d / e / g / o / s are filled in, and disjoint parts like the
+ * tittle of an "i" / "j" stay as their own filled solids. Counters are
+ * detected by winding direction (opposite to the outline) and dropped.
  */
 function pathToShapes(path) {
-    const shapes = [];
-    let current = null;
-
+    // One THREE.Path per contour (curves preserved).
+    const contours = [];
+    let cur = null;
     for (const cmd of path.commands) {
         if (cmd.type === "M") {
-            if (current) shapes.push(current);
-            current = new THREE.Shape();
-            current.moveTo(cmd.x, -cmd.y);
+            if (cur) contours.push(cur);
+            cur = new THREE.Path();
+            cur.moveTo(cmd.x, -cmd.y);
         } else if (cmd.type === "L") {
-            current.lineTo(cmd.x, -cmd.y);
+            cur.lineTo(cmd.x, -cmd.y);
         } else if (cmd.type === "Q") {
-            current.quadraticCurveTo(cmd.x1, -cmd.y1, cmd.x, -cmd.y);
+            cur.quadraticCurveTo(cmd.x1, -cmd.y1, cmd.x, -cmd.y);
         } else if (cmd.type === "C") {
-            current.bezierCurveTo(cmd.x1, -cmd.y1, cmd.x2, -cmd.y2, cmd.x, -cmd.y);
-        } else if (cmd.type === "Z" || cmd.type === "z") {
-            // closePath is implicit in Shape
+            cur.bezierCurveTo(cmd.x1, -cmd.y1, cmd.x2, -cmd.y2, cmd.x, -cmd.y);
         }
     }
-    if (current) shapes.push(current);
+    if (cur) contours.push(cur);
+    if (contours.length === 0) return [];
 
-    return shapes;
+    const polys = contours.map((c) => c.getPoints(64));
+    if (polys.length === 1) return [new THREE.Shape(polys[0])];
+
+    // In a font glyph, solid outlines wind one way and their counters
+    // wind the opposite way (that's how non-zero fill cuts the holes).
+    // Keep only contours that wind the same way as the biggest contour —
+    // every counter is dropped, so the letter fills in solid. Disjoint
+    // solids (the "i"/"j" tittle) share the outer winding, so they stay.
+    const signedArea = (poly) => {
+        let a = 0;
+        for (let i = 0; i < poly.length; i++) {
+            const j = (i + 1) % poly.length;
+            a += poly[i].x * poly[j].y - poly[j].x * poly[i].y;
+        }
+        return a / 2;
+    };
+    const areas = polys.map(signedArea);
+    let biggest = 0;
+    for (let i = 1; i < areas.length; i++) {
+        if (Math.abs(areas[i]) > Math.abs(areas[biggest])) biggest = i;
+    }
+    const solidSign = Math.sign(areas[biggest]) || 1;
+
+    const shapes = polys
+        .filter((_, i) => Math.sign(areas[i]) === solidSign && Math.abs(areas[i]) > 1)
+        .map((poly) => new THREE.Shape(poly));
+
+    return shapes.length ? shapes : [new THREE.Shape(polys[biggest])];
 }
 
 /**
@@ -195,7 +229,8 @@ export function Letter3D({ shapes, position, themeKey = "A" }) {
     const meshRef = useRef(null);
     const colors = THEMES_COLORS[themeKey] || THEMES_COLORS.A;
 
-    // Build geometry from shapes — first shape is outer contour, rest are holes
+    // Extrude every solid of the glyph (each already carries its own
+    // holes), so disjoint parts like the "i"/"j" dot are filled too.
     const geometry = useMemo(() => {
         if (!shapes || shapes.length === 0) return null;
 
@@ -209,17 +244,10 @@ export function Letter3D({ shapes, position, themeKey = "A" }) {
             bevelSegments: 3,
         };
 
-        if (shapes.length === 1) {
-            return new THREE.ExtrudeGeometry(shapes[0], extrudeSettings);
-        }
-
-        // Use the first shape (outer contour) as the main shape,
-        // and add remaining contours as holes for proper counter rendering
-        const mainShape = shapes[0];
-        for (let i = 1; i < shapes.length; i++) {
-            mainShape.holes.push(new THREE.Path(shapes[i].getPoints()));
-        }
-        return new THREE.ExtrudeGeometry(mainShape, extrudeSettings);
+        return new THREE.ExtrudeGeometry(
+            shapes.length === 1 ? shapes[0] : shapes,
+            extrudeSettings,
+        );
     }, [shapes]);
 
     if (!geometry) return null;
@@ -253,6 +281,12 @@ function ScriptWord({ layoutData, scrollProgress, themeKey = "A" }) {
     const letterTargets = useRef([]);
     const mouseRef = useRef({ x: 0, y: 0 });
 
+    // Drag-to-spin — applied ON TOP of the eased scroll/mouse rotation.
+    const baseRot = useRef({ x: 0, y: 0 });
+    const dragRot = useRef({ x: 0, y: 0 });
+    const dragVel = useRef({ x: 0, y: 0 });
+    const dragging = useRef(false);
+
     useEffect(() => {
         const onMove = (e) => {
             const nx = (e.clientX / window.innerWidth) * 2 - 1;
@@ -261,6 +295,48 @@ function ScriptWord({ layoutData, scrollProgress, themeKey = "A" }) {
         };
         window.addEventListener("mousemove", onMove);
         return () => window.removeEventListener("mousemove", onMove);
+    }, []);
+
+    // Grab-and-spin the wordmark, exactly like the CTA "Let's Go!" text.
+    useEffect(() => {
+        const hero = document.querySelector(".panel-hero");
+        if (!hero) return;
+        const prevTA = hero.style.touchAction;
+        hero.style.touchAction = "pan-y"; // keep vertical page-scroll on touch
+
+        const IGNORE = 'a, button, input, textarea, select, [role="button"], .nav, .pill, .title-on-cloud, .cloud-seat, .hero-cta';
+        const last = { x: 0, y: 0 };
+
+        const down = (e) => {
+            if (e.target?.closest?.(IGNORE)) return;
+            dragging.current = true;
+            last.x = e.clientX;
+            last.y = e.clientY;
+            dragVel.current = { x: 0, y: 0 };
+        };
+        const move = (e) => {
+            if (!dragging.current) return;
+            const dx = e.clientX - last.x;
+            const dy = e.clientY - last.y;
+            last.x = e.clientX;
+            last.y = e.clientY;
+            dragRot.current.y += dx * 0.011;
+            dragRot.current.x += dy * 0.011;
+            dragVel.current = { x: dy * 0.011, y: dx * 0.011 };
+        };
+        const up = () => { dragging.current = false; };
+
+        hero.addEventListener("pointerdown", down);
+        window.addEventListener("pointermove", move);
+        window.addEventListener("pointerup", up);
+        window.addEventListener("pointercancel", up);
+        return () => {
+            hero.style.touchAction = prevTA;
+            hero.removeEventListener("pointerdown", down);
+            window.removeEventListener("pointermove", move);
+            window.removeEventListener("pointerup", up);
+            window.removeEventListener("pointercancel", up);
+        };
     }, []);
 
     useFrame((state, delta) => {
@@ -275,9 +351,24 @@ function ScriptWord({ layoutData, scrollProgress, themeKey = "A" }) {
         const tiltX = my + sp * 1.2;
         const turnRight = sp * 0.62;
         const groupEase = 1 - Math.pow(0.02, delta);
-        g.rotation.y += (mx + turnRight - g.rotation.y) * groupEase;
-        g.rotation.x += (tiltX - g.rotation.x) * groupEase;
+        baseRot.current.y += (mx + turnRight - baseRot.current.y) * groupEase;
+        baseRot.current.x += (tiltX - baseRot.current.x) * groupEase;
+
+        // Drag offset + flick inertia, layered over the base rotation.
+        if (!dragging.current) {
+            dragRot.current.x += dragVel.current.x;
+            dragRot.current.y += dragVel.current.y;
+            dragVel.current.x *= 0.92;
+            dragVel.current.y *= 0.92;
+        }
+        g.rotation.y = baseRot.current.y + dragRot.current.y;
+        g.rotation.x = baseRot.current.x + dragRot.current.x;
         g.position.z = -sp * 5;
+        // Gentle levitation — the whole wordmark drifts up and down on a
+        // loop (letters stay rigid). Fades out as the hero scrolls away.
+        const tt = state.clock.elapsedTime;
+        const lev = 0.32 * Math.sin(tt * 0.7) + 0.08 * Math.sin(tt * 1.25 + 1.4);
+        g.position.y = lev * Math.max(0, 1 - sp * 1.6);
         // chunkier wordmark, still centred on origin
         g.scale.setScalar((1 - sp * 0.35) * HERO_WORD_SCALE);
 

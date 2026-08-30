@@ -114,7 +114,7 @@ const Terminal = () => {
             const folder = locations.work.children.find((f) => f.name.toLowerCase().includes("aeroguard"));
             push("ok", openFinderAt(folder));
         } else if (cmd === "whoami") {
-            push("out", "Adam Jemmali: Computer Vision & AI Systems engineer");
+            push("out", "Adam Jemmali: builds ML systems & AI automation (aspiring AI engineer)");
         } else if (cmd === "date") {
             push("out", new Date().toLocaleString());
         } else if (cmd === "clear" || cmd === "cls") {

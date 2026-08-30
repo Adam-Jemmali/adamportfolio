@@ -196,10 +196,10 @@ const SUPPORTING_ENTRIES = [
         type: "focus",
         icon: "/public/icons/gicon2.svg",
         tag: "Focus now",
-        title: "Agentic AI & Computer Vision",
+        title: "AI Automation & ML Systems",
         period: "Building in public",
         summary:
-            "Designing real-time sports analytics and computer vision pipelines alongside agentic AI systems.",
+            "Building AI automation and ML systems in public, while sharpening system design, Python, FastAPI and Make toward AI engineering.",
         skills: ["DSA (NeetCode)", "Linux debugging (SadServers)", "Shell tools", "Git internals", "MIT Missing Semester", "SQLZoo"],
     },
 ];
@@ -455,14 +455,21 @@ const Journey = () => {
 
             <div ref={bodyRef} className="journey-body">
                 <header className="journey-intro">
-                    <span className="journey-intro-kicker">ADAM JEMMALI</span>
+                    <div className="journey-intro-photo">
+                        <span className="journey-intro-signature" aria-hidden="true">adam jemmali</span>
+                        <div className="journey-intro-photo-wrap">
+                            <img src="/public/images/adam_Me.png" alt="Adam Jemmali" />
+                        </div>
+                    </div>
                     <h1>I build reliable software for real-time ideas.</h1>
-                    <p>Full-stack engineer focused on backend systems, computer vision, and AI products.</p>
                 </header>
 
                 <section className="journey-section">
                     <div className="journey-section-head">
-                        <h2>Work Experience</h2>
+                        <h2>
+                            <img className="journey-section-icon" src="/public/icons/grad.svg" alt="" aria-hidden="true" />
+                            Work Experience
+                        </h2>
                     </div>
 
                     <div className="journey-timeline">

@@ -151,7 +151,7 @@ body {
     font-weight: 800;
     letter-spacing: 0.04em;
     font-size: 14px;
-    background: linear-gradient(135deg, #ffffff 30%, #b0c4ff 100%);
+    background: linear-gradient(135deg, #ffffff 28%, color-mix(in srgb, var(--accent) 55%, #ffffff) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -159,9 +159,14 @@ body {
 }
 
 .nav-brand:hover {
-    animation: nav-gradient 0.6s ease infinite;
-    background: linear-gradient(90deg, #5b6cff, #22d3ee, #fbbf24, #fb7185, #5b6cff);
-    background-size: 200% 100%;
+    animation: nav-gradient 1.4s linear infinite;
+    /* the two theme accents, not a rainbow — re-tints with A / B / C */
+    background: linear-gradient(90deg,
+        var(--accent),
+        var(--accent-2),
+        color-mix(in srgb, var(--accent) 60%, #ffffff),
+        var(--accent));
+    background-size: 220% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -196,8 +201,12 @@ body {
 
 .nav-links a:hover {
     animation: nav-gradient 0.6s ease infinite;
-    background: linear-gradient(90deg, #5b6cff, #22d3ee, #fbbf24, #fb7185, #5b6cff);
-    background-size: 200% 100%;
+    background: linear-gradient(90deg,
+        var(--accent),
+        var(--accent-2),
+        color-mix(in srgb, var(--accent) 60%, #ffffff),
+        var(--accent));
+    background-size: 220% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -227,8 +236,12 @@ body {
 
 .pill:hover .pill-label {
     animation: nav-gradient 0.6s ease infinite;
-    background: linear-gradient(90deg, #5b6cff, #22d3ee, #fbbf24, #fb7185, #5b6cff);
-    background-size: 200% 100%;
+    background: linear-gradient(90deg,
+        var(--accent),
+        var(--accent-2),
+        color-mix(in srgb, var(--accent) 60%, #ffffff),
+        var(--accent));
+    background-size: 220% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -311,11 +324,20 @@ body {
     width: 22px;
     height: 22px;
     opacity: 0.8;
-    transition: transform 0.6s ease;
+    animation: globe-spin 9s linear infinite;
+    transform-origin: 50% 50%;
 }
 
 .globe:hover {
-    transform: rotate(360deg);
+    animation-duration: 2.2s;
+}
+
+@keyframes globe-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .globe { animation: none; }
 }
 
 .sb-sep {
@@ -1733,8 +1755,12 @@ body {
 
 .profile-template-brand:hover,
 .profile-template-handle:hover {
-    background: linear-gradient(90deg, #5b6cff, #22d3ee, #fbbf24, #fb7185, #5b6cff);
-    background-size: 200% 100%;
+    background: linear-gradient(90deg,
+        var(--accent),
+        var(--accent-2),
+        color-mix(in srgb, var(--accent) 60%, #ffffff),
+        var(--accent));
+    background-size: 220% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -1848,11 +1874,13 @@ body {
         transform: translate3d(48%, -50%, 0) scale(0.78);
     }
 
-    .nav-links { gap: 0.5rem; }
-    .statusbar, .hero-meta { font-size: 10px; padding: 0.9rem 1.25rem; }
-    .nav { padding: 1.25rem 1.25rem; }
+    .nav-links { gap: 0.35rem; }
+    .statusbar, .hero-meta { font-size: 10px; padding: 0.9rem 0.9rem; gap: 0.4rem; }
+    .nav { padding: 1rem 0.9rem; gap: 0.5rem; }
+    .nav-brand { font-size: 12px; flex-shrink: 0; }
     .crosshair { display: none; }
-    .pill { width: 84px; }
+    .pill { width: 68px; font-size: 11px; }
+    .nav-links a { font-size: 11px; }
 
     .sb-item:hover { transform: none; }
 }

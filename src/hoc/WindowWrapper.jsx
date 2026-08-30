@@ -29,9 +29,12 @@ const WindowWrapper = (Component, windowKey) => {
             );
         }, [isOpen, isMinimized]);
 
-        // Drag by the header (disabled while maximized)
+        // Drag by the header (disabled while maximized, and on phones where
+        // windows are full-screen sheets — dragging one just shoves it
+        // off-screen and fights the header's tap targets).
         useGSAP(() => {
             if (!isOpen || isMinimized || isMaximized || !ref.current) return;
+            if (typeof window !== "undefined" && window.matchMedia("(max-width: 640px)").matches) return;
 
             const header = ref.current.querySelector("#window-header");
             if (!header) return;

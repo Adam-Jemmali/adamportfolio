@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
  * scrollProgress is read through a ref so a scroll never tears down and
  * rebuilds the canvas / rAF loop / listeners.
  */
-export default function OceanWave({ scrollProgressRef }) {
+export default function OceanWave({ scrollProgressRef, hoverRef }) {
     const canvasRef = useRef(null);
     const mouseRef = useRef({ x: 0.5, y: 0.5 });
 
@@ -34,12 +34,16 @@ export default function OceanWave({ scrollProgressRef }) {
         };
         window.addEventListener("mousemove", onMouse, { passive: true });
 
-        const WAVE_COUNT = 5;
+        // Thin lines spread across the WHOLE section, not filled bands
+        // pooling at the bottom.
+        const WAVE_COUNT = 11;
         const phases = Array.from({ length: WAVE_COUNT }, () => Math.random() * Math.PI * 2);
-        const STEP = (window.devicePixelRatio || 1) > 1.5 ? 6 : 4;
+        const STEP = (window.devicePixelRatio || 1) > 1.5 ? 7 : 5;
+        const SLOPE = -0.045; // gentle diagonal drift
 
         let raf = 0;
         let cleared = false;
+        let hover = 0; // eased 0→1 while the hero section is hovered
 
         const draw = (t) => {
             raf = requestAnimationFrame(draw);
@@ -48,6 +52,10 @@ export default function OceanWave({ scrollProgressRef }) {
 
             const w = window.innerWidth;
             const h = window.innerHeight;
+            // Ease the hover intensity so the waves swell/settle smoothly.
+            hover += ((hoverRef && hoverRef.current ? 1 : 0) - hover) * 0.045;
+            // Discreet: hover only lifts the lines a little.
+            const boost = 1 + hover * 1.7;
             const opacity = Math.max(0, 1 - (scrollProgressRef.current || 0) * 1.5);
 
             if (opacity <= 0) {
@@ -62,31 +70,30 @@ export default function OceanWave({ scrollProgressRef }) {
             ctx.clearRect(0, 0, w, h);
 
             const mx = mouseRef.current.x * w;
+            ctx.lineWidth = 1.4;
 
             for (let i = 0; i < WAVE_COUNT; i++) {
-                const yBase = h * (0.45 + i * 0.11);
-                const amplitude = 12 + i * 6;
-                const freq = 0.002 + i * 0.0004;
-                const speed = 0.3 + i * 0.15;
-                const waveOpacity = (0.03 + i * 0.008) * opacity;
+                // spread from ~4% to ~96% of the viewport height
+                const yBase = h * (0.04 + i * (0.92 / (WAVE_COUNT - 1)));
+                const amplitude = (9 + (i % 3) * 5) * (1 + hover * 0.28);
+                const freq = 0.0015 + (i % 4) * 0.00035;
+                const speed = 0.14 + i * 0.045;
+                const lineOpacity = (0.018 + (i % 3) * 0.006) * opacity * boost;
 
                 ctx.beginPath();
-                ctx.moveTo(0, h);
-
                 for (let x = 0; x <= w; x += STEP) {
                     const distX = (x - mx) / w;
-                    const push = Math.exp(-distX * distX * 12) * 25;
+                    const push = Math.exp(-distX * distX * 10) * 12 * (1 + hover * 0.6);
                     const y =
                         yBase +
+                        x * SLOPE +
                         Math.sin(x * freq + t * speed + phases[i]) * amplitude -
                         push;
-                    ctx.lineTo(x, y);
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
                 }
-
-                ctx.lineTo(w, h);
-                ctx.closePath();
-                ctx.fillStyle = `rgba(100, 180, 255, ${waveOpacity})`;
-                ctx.fill();
+                ctx.strokeStyle = `rgba(120, 190, 255, ${lineOpacity})`;
+                ctx.stroke();
             }
         };
 
@@ -97,7 +104,7 @@ export default function OceanWave({ scrollProgressRef }) {
             window.removeEventListener("resize", resize);
             window.removeEventListener("mousemove", onMouse);
         };
-    }, [scrollProgressRef]);
+    }, [scrollProgressRef, hoverRef]);
 
     return (
         <canvas

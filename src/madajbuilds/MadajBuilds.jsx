@@ -145,11 +145,11 @@ function BentTitleLine({ text, curve = 9 }) {
     );
 }
 
-/* ── Hero-meta time computation ───────────────────────────────────── */
-function getShanghaiTime() {
+/* ── Hero-meta time computation — my time, Eastern (ET) ───────────── */
+function getEasternTime() {
     const now = new Date();
     const parts = new Intl.DateTimeFormat("en-GB", {
-        timeZone: "Asia/Shanghai",
+        timeZone: "America/Toronto",
         hour: "2-digit",
         minute: "2-digit",
     }).formatToParts(now);
@@ -181,6 +181,110 @@ const useBeep = (enabled) => {
             /* silent */
         }
     };
+};
+
+/* ── Ambient pad — a slow, warm, generative drone (Asus2) that just
+   breathes. No audio file: detuned oscillator voices + a filtered noise
+   bed + slow LFO sweeps, so it can loop forever without ever repeating.
+   Returns setEnabled(on) — call it from a user gesture. ─────────────── */
+const useAmbient = () => {
+    const ref = useRef(null);
+
+    const build = (ctx) => {
+        const master = ctx.createGain();
+        master.gain.value = 0;
+
+        // Master "breathing" lowpass
+        const lp = ctx.createBiquadFilter();
+        lp.type = "lowpass";
+        lp.frequency.value = 640;
+        lp.Q.value = 0.4;
+        lp.connect(master);
+        master.connect(ctx.destination);
+
+        const sweep = ctx.createOscillator();
+        const sweepGain = ctx.createGain();
+        sweep.frequency.value = 0.045;
+        sweepGain.gain.value = 260;
+        sweep.connect(sweepGain).connect(lp.frequency);
+        sweep.start();
+
+        // Asus2 pad, low and wide
+        const NOTES = [55.0, 82.41, 110.0, 123.47, 164.81];
+        const started = [sweep];
+        NOTES.forEach((f, i) => {
+            const o1 = ctx.createOscillator();
+            const o2 = ctx.createOscillator();
+            o1.type = "sine";
+            o2.type = "triangle";
+            o1.frequency.value = f;
+            o2.frequency.value = f;
+            o2.detune.value = 5 + i * 3;
+
+            const g = ctx.createGain();
+            g.gain.value = 0.055 - i * 0.006;
+
+            const aLfo = ctx.createOscillator();
+            const aLfoGain = ctx.createGain();
+            aLfo.frequency.value = 0.02 + i * 0.013;
+            aLfoGain.gain.value = 0.03;
+            aLfo.connect(aLfoGain).connect(g.gain);
+
+            o1.connect(g);
+            o2.connect(g);
+            g.connect(lp);
+            o1.start();
+            o2.start();
+            aLfo.start();
+            started.push(o1, o2, aLfo);
+        });
+
+        // Airy noise bed — like distant surf
+        const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
+        const noise = ctx.createBufferSource();
+        noise.buffer = buf;
+        noise.loop = true;
+        const nf = ctx.createBiquadFilter();
+        nf.type = "bandpass";
+        nf.frequency.value = 480;
+        nf.Q.value = 0.6;
+        const ng = ctx.createGain();
+        ng.gain.value = 0.014;
+        noise.connect(nf).connect(ng).connect(master);
+        noise.start();
+        started.push(noise);
+
+        return { master, started };
+    };
+
+    const setEnabled = (on) => {
+        try {
+            if (on) {
+                if (!ref.current) {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    ref.current = { ctx, ...build(ctx) };
+                }
+                const { ctx, master } = ref.current;
+                if (ctx.state === "suspended") ctx.resume();
+                master.gain.cancelScheduledValues(ctx.currentTime);
+                master.gain.setTargetAtTime(0.34, ctx.currentTime, 2.4); // slow fade-in
+            } else if (ref.current) {
+                const { ctx, master } = ref.current;
+                master.gain.cancelScheduledValues(ctx.currentTime);
+                master.gain.setTargetAtTime(0.0001, ctx.currentTime, 1.1);
+            }
+        } catch {
+            /* silent */
+        }
+    };
+
+    useEffect(() => () => {
+        try { ref.current?.ctx?.close(); } catch { /* ignore */ }
+    }, []);
+
+    return setEnabled;
 };
 
 /* ── BurstLines ─────────────────────────────────────────────────── */
@@ -1082,7 +1186,7 @@ function VacuumTransition({ scrollProgress }) {
 /* ── Title-on-cloud bounce (shared by both cloud platforms) ──────────
    Pointer pressure dents the nearest puff; a click launches the title
    into a taller jelly bounce. Returns a cleanup function. */
-function setupCloudBounce({ title, cloud, wrapper, puffs, PUFFS }) {
+function setupCloudBounce({ title, cloud, wrapper, puffs, PUFFS, autoOffset = 0 }) {
     if (!title || !cloud || !wrapper || puffs.length !== PUFFS.length) return () => {};
 
     gsap.set(title, { transformOrigin: "50% 100%" });
@@ -1193,26 +1297,35 @@ function setupCloudBounce({ title, cloud, wrapper, puffs, PUFFS }) {
     };
 
     const onBounce = (event) => {
-        if (!settled || reducedMotion) return;
+        if (!settled || reducedMotion || bouncing) return;
         if (idle) idle.kill();
         bouncing = true;
-        dentPuffs(event.clientX, 1);
+        const cx = event && typeof event.clientX === "number"
+            ? event.clientX
+            : cloud.getBoundingClientRect().left + cloud.getBoundingClientRect().width / 2;
+        dentPuffs(cx, 1);
         gsap.killTweensOf([title, cloud]);
+        gsap.set(title, { rotation: 0 });
 
         gsap
             .timeline({ onComplete: settleAfterBounce })
-            .to(cloud, { scaleY: 0.45, scaleX: 1.5, rotation: -2, duration: 0.1, ease: "power4.in" })
-            .to(title, { y: 10, rotation: 2, duration: 0.1, ease: "power4.in" }, "<")
-            .to(title, { y: -140, rotation: -4, duration: 0.35, ease: "power3.out" }, "<")
-            .to(cloud, { scaleY: 1.18, scaleX: 0.82, rotation: 1, duration: 0.22, ease: "power2.out" }, "<-0.05")
-            .to(title, { y: 12, rotation: 1, duration: 0.3, ease: "bounce.out" }, ">")
-            .to(cloud, { scaleY: 0.88, scaleX: 1.12, duration: 0.12, ease: "power2.in" }, "<")
-            .to(title, { y: -45, rotation: -1, duration: 0.2, ease: "power2.out" }, ">")
-            .to(cloud, { scaleY: 1.08, scaleX: 0.93, duration: 0.2, ease: "power2.out" }, "<")
-            .to(title, { y: 5, rotation: 0.5, duration: 0.15, ease: "power2.out" }, ">")
-            .to(cloud, { scaleY: 0.96, scaleX: 1.04, duration: 0.15, ease: "power2.out" }, "<")
-            .to(title, { y: 0, rotation: 0, duration: 0.5, ease: "elastic.out(1.2, 0.25)" }, ">")
-            .to(cloud, { scaleY: 1, scaleX: 1, rotation: 0, duration: 0.5, ease: "elastic.out(1.2, 0.25)" }, "<");
+            .to(cloud, { scaleY: 0.4, scaleX: 1.6, rotation: -2, duration: 0.1, ease: "power4.in" })
+            .to(title, { y: 14, scaleY: 0.9, duration: 0.1, ease: "power4.in" }, "<")
+            // big launch
+            .to(title, { y: -210, duration: 0.4, ease: "power3.out" }, "<")
+            .to(title, { scaleY: 1.12, scaleX: 0.92, duration: 0.18, ease: "power2.out" }, "<")
+            .to(cloud, { scaleY: 1.22, scaleX: 0.78, rotation: 1, duration: 0.24, ease: "power2.out" }, "<-0.05")
+            // 360° flip on the way down, then snap the angle back (same look)
+            .to(title, { rotation: -360, y: 6, scaleY: 1, scaleX: 1, duration: 0.5, ease: "power1.in" }, ">")
+            .set(title, { rotation: 0 })
+            .to(cloud, { scaleY: 0.82, scaleX: 1.18, duration: 0.12, ease: "power2.in" }, "<0.05")
+            // secondary hops settling out
+            .to(title, { y: -58, duration: 0.22, ease: "power2.out" }, ">")
+            .to(cloud, { scaleY: 1.1, scaleX: 0.92, duration: 0.22, ease: "power2.out" }, "<")
+            .to(title, { y: 6, duration: 0.16, ease: "power2.in" }, ">")
+            .to(cloud, { scaleY: 0.95, scaleX: 1.05, duration: 0.16, ease: "power2.out" }, "<")
+            .to(title, { y: 0, rotation: 0, duration: 0.55, ease: "elastic.out(1.15, 0.28)" }, ">")
+            .to(cloud, { scaleY: 1, scaleX: 1, rotation: 0, duration: 0.55, ease: "elastic.out(1.15, 0.28)" }, "<");
     };
 
     wrapper.addEventListener("pointermove", onMove);
@@ -1220,8 +1333,19 @@ function setupCloudBounce({ title, cloud, wrapper, puffs, PUFFS }) {
     wrapper.addEventListener("pointerleave", onLeave);
     wrapper.addEventListener("click", onBounce);
 
+    // Auto-bounce once every 10s (skips while hidden or mid-bounce);
+    // the two clouds are offset so they don't fire in unison.
+    let autoBounce = 0;
+    const autoStart = window.setTimeout(() => {
+        autoBounce = window.setInterval(() => {
+            if (!document.hidden) onBounce(null);
+        }, 10000);
+    }, autoOffset);
+
     return () => {
         if (idle) idle.kill();
+        window.clearTimeout(autoStart);
+        window.clearInterval(autoBounce);
         gsap.killTweensOf([...puffs, title, cloud]);
         wrapper.removeEventListener("pointermove", onMove);
         wrapper.removeEventListener("pointerdown", onPointerDown);
@@ -1237,6 +1361,7 @@ const MadajBuilds = () => {
     const heroRef = useRef(null);
     const wordmarkRectRef = useRef(null);
     const profileCurveRef = useRef(null);
+    const heroHoverRef = useRef(false);
     const titleCloudRef = useRef(null);
     const titleRef = useRef(null);
     const cloudRef = useRef(null);
@@ -1314,6 +1439,7 @@ const MadajBuilds = () => {
     const [clock, setClock] = useState("--:--:--");
     const [coords, setCoords] = useState("0000 X 0000 Y");
     const beep = useBeep(soundOn);
+    const setAmbient = useAmbient();
     const theme = THEMES[themeIndex];
 
     // Pixel-mosaic of the falling icons — re-captured fresh each time the hero
@@ -1395,6 +1521,7 @@ const MadajBuilds = () => {
         wrapper: titleCloudRef2.current,
         puffs: puffRefs2.current,
         PUFFS: CLOUD2_PUFFS,
+        autoOffset: 5000,
     }), []);
 
 
@@ -1544,7 +1671,7 @@ const MadajBuilds = () => {
     return (
         <ReactLenis root options={{ duration: 1.2, smoothWheel: true }}>
             {/* Background effects */}
-            <OceanWave scrollProgressRef={scrollProgressRef} />
+            <OceanWave scrollProgressRef={scrollProgressRef} hoverRef={heroHoverRef} />
             <WaterDrop scrollProgressRef={scrollProgressRef} />
             <VacuumTransition scrollProgress={scrollProgress} />
 
@@ -1575,7 +1702,7 @@ const MadajBuilds = () => {
                     <Pill path={pillPath} onClick={() => { setThemeIndex((i) => (i + 1) % THEMES.length); beep(); }}>
                         THEME[{theme.key}]
                     </Pill>
-                    <Pill path={pillPath} onClick={() => { setSoundOn((s) => !s); beep(); }}>
+                    <Pill path={pillPath} onClick={() => { const next = !soundOn; setSoundOn(next); setAmbient(next); if (next) beep(); }}>
                         SOUND[{soundOn ? "/" : "-"}]
                     </Pill>
                 </div>
@@ -1583,7 +1710,12 @@ const MadajBuilds = () => {
 
             <main>
                                 {/* ── HERO ──────────────────────────────────────────── */}
-                <section className="panel panel-hero" ref={heroRef}>
+                <section
+                    className="panel panel-hero"
+                    ref={heroRef}
+                    onMouseEnter={() => { heroHoverRef.current = true; }}
+                    onMouseLeave={() => { heroHoverRef.current = false; }}
+                >
                     {/* Diagonal cloud-ladder layout */}
                     <div className="hero-diagonal" style={{
                         opacity: Math.max(0, 1 - sp * 1.2),
@@ -1599,10 +1731,10 @@ const MadajBuilds = () => {
                                 <h1
                                     className="hero-title"
                                     ref={titleRef}
-                                    aria-label="AI Engineering and AI automation"
+                                    aria-label="Sharing what I build and what I learn"
                                 >
-                                    <BentTitleLine text="AI Engineering" curve={10} />
-                                    <BentTitleLine text="& AI automation" curve={8} />
+                                    <BentTitleLine text="Sharing what I build" curve={10} />
+                                    <BentTitleLine text="& what I learn" curve={8} />
                                 </h1>
                                 <svg className="cloud-seat" viewBox="0 0 200 70" preserveAspectRatio="none" ref={cloudRef} aria-hidden="true">
                                     <g fill="currentColor">
@@ -1700,9 +1832,9 @@ const MadajBuilds = () => {
                         transform: `translateY(${-sp * 50}px) translateX(${-sp2 * 100}px) perspective(800px) rotateY(${sp * 15}deg)`,
                     }}>
                         <p className="hero-tagline-text">
-                            I BRING<br />
-                            CRAFT &amp; TASTE<br />
-                            TO DIGITAL WORK
+                            I BUILD SPORTS<br />
+                            AND EDTECH WITH AI<br />
+                            IN PUBLIC
                         </p>
                     </div>
 
@@ -1718,11 +1850,11 @@ const MadajBuilds = () => {
                             </svg>
                         </span>
                         <span className="sb-item mono">
-                            GMT+8 CN {getShanghaiTime()} 27°C
+                            ET {getEasternTime()}
                         </span>
                         <span className="sb-item sb-sep">/</span>
                         <span className="sb-item mono">
-                            CAN {clock}
+                            MTL {clock}
                         </span>
                         <span className="sb-item">
                             <RollingCoords coords={coords} />
@@ -1757,10 +1889,13 @@ const MadajBuilds = () => {
                         <path fill="currentColor" d="M8 46 Q2 24 22 16 Q30 4 48 10 Q66 2 76 18 Q96 20 92 42 Q100 60 80 66 Q70 82 50 76 Q30 88 16 70 Q-2 66 8 46 Z" />
                     </svg>
 
-                    {/* 3D chained cursive — the hero's balloon-script style,
-                        floating in the space above the headline */}
+                    {/* 3D balloon wordmark — drag to spin it, same as the
+                        OS toast. Keeps this page's larger sizing. */}
                     <Suspense fallback={null}>
-                        <CtaWord3D themeKey={theme.key} />
+                        {/* scrollLock off: desktop mouse still spins on
+                            both axes; mobile keeps vertical page-scroll and
+                            spins on horizontal drag. */}
+                        <CtaWord3D word="Let's Go!" themeKey={theme.key} draggable scrollLock={false} floatAmp={1.1} />
                     </Suspense>
 
                     <div className="cta-stage">
@@ -1792,11 +1927,11 @@ const MadajBuilds = () => {
                     </svg>
                 </span>
                 <span className="sb-item mono sb-left">
-                    GMT+8 CN {getShanghaiTime()} 27°C
+                    ET {getEasternTime()}
                 </span>
                 <span className="sb-item sb-sep sb-left">/</span>
                 <span className="sb-item mono sb-left">
-                    CAN {clock}
+                    MTL {clock}
                 </span>
                 <span className="sb-item sb-right">
                     <RollingCoords coords={coords} />

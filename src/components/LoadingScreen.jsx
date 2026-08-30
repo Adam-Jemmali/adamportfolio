@@ -58,7 +58,7 @@ const LoadingScreen = ({ onComplete }) => {
                     <span className="boot-title-accent">A</span>dam <span className="boot-title-accent">J</span>emmali <span className="boot-title-accent">OS</span>
                 </h1>
 
-                <p className="boot-sub">AI Engineer</p>
+                <p className="boot-sub">Aspiring AI Engineer</p>
 
                 <div className="boot-logs">
                     {BOOT_LOGS.map((log) =>

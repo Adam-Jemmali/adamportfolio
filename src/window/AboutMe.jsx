@@ -3,12 +3,6 @@ import { Rabbit } from "#components/AppMascots.jsx";
 import WindowWrapper from "#hoc/WindowWrapper.jsx";
 import useWindowStore from "#store/window.js";
 
-const FOCUS_AREAS = [
-    "Real-time computer vision for sports analytics",
-    "Agentic AI systems, designed to actually ship",
-    "Full-stack SaaS, backend to UI",
-];
-
 const AboutMe = () => {
     const { openWindow, focusWindow } = useWindowStore();
     const open = (id) => {
@@ -24,24 +18,20 @@ const AboutMe = () => {
             </div>
 
             <div className="aboutme-body">
-                <div className="aboutme-photo-wrap">
-                    <img src="/public/images/adam_Me.png" alt="Adam Jemmali" className="aboutme-photo" />
-                    <div className="aboutme-photo-shimmer" aria-hidden="true" />
+                <div className="aboutme-photo-block">
+                    <div className="aboutme-photo-wrap">
+                        <img src="/public/images/adam_Me.png" alt="Adam Jemmali" className="aboutme-photo" />
+                        <div className="aboutme-photo-shimmer" aria-hidden="true" />
+                    </div>
                 </div>
                 <h3 className="aboutme-name">Adam Jemmali</h3>
-                <p className="aboutme-title">Computer Vision &amp; AI Systems Engineer</p>
+                <p className="aboutme-title">ML Systems &amp; AI Automation &middot; Aspiring AI Engineer</p>
 
                 <p className="aboutme-what">
-                    <b>What I do:</b> I build real-time computer vision pipelines and agentic
-                    AI systems, then ship them as full products, backend to UI, not just
-                    notebooks.
+                    <b>What I do:</b> I build machine-learning systems and AI automation,
+                    then ship them as real products, backend to UI, not just notebooks.
+                    Mostly around sports and edtech, always in public.
                 </p>
-
-                <ul className="aboutme-focus">
-                    {FOCUS_AREAS.map((f) => (
-                        <li key={f}>{f}</li>
-                    ))}
-                </ul>
 
                 <div className="aboutme-actions">
                     <button type="button" className="aboutme-btn" onClick={() => open("resume")}>
