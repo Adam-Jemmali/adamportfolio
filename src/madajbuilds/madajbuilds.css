@@ -671,7 +671,9 @@ body {
 .falling-icons-layer {
     position: absolute;
     inset: 0;
-    z-index: 0;
+    /* above the 3D wordmark canvas (z:1) so the badges read as an overlay
+       riding over the letters — you see them cross the 3D text */
+    z-index: 2;
     pointer-events: none;
     overflow: hidden;
     perspective: 900px;
@@ -686,6 +688,16 @@ body {
     transform-origin: 50% 50%;
     will-change: transform, opacity, filter;
     backface-visibility: visible;
+}
+
+/* plain emoji / object glyphs */
+.falling-emoji {
+    display: grid;
+    place-items: center;
+    line-height: 1;
+    text-align: center;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .falling-badge {

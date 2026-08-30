@@ -789,7 +789,7 @@ const ABOUT_LOCATION = {
             kind: "file",
             fileType: "txt",
             position: "top-5 left-10",
-            subtitle: "Full-Stack Software Engineer - Backend Systems and AI-Integrated Applications",
+            subtitle: "ML Systems & AI Automation · Backend & Full-Stack · Aspiring AI Engineer",
             description: [
                 "Full-stack software engineering student proficient in Python, OpenCV, FastAPI, SQL, Git, Docker, and CI/CD, with hands-on production experience building real-time computer vision systems for professional sports analytics and full-stack SaaS platforms shipped and operated end-to-end.",
                 "Sharpening system design, testing, and Linux debugging daily through structured and self-directed practice. Eligible for Government of Canada security clearance.",

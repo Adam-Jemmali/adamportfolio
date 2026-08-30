@@ -42,23 +42,21 @@ const THEMES = [
 const PILL_W = 108;
 const PILL_H = 34;
 
-/* ── Textured badge icons ─────────────────────────────────────────── */
-// CSS-rendered badges replace the old line-art SVGs. Each has a colored,
-// grainy circular face, a pale rim, and a dark hand-drawn-style symbol.
+/* ── Falling icons — a small mix of sports, faces and objects. `color`
+   drives the glow the emoji picks up as it crosses the 3D wordmark. ── */
 const BADGE_ICONS = [
-    { kind: "orbit", color: "#ffad38", ink: "#172333" },
-    { kind: "leaf", color: "#9bd85c", ink: "#1d3020" },
-    { kind: "spark", color: "#f66c8a", ink: "#321a28" },
-    { kind: "wave", color: "#5dbde4", ink: "#102b3b" },
-    { kind: "flower", color: "#b78ee7", ink: "#281a3c" },
-    { kind: "eye", color: "#f3c84b", ink: "#332b14" },
-    { kind: "mountain", color: "#ef8862", ink: "#392019" },
-    { kind: "planet", color: "#65c7b4", ink: "#11302d" },
-    { kind: "bolt", color: "#e86e5c", ink: "#321d1a" },
-    { kind: "smile", color: "#f0a7c8", ink: "#3a1d2c" },
+    { emoji: "⚽", color: "#e8e8e8" },   // sports
+    { emoji: "🏀", color: "#ef8862" },
+    { emoji: "🎾", color: "#c8e64a" },
+    { emoji: "😎", color: "#ffd23f" },   // faces / emoticons
+    { emoji: "🤓", color: "#7fc4ff" },
+    { emoji: "👀", color: "#f0a7c8" },
+    { emoji: "🚀", color: "#ff8a5b" },   // objects
+    { emoji: "💻", color: "#5dbde4" },
+    { emoji: "💡", color: "#ffe066" },
 ];
 
-const FALLING_ICON_COUNT = LOW_END ? 16 : 34;
+const FALLING_ICON_COUNT = LOW_END ? 4 : 8;
 const FALLING_ICONS = Array.from({ length: FALLING_ICON_COUNT }, (_, i) => ({
     badge: BADGE_ICONS[i % BADGE_ICONS.length],
     size: 30 + (((i * 7 + 3) % 38)),
@@ -608,7 +606,7 @@ function FallingIconsRaw({ scrollProgressRef, wordmarkRectRef, onFreeze }) {
                 depth: icon.depth,
                 size: icon.size,
                 color: icon.badge.color,
-                ink: icon.badge.ink,
+                ink: icon.badge.color,
                 // gentle horizontal sway while falling
                 swayAmp: 6 + ((i * 37 + 5) % 22),
                 swayFreq: 0.4 + ((i * 23 + 7) % 90) / 100,
@@ -719,10 +717,8 @@ function FallingIconsRaw({ scrollProgressRef, wordmarkRectRef, onFreeze }) {
                 if (it.x < 2) { it.x = 2; it.vx = Math.abs(it.vx); }
                 else if (it.x > 98) { it.x = 98; it.vx = -Math.abs(it.vx); }
 
-                const half = (it.size * it.scale) / 2;
                 const rx = (it.x / 100) * lr.width + it.sway;
                 const ry = it.y;
-                const z = it.scale * 90;
                 const vpx = rx + lr.left;
                 const vpy = ry + lr.top;
 
@@ -732,32 +728,41 @@ function FallingIconsRaw({ scrollProgressRef, wordmarkRectRef, onFreeze }) {
                 else if (it.y > H - 90) opacity = Math.max(0, 0.4 * ((H - it.y) / 90));
                 opacity *= 1 - Math.min(0.86, vacuumProgress * 0.86);
 
-                // Fade slightly while passing behind the 3D wordmark letters.
-                // Nearer icons dim less, farther icons dim more (layered depth).
+                // How far the icon is over a 3D wordmark letter (0 = clear,
+                // 1 = right on it). The badge layer sits ABOVE the wordmark
+                // canvas, so instead of being hidden the icon rides over the
+                // letter — it pops slightly forward, brightens and picks up a
+                // glow, so you can watch it cross the 3D text.
+                let insideDepth = 0;
                 const wmRects = wordmarkRectRef ? wordmarkRectRef.current : null;
                 if (wmRects && wmRects.length) {
-                    const margin = 22;
-                    const dim = 0.6 - it.depth * 0.4;
-                    let wmFade = 1;
+                    const margin = 16;
                     for (const r of wmRects) {
-                        const insideX = Math.min(vpx - (r.left - margin), (r.right + margin) - vpx);
-                        const insideY = Math.min(vpy - (r.top - margin), (r.bottom + margin) - vpy);
-                        const inside = Math.min(insideX, insideY);
-                        if (inside > 0) {
-                            const t = Math.min(1, inside / margin);
-                            wmFade = Math.min(wmFade, 1 - dim * t);
-                        }
+                        const ix = Math.min(vpx - (r.left - margin), (r.right + margin) - vpx);
+                        const iy = Math.min(vpy - (r.top - margin), (r.bottom + margin) - vpy);
+                        const inside = Math.min(ix, iy);
+                        if (inside > insideDepth) insideDepth = inside;
                     }
-                    opacity *= wmFade;
                 }
+                const enter = Math.min(1, insideDepth / 30);
+                const eSm = enter * enter * (3 - 2 * enter); // smoothstep
+                opacity = Math.min(0.95, opacity * (1 + eSm * 0.9));
+                const iScale = it.scale * (1 + eSm * 0.14);
+                const z = it.scale * 90 + eSm * 55; // pop toward the viewer, over the letter
+                // scale() pivots on the element centre — half is the true
+                // (unscaled) half-size so the icon stays centred.
+                const half = it.size / 2;
 
                 it.el.style.transform =
                     `translate3d(${(rx - half).toFixed(1)}px, ${(ry - half).toFixed(1)}px, ${z.toFixed(1)}px) ` +
                     `rotateX(${(it.rot * it.tumble).toFixed(2)}deg) ` +
                     `rotateY(${(it.rot * it.tumble * 0.7).toFixed(2)}deg) ` +
-                    `rotateZ(${it.rot.toFixed(2)}deg) scale(${it.scale.toFixed(3)})`;
+                    `rotateZ(${it.rot.toFixed(2)}deg) scale(${iScale.toFixed(3)})`;
                 it.el.style.opacity = opacity.toFixed(3);
-                it.el.style.filter = it.blur > 0.02 ? `blur(${it.blur.toFixed(2)}px)` : "none";
+                const fx = ["drop-shadow(0 2px 5px rgba(0,0,0,0.4))"];
+                if (it.blur > 0.02) fx.push(`blur(${it.blur.toFixed(2)}px)`);
+                if (eSm > 0.02) fx.push(`drop-shadow(0 0 ${(6 + eSm * 12).toFixed(1)}px ${it.color})`);
+                it.el.style.filter = fx.join(" ");
             }
         };
 
@@ -774,16 +779,15 @@ function FallingIconsRaw({ scrollProgressRef, wordmarkRectRef, onFreeze }) {
                 <div
                     key={i}
                     ref={(el) => { iconElsRef.current[i] = el; }}
-                    className={`falling-icon falling-badge falling-badge-${icon.badge.kind}`}
+                    className="falling-icon falling-emoji"
                     style={{
                         width: icon.size,
                         height: icon.size,
-                        "--badge-color": icon.badge.color,
-                        "--badge-ink": icon.badge.ink,
+                        fontSize: `${(icon.size * 0.92).toFixed(1)}px`,
                     }}
                     aria-hidden="true"
                 >
-                    <span className="falling-badge-symbol" />
+                    {icon.badge.emoji}
                 </div>
             ))}
         </div>
@@ -982,7 +986,7 @@ const CursorSnake = memo(CursorSnakeRaw);
 // spin, tumble and a gentle sway. The only difference from the hero is
 // the spawn line: here the rain starts at the cursor tip's height row
 // instead of the top of the screen.
-const CTA_BADGE_COUNT = LOW_END ? 20 : 38;
+const CTA_BADGE_COUNT = LOW_END ? 5 : 9;
 const CTA_BADGES = Array.from({ length: CTA_BADGE_COUNT }, (_, i) => ({
     badge: BADGE_ICONS[i % BADGE_ICONS.length],
     size: 30 + ((i * 7 + 3) % 38),
@@ -1108,7 +1112,9 @@ const FallingBadgesRaw = () => {
                     `rotateY(${(it.rot * it.tumble * 0.7).toFixed(2)}deg) ` +
                     `rotateZ(${it.rot.toFixed(2)}deg) scale(${it.scale.toFixed(3)})`;
                 it.el.style.opacity = op.toFixed(3);
-                it.el.style.filter = it.blur > 0.02 ? `blur(${it.blur.toFixed(2)}px)` : "none";
+                it.el.style.filter = it.blur > 0.02
+                    ? `drop-shadow(0 2px 5px rgba(0,0,0,0.4)) blur(${it.blur.toFixed(2)}px)`
+                    : "drop-shadow(0 2px 5px rgba(0,0,0,0.4))";
             }
         };
 
@@ -1122,15 +1128,14 @@ const FallingBadgesRaw = () => {
                 <div
                     key={i}
                     ref={(el) => { elsRef.current[i] = el; }}
-                    className={`falling-icon falling-badge falling-badge-${c.badge.kind}`}
+                    className="falling-icon falling-emoji"
                     style={{
                         width: c.size,
                         height: c.size,
-                        "--badge-color": c.badge.color,
-                        "--badge-ink": c.badge.ink,
+                        fontSize: `${(c.size * 0.92).toFixed(1)}px`,
                     }}
                 >
-                    <span className="falling-badge-symbol" />
+                    {c.badge.emoji}
                 </div>
             ))}
         </div>
